@@ -1,0 +1,9 @@
+# Dependencias
+node_modules/
+
+# Credenciales de clasp (NUNCA subir a git)
+.clasprc.json
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
