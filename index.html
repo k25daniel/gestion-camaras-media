@@ -1,317 +1,530 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="dark">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Equipo Media - Cámaras</title>
+    <title>Gestión de Cámaras · Media</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            400: '#818cf8',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
     <style>
-        .bg-gradient-header {
-            background: linear-gradient(135deg, #0f172a 0%, #312e81 100%);
+        :root {
+            --bg-canvas: #090a0f;
+            --bg-card: #111319;
+            --bg-elevated: #161822;
+            --border-subtle: rgba(255, 255, 255, 0.07);
+            --border-hover: rgba(255, 255, 255, 0.14);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-canvas);
+            color: #f1f5f9;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.22);
+        }
+
+        /* Glassmorphism & Header */
+        .glass-nav {
+            background: rgba(9, 10, 15, 0.85);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        /* Minimal cards */
+        .surface-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 1rem;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .surface-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        /* Tabs Segmented Control */
+        .tab-btn {
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            color: #94a3b8;
+            border-radius: 0.5rem;
+        }
+
+        .tab-btn:hover {
+            color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.04);
         }
 
         .tab-active {
-            border-b-4 border-indigo-500;
-            color: #818cf8;
-            font-weight: bold;
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
         }
 
-        .checkbox-camara:checked+div {
-            background-color: #4f46e5;
-            border-color: #4f46e5;
-            color: white;
+        /* Camera Toggle Checkboxes */
+        .checkbox-camara:checked + div {
+            background-color: #6366f1;
+            border-color: #818cf8;
+            color: #ffffff;
+            box-shadow: 0 0 16px rgba(99, 102, 241, 0.35);
         }
 
-        .checkbox-camara:not(:checked)+div {
-            background-color: #1e293b;
-            border-color: #334155;
+        .checkbox-camara:not(:checked) + div {
+            background-color: rgba(255, 255, 255, 0.02);
+            border-color: var(--border-subtle);
+            color: #64748b;
+        }
+
+        .checkbox-camara:not(:checked) + div:hover {
+            border-color: rgba(255, 255, 255, 0.15);
             color: #94a3b8;
         }
 
-        input,
-        select {
-            font-size: 16px !important;
+        /* Modern Form Elements */
+        input, select {
+            font-size: 14px !important;
         }
 
         input[type="date"] {
             -webkit-appearance: none !important;
             -moz-appearance: none !important;
             appearance: none !important;
+            color-scheme: dark;
             min-width: 0 !important;
             width: 100% !important;
             box-sizing: border-box !important;
         }
+
+        /* Micro animation utility */
+        .animate-fade-in {
+            animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased">
+<body class="min-h-screen antialiased selection:bg-brand-500/30 selection:text-brand-100 flex flex-col justify-between">
 
-    <header class="bg-gradient-header border-b border-slate-800 p-3.5 sticky top-0 z-50 shadow-lg">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-2.5">
-                <i class="fas fa-video text-xl text-indigo-400"></i>
+    <!-- TOP HEADER -->
+    <header class="glass-nav sticky top-0 z-50 transition-all">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <!-- Brand -->
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-sm shadow-indigo-500/10">
+                    <i class="fas fa-video text-sm"></i>
+                </div>
                 <div>
-                    <h1 class="text-base sm:text-lg font-bold text-white tracking-wide leading-tight">Gestión de Cámaras
-                    </h1>
-                    <p class="text-[11px] text-indigo-300">Departamento de Media</p>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-sm sm:text-base font-bold text-white tracking-tight">Gestión de Cámaras</h1>
+                        <span class="text-[10px] tracking-widest uppercase font-mono px-1.5 py-0.5 rounded bg-white/[0.06] text-zinc-400 border border-white/[0.05]">Media</span>
+                    </div>
+                    <p class="text-[11px] text-zinc-400 font-medium leading-none mt-0.5">Control y Asignación de Servicios</p>
                 </div>
             </div>
+
+            <!-- Role / PIN Auth Button -->
             <div class="flex items-center space-x-2">
                 <button onclick="abrirModalPin()" id="btnAdminState"
-                    class="bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 px-3 py-2 rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition">
-                    <i class="fas fa-lock text-amber-400" id="iconLock"></i>
-                    <span id="adminStatusText">Ingresar</span>
+                    class="group relative bg-white/[0.04] hover:bg-white/[0.08] active:scale-95 border border-white/[0.08] hover:border-white/[0.15] text-zinc-300 px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center space-x-2 transition-all duration-200">
+                    <span id="roleIndicatorDot" class="w-1.5 h-1.5 rounded-full bg-amber-400/80 group-hover:scale-125 transition-transform"></span>
+                    <i class="fas fa-lock text-[11px] text-zinc-400 group-hover:text-white transition-colors" id="iconLock"></i>
+                    <span id="adminStatusText" class="tracking-wide">Ingresar</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- SEGMENTED NAVIGATION TABS -->
+        <div class="border-t border-white/[0.05] bg-black/20">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 py-2">
+                <nav class="flex p-1 bg-white/[0.03] border border-white/[0.06] rounded-xl text-xs font-medium space-x-1 overflow-x-auto no-scrollbar">
+                    <button id="tab-dashboard-btn" onclick="switchTab('dashboard')"
+                        class="tab-btn flex-1 min-w-[90px] py-2 px-3 tab-active flex items-center justify-center space-x-1.5 text-center">
+                        <i class="fas fa-layer-group text-[11px]"></i>
+                        <span>Servicios</span>
+                    </button>
+                    <button id="tab-registro-btn" onclick="switchTab('registro')"
+                        class="tab-btn hidden flex-1 min-w-[90px] py-2 px-3 flex items-center justify-center space-x-1.5 text-center">
+                        <i class="fas fa-calendar-plus text-[11px]"></i>
+                        <span>Planear</span>
+                    </button>
+                    <button id="tab-estadisticas-btn" onclick="switchTab('estadisticas')"
+                        class="tab-btn hidden flex-1 min-w-[90px] py-2 px-3 flex items-center justify-center space-x-1.5 text-center">
+                        <i class="fas fa-chart-pie text-[11px]"></i>
+                        <span>Estadísticas</span>
+                    </button>
+                    <button id="tab-equipo-btn" onclick="switchTab('equipo')"
+                        class="tab-btn hidden flex-1 min-w-[90px] py-2 px-3 flex items-center justify-center space-x-1.5 text-center">
+                        <i class="fas fa-users text-[11px]"></i>
+                        <span>Equipo</span>
+                    </button>
+                </nav>
             </div>
         </div>
     </header>
 
-    <!-- Pestañas -->
-    <div class="bg-slate-800 border-b border-slate-700 sticky top-[57px] z-40">
-        <div class="max-w-4xl mx-auto flex justify-around text-xs sm:text-sm font-medium text-slate-400">
-            <button id="tab-dashboard-btn" onclick="switchTab('dashboard')"
-                class="py-3 px-2 sm:px-3 tab-active transition"> Dashboard</button>
-            <button id="tab-registro-btn" onclick="switchTab('registro')" class="hidden py-3 px-2 sm:px-3 transition">
-                Planear</button>
-            <button id="tab-estadisticas-btn" onclick="switchTab('estadisticas')"
-                class="hidden py-3 px-2 sm:px-3 transition"> Estadísticas</button>
-            <button id="tab-equipo-btn" onclick="switchTab('equipo')" class="hidden py-3 px-2 sm:px-3 transition">
-                Equipo</button>
-        </div>
-    </div>
+    <!-- MAIN CONTAINER -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full space-y-6">
 
-    <main class="max-w-4xl mx-auto p-3 sm:p-4 space-y-4">
+        <!-- ========================= SECCIÓN: DASHBOARD ========================= -->
+        <section id="sec-dashboard" class="space-y-4 animate-fade-in">
+            <div class="flex items-center justify-between pb-1 border-b border-white/[0.06]">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                    <h2 class="text-sm sm:text-base font-bold text-white tracking-tight">Historial de Servicios</h2>
+                </div>
+                <button onclick="cargarDatos()" title="Recargar datos" class="text-xs text-zinc-400 hover:text-white flex items-center space-x-1 px-2.5 py-1 rounded-lg hover:bg-white/[0.05] transition">
+                    <i class="fas fa-rotate-right text-[11px]"></i>
+                    <span class="hidden sm:inline">Actualizar</span>
+                </button>
+            </div>
 
-        <!-- DASHBOARD -->
-        <section id="sec-dashboard" class="space-y-3">
-            <h2 class="font-bold text-base sm:text-lg text-white"> Últimos Servicios</h2>
-            <div id="listaServicios" class="space-y-3"></div>
+            <!-- Contenedor dinámico de servicios -->
+            <div id="listaServicios" class="space-y-3.5"></div>
         </section>
 
-        <!-- PLANEAR SERVICIO -->
-        <section id="sec-registro" class="hidden">
-            <div class="bg-slate-800 rounded-xl border border-slate-700 p-3.5 sm:p-5 space-y-4">
+        <!-- ========================= SECCIÓN: PLANEAR SERVICIO ========================= -->
+        <section id="sec-registro" class="hidden space-y-5 animate-fade-in">
+            <div class="surface-card p-4 sm:p-6 space-y-6">
 
-                <div
-                    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-700 pb-3">
-                    <h2 id="formServiceTitle" class="font-bold text-base sm:text-lg text-white"> Registrar / Planear
-                        Servicio</h2>
+                <!-- Header de Formulario -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-white/[0.06]">
+                    <div>
+                        <h2 id="formServiceTitle" class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center">
+                            <i class="fas fa-sliders text-indigo-400 mr-2 text-sm"></i> Registrar / Planear Servicio
+                        </h2>
+                        <p class="text-xs text-zinc-400 mt-0.5">Asigna cámaras y operadores para el próximo servicio.</p>
+                    </div>
 
-                    <div
-                        class="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap gap-y-2">
+                    <div class="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap gap-2">
                         <button type="button" onclick="copiarServicioAnterior()"
-                            class="bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-indigo-500/40 flex items-center">
-                            <i class="fas fa-copy mr-1.5"></i> Copiar Anterior
+                            class="bg-indigo-500/10 hover:bg-indigo-500/20 active:scale-95 text-indigo-300 hover:text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border border-indigo-500/20 flex items-center">
+                            <i class="fas fa-copy mr-1.5 text-[11px]"></i> Copiar Anterior
                         </button>
                         <button type="button" onclick="limpiarFormularioCompleto()"
-                            class="bg-red-600/20 hover:bg-red-600 text-red-200 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-red-500/40 flex items-center"
+                            class="bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 text-rose-300 hover:text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border border-rose-500/20 flex items-center"
                             title="Borrar todo el formulario">
-                            <i class="fas fa-trash-alt mr-1.5"></i> Limpiar todo
+                            <i class="fas fa-trash-can mr-1.5 text-[11px]"></i> Limpiar
                         </button>
                         <button id="btnCancelEditService" onclick="resetServiceForm()"
-                            class="hidden text-xs text-slate-400 hover:text-white underline">Cancelar</button>
+                            class="hidden text-xs text-zinc-400 hover:text-white underline underline-offset-4 px-2 py-1 transition">Cancelar edición</button>
                     </div>
                 </div>
 
                 <input type="hidden" id="regServicioId" value="">
 
-                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 w-full">
-                    <div class="sm:col-span-7 min-w-0">
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Director a cargo</label>
-                        <select id="regDirector"
-                            class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white outline-none"></select>
-                    </div>
-                    <div class="sm:col-span-5 min-w-0">
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Fecha</label>
-                        <input type="date" id="regFecha"
-                            class="w-full min-w-0 bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white outline-none appearance-none">
-                    </div>
-                </div>
-
-                <!-- PASO 1: Buscador Móvil -->
-                <div class="bg-slate-900/50 p-3.5 rounded-xl border border-indigo-500/30 space-y-2.5 relative">
-                    <h3 class="font-bold text-indigo-400 text-sm">1. Camarógrafos Disponibles Hoy</h3>
-
-                    <div class="relative">
-                        <div class="flex space-x-2">
-                            <div class="relative flex-1">
-                                <input type="text" id="inputCamarografoHoy" placeholder="Buscar por nombre..."
-                                    oninput="filtrarCamarografosMovil(this.value)"
-                                    onfocus="filtrarCamarografosMovil(this.value)"
-                                    class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white outline-none">
-                                <span class="absolute right-3 top-3 text-slate-400 text-xs"><i
-                                        class="fas fa-search"></i></span>
+                <!-- Director & Fecha -->
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
+                    <div class="sm:col-span-7 min-w-0 space-y-1.5">
+                        <label class="block text-xs font-semibold text-zinc-300">Director a cargo</label>
+                        <div class="relative">
+                            <select id="regDirector"
+                                class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-3 text-sm text-white outline-none transition appearance-none cursor-pointer">
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400">
+                                <i class="fas fa-chevron-down text-xs"></i>
                             </div>
                         </div>
+                    </div>
+                    <div class="sm:col-span-5 min-w-0 space-y-1.5">
+                        <label class="block text-xs font-semibold text-zinc-300">Fecha del servicio</label>
+                        <input type="date" id="regFecha"
+                            class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-3 text-sm text-white outline-none transition">
+                    </div>
+                </div>
 
+                <!-- PASO 1: Camarógrafos Disponibles Hoy -->
+                <div class="bg-black/30 p-4 sm:p-5 rounded-2xl border border-white/[0.06] space-y-3 relative">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center space-x-1.5">
+                            <span class="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px] font-mono">1</span>
+                            <span>Camarógrafos Disponibles Hoy</span>
+                        </h3>
+                        <span class="text-[11px] text-zinc-500">Agrega al equipo presente</span>
+                    </div>
+
+                    <div class="relative">
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3.5 text-zinc-400 text-xs"><i class="fas fa-magnifying-glass"></i></span>
+                            <input type="text" id="inputCamarografoHoy" placeholder="Escribe el nombre del camarógrafo..."
+                                oninput="filtrarCamarografosMovil(this.value)"
+                                onfocus="filtrarCamarografosMovil(this.value)"
+                                class="w-full pl-9 pr-3 py-2.5 bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl text-sm text-white outline-none transition">
+                        </div>
+
+                        <!-- Dropdown de Sugerencias -->
                         <div id="sugerenciasDropdown"
-                            class="hidden absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-lg shadow-2xl max-h-48 overflow-y-auto z-50 divide-y divide-slate-800">
+                            class="hidden absolute left-0 right-0 mt-1.5 bg-[#161822] border border-white/[0.12] rounded-xl shadow-2xl max-h-52 overflow-y-auto z-50 divide-y divide-white/[0.04]">
                         </div>
                     </div>
 
-                    <div id="contenedorEtiquetasAsistentes" class="space-y-2 pt-1"></div>
+                    <!-- Tags de Asistentes Seleccionados -->
+                    <div id="contenedorEtiquetasAsistentes" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1"></div>
                 </div>
 
-                <!-- PASO 2: Cámaras Activas -->
-                <div class="bg-slate-900/50 p-3.5 rounded-xl border border-slate-700 space-y-3">
-                    <h3 class="font-bold text-slate-200 text-sm">2. Cámaras Activas Hoy</h3>
-                    <p class="text-xs text-slate-400">Toca para activar o desactivar las cámaras que se usarán.</p>
-
-                    <div class="grid grid-cols-3 sm:flex sm:flex-wrap gap-2">
-                        <label class="cursor-pointer text-center"><input type="checkbox" id="chkActiva1"
-                                class="hidden checkbox-camara" onchange="toggleVisibilidadCamara(1)" checked>
-                            <div class="border rounded-lg py-2 text-xs font-bold transition">Cam 1</div>
-                        </label>
-                        <label class="cursor-pointer text-center"><input type="checkbox" id="chkActiva2"
-                                class="hidden checkbox-camara" onchange="toggleVisibilidadCamara(2)" checked>
-                            <div class="border rounded-lg py-2 text-xs font-bold transition">Cam 2</div>
-                        </label>
-                        <label class="cursor-pointer text-center"><input type="checkbox" id="chkActiva3"
-                                class="hidden checkbox-camara" onchange="toggleVisibilidadCamara(3)" checked>
-                            <div class="border rounded-lg py-2 text-xs font-bold transition">Cam 3</div>
-                        </label>
-                        <label class="cursor-pointer text-center"><input type="checkbox" id="chkActiva4"
-                                class="hidden checkbox-camara" onchange="toggleVisibilidadCamara(4)" checked>
-                            <div class="border rounded-lg py-2 text-xs font-bold transition">Cam 4</div>
-                        </label>
-                        <label class="cursor-pointer text-center"><input type="checkbox" id="chkActiva5"
-                                class="hidden checkbox-camara" onchange="toggleVisibilidadCamara(5)" checked>
-                            <div class="border rounded-lg py-2 text-xs font-bold transition">Cam 5</div>
-                        </label>
-                        <label class="cursor-pointer text-center"><input type="checkbox" id="chkActiva6"
-                                class="hidden checkbox-camara" onchange="toggleVisibilidadCamara(6)" checked>
-                            <div class="border rounded-lg py-2 text-xs font-bold transition">Cam 6</div>
-                        </label>
+                <!-- PASO 2: Cámaras Activas Hoy -->
+                <div class="bg-black/30 p-4 sm:p-5 rounded-2xl border border-white/[0.06] space-y-4">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
+                        <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center space-x-1.5">
+                            <span class="w-4 h-4 rounded-full bg-white/10 text-white flex items-center justify-center text-[10px] font-mono">2</span>
+                            <span>Cámaras Activas Hoy</span>
+                        </h3>
+                        <p class="text-[11px] text-zinc-500">Activa o desactiva las cámaras según el setup del evento</p>
                     </div>
 
-                    <div
-                        class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-3 border-t border-slate-800">
-                        <h3 class="font-bold text-slate-200 text-sm">3. Asignación y Presets</h3>
+                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        <label class="cursor-pointer text-center">
+                            <input type="checkbox" id="chkActiva1" class="hidden checkbox-camara" onchange="toggleVisibilidadCamara(1)" checked>
+                            <div class="border rounded-xl py-2.5 text-xs font-bold font-mono transition-all duration-150">CAM 1</div>
+                        </label>
+                        <label class="cursor-pointer text-center">
+                            <input type="checkbox" id="chkActiva2" class="hidden checkbox-camara" onchange="toggleVisibilidadCamara(2)" checked>
+                            <div class="border rounded-xl py-2.5 text-xs font-bold font-mono transition-all duration-150">CAM 2</div>
+                        </label>
+                        <label class="cursor-pointer text-center">
+                            <input type="checkbox" id="chkActiva3" class="hidden checkbox-camara" onchange="toggleVisibilidadCamara(3)" checked>
+                            <div class="border rounded-xl py-2.5 text-xs font-bold font-mono transition-all duration-150">CAM 3</div>
+                        </label>
+                        <label class="cursor-pointer text-center">
+                            <input type="checkbox" id="chkActiva4" class="hidden checkbox-camara" onchange="toggleVisibilidadCamara(4)" checked>
+                            <div class="border rounded-xl py-2.5 text-xs font-bold font-mono transition-all duration-150">CAM 4</div>
+                        </label>
+                        <label class="cursor-pointer text-center">
+                            <input type="checkbox" id="chkActiva5" class="hidden checkbox-camara" onchange="toggleVisibilidadCamara(5)" checked>
+                            <div class="border rounded-xl py-2.5 text-xs font-bold font-mono transition-all duration-150">CAM 5</div>
+                        </label>
+                        <label class="cursor-pointer text-center">
+                            <input type="checkbox" id="chkActiva6" class="hidden checkbox-camara" onchange="toggleVisibilidadCamara(6)" checked>
+                            <div class="border rounded-xl py-2.5 text-xs font-bold font-mono transition-all duration-150">CAM 6</div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- PASO 3: Asignación y Presets -->
+                <div class="space-y-3.5">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2">
+                        <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center space-x-1.5">
+                            <span class="w-4 h-4 rounded-full bg-white/10 text-white flex items-center justify-center text-[10px] font-mono">3</span>
+                            <span>Asignación y Parámetros (Presets)</span>
+                        </h3>
                         <button type="button" onclick="sugerirRotacion()"
-                            class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg text-xs font-bold transition shadow flex items-center justify-center">
-                            <i class="fas fa-magic mr-1.5"></i> Sugerir Rotación
+                            class="w-full sm:w-auto bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 text-emerald-300 hover:text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition border border-emerald-500/20 flex items-center justify-center">
+                            <i class="fas fa-wand-magic-sparkles mr-1.5 text-emerald-400"></i> Sugerir Rotación Inteligente
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="contenedorCamarasForm"></div>
+                    <!-- Grid generado dinámicamente -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="contenedorCamarasForm"></div>
                 </div>
 
-                <button onclick="guardarServicio()" id="btnGuardar"
-                    class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl shadow-lg transition text-sm">
-                    Guardar Servicio
-                </button>
+                <!-- Botón Principal Guardar -->
+                <div class="pt-2">
+                    <button onclick="guardarServicio()" id="btnGuardar"
+                        class="w-full bg-brand-600 hover:bg-brand-500 active:scale-[0.99] text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-brand-500/20 transition-all text-sm tracking-wide flex items-center justify-center space-x-2">
+                        <i class="fas fa-check"></i>
+                        <span>Guardar Servicio</span>
+                    </button>
+                </div>
             </div>
         </section>
 
-        <!-- ESTADÍSTICAS -->
-        <section id="sec-estadisticas" class="hidden space-y-4">
-            <div class="bg-slate-800 rounded-xl border border-slate-700 p-4 sm:p-5 space-y-4">
-                <div
-                    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-700 pb-3">
+        <!-- ========================= SECCIÓN: ESTADÍSTICAS ========================= -->
+        <section id="sec-estadisticas" class="hidden space-y-4 animate-fade-in">
+            <div class="surface-card p-4 sm:p-6 space-y-5">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-white/[0.06]">
                     <div>
-                        <h2 class="font-bold text-base sm:text-lg text-white"><i
-                                class="fas fa-chart-bar text-indigo-400 mr-2"></i> Estadísticas de Uso de Cámaras</h2>
-                        <p class="text-xs text-slate-400">Toca el nombre de cualquier camarógrafo para ver su historial
-                            detallado.</p>
+                        <h2 class="text-base sm:text-lg font-bold text-white tracking-tight flex items-center">
+                            <i class="fas fa-chart-simple text-indigo-400 mr-2 text-sm"></i> Estadísticas de Uso de Cámaras
+                        </h2>
+                        <p class="text-xs text-zinc-400 mt-0.5">Toca cualquier nombre para inspeccionar su historial de posiciones.</p>
                     </div>
-                    <input type="text" id="buscarStats" placeholder="Filtrar camarógrafo..."
-                        oninput="renderizarEstadisticas()"
-                        class="bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white outline-none w-full sm:w-56">
+
+                    <div class="relative w-full sm:w-64">
+                        <span class="absolute left-3 top-2.5 text-zinc-400 text-xs"><i class="fas fa-magnifying-glass"></i></span>
+                        <input type="text" id="buscarStats" placeholder="Filtrar por camarógrafo..."
+                            oninput="renderizarEstadisticas()"
+                            class="w-full pl-8 pr-3 py-2 bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl text-xs text-white outline-none transition">
+                    </div>
                 </div>
 
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto rounded-xl border border-white/[0.06]">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr class="bg-slate-900/60 text-slate-400 uppercase border-b border-slate-700">
-                                <th class="p-2.5">Camarógrafo</th>
-                                <th class="p-2.5 text-center">Cam 1</th>
-                                <th class="p-2.5 text-center">Cam 2</th>
-                                <th class="p-2.5 text-center">Cam 3</th>
-                                <th class="p-2.5 text-center">Cam 4</th>
-                                <th class="p-2.5 text-center">Cam 5</th>
-                                <th class="p-2.5 text-center">Cam 6</th>
-                                <th class="p-2.5 text-center font-bold text-indigo-400">Total</th>
+                            <tr class="bg-white/[0.02] text-zinc-400 border-b border-white/[0.06] font-mono text-[11px] uppercase tracking-wider">
+                                <th class="p-3">Camarógrafo</th>
+                                <th class="p-3 text-center">C1</th>
+                                <th class="p-3 text-center">C2</th>
+                                <th class="p-3 text-center">C3</th>
+                                <th class="p-3 text-center">C4</th>
+                                <th class="p-3 text-center">C5</th>
+                                <th class="p-3 text-center">C6</th>
+                                <th class="p-3 text-center font-bold text-indigo-400">Total</th>
                             </tr>
                         </thead>
-                        <tbody id="tablaEstadisticasCuerpo" class="divide-y divide-slate-700/50"></tbody>
+                        <tbody id="tablaEstadisticasCuerpo" class="divide-y divide-white/[0.04]"></tbody>
                     </table>
                 </div>
             </div>
         </section>
 
-        <!-- EQUIPO (Solo Admin con Tags Múltiples) -->
-        <section id="sec-equipo" class="hidden space-y-4">
-            <div class="bg-slate-800 rounded-xl border border-slate-700 p-4 sm:p-5 space-y-3">
-                <h2 class="font-bold text-base sm:text-lg text-white"> Añadir Miembro al Equipo</h2>
+        <!-- ========================= SECCIÓN: EQUIPO (SOLO ADMIN) ========================= -->
+        <section id="sec-equipo" class="hidden space-y-4 animate-fade-in">
+            <!-- Formulario Agregar Miembro -->
+            <div class="surface-card p-4 sm:p-5 space-y-4">
+                <div>
+                    <h2 class="text-sm sm:text-base font-bold text-white tracking-tight flex items-center">
+                        <i class="fas fa-user-plus text-indigo-400 mr-2 text-xs"></i> Añadir Miembro al Equipo
+                    </h2>
+                    <p class="text-xs text-zinc-400 mt-0.5">Registra a nuevos colaboradores en el departamento de media.</p>
+                </div>
+
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-                    <div class="sm:col-span-4">
+                    <div class="sm:col-span-5">
                         <input type="text" id="nuevoMiembroNombre" placeholder="Nombre"
-                            class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white outline-none">
+                            class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white outline-none transition">
                     </div>
-                    <div class="sm:col-span-4">
+                    <div class="sm:col-span-5">
                         <input type="text" id="nuevoMiembroApellidos" placeholder="Apellidos"
-                            class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white outline-none">
+                            class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white outline-none transition">
                     </div>
-                    <div class="sm:col-span-4">
+                    <div class="sm:col-span-2">
                         <button onclick="agregarMiembro()"
-                            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2.5 rounded-lg text-sm transition flex items-center justify-center">
-                            <i class="fas fa-plus mr-1.5"></i> Agregar Miembro
+                            class="w-full h-full min-h-[42px] bg-brand-600 hover:bg-brand-500 active:scale-95 text-white font-semibold rounded-xl text-xs transition flex items-center justify-center shadow-sm">
+                            <i class="fas fa-plus mr-1.5"></i> Agregar
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- LISTA UNIFICADA DE MIEMBROS CON TAGS MÚLTIPLES -->
-            <div class="bg-slate-800 rounded-xl border border-slate-700 p-4 space-y-3">
-                <h3 class="font-bold text-sm text-indigo-400"><i class="fas fa-users"></i> Directorio General del Equipo
-                    (<span id="contadorMiembros">0</span>)</h3>
-                <div id="listaDirectorioGeneral" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+            <!-- Directorio General -->
+            <div class="surface-card p-4 sm:p-5 space-y-3.5">
+                <div class="flex justify-between items-center pb-2 border-b border-white/[0.06]">
+                    <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center">
+                        <i class="fas fa-address-book text-indigo-400 mr-2"></i> Directorio General (<span id="contadorMiembros">0</span>)
+                    </h3>
+                    <span class="text-[11px] text-zinc-500">Haz clic en los tags para activar roles</span>
+                </div>
+                <div id="listaDirectorioGeneral" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
             </div>
         </section>
 
     </main>
 
-    <!-- MODAL HISTORIAL DE CAMARÓGRAFO -->
+    <!-- FOOTER MINIMALISTA -->
+    <footer class="border-t border-white/[0.05] py-4 text-center text-xs text-zinc-500 font-mono">
+        Gestión de Cámaras &copy; Media Team
+    </footer>
+
+    <!-- ========================= MODAL: HISTORIAL DE CAMARÓGRAFO ========================= -->
     <div id="modalHistorialCamarografo"
-        class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-3 z-50">
-        <div
-            class="bg-slate-800 border border-slate-700 rounded-xl p-4 sm:p-6 max-w-lg w-full space-y-4 max-h-[85vh] flex flex-col">
-            <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+        class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div class="surface-card p-5 sm:p-6 max-w-lg w-full space-y-4 max-h-[85vh] flex flex-col shadow-2xl border border-white/[0.1]">
+            <div class="flex justify-between items-start border-b border-white/[0.08] pb-3">
                 <div>
-                    <h3 class="font-bold text-white text-base" id="modalHistorialTitulo">Historial de Camarógrafo</h3>
-                    <p class="text-xs text-slate-400">Listado de todas las asignaciones históricas</p>
+                    <h3 class="font-bold text-white text-base tracking-tight" id="modalHistorialTitulo">Historial de Camarógrafo</h3>
+                    <p class="text-xs text-zinc-400 mt-0.5">Asignaciones anteriores en servicios</p>
                 </div>
-                <button onclick="cerrarModalHistorial()" class="text-slate-400 hover:text-white p-1 text-sm"><i
-                        class="fas fa-times"></i></button>
+                <button onclick="cerrarModalHistorial()" class="text-zinc-400 hover:text-white p-1 text-sm rounded-lg hover:bg-white/[0.05] transition">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
 
-            <div class="overflow-y-auto flex-1 space-y-2.5 pr-1" id="modalHistorialContenido"></div>
+            <div class="overflow-y-auto flex-1 space-y-2 pr-1" id="modalHistorialContenido"></div>
 
-            <div class="border-t border-slate-700 pt-3 text-right">
+            <div class="border-t border-white/[0.08] pt-3 text-right">
                 <button onclick="cerrarModalHistorial()"
-                    class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2 rounded-lg text-xs font-bold transition">Cerrar</button>
+                    class="bg-white/[0.06] hover:bg-white/[0.12] text-zinc-200 px-4 py-2 rounded-xl text-xs font-semibold transition">
+                    Cerrar
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL PIN / ACCESO -->
-    <div id="modalPin" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center p-3 z-50">
-        <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 max-w-xs w-full space-y-3 text-center">
-            <h3 class="font-bold text-white text-base">Iniciar Sesión</h3>
-            <p class="text-xs text-slate-400">Ingresa tu PIN de Director o Administrador.</p>
-            <input type="password" id="inputPin" placeholder="PIN"
-                class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-center text-white text-base outline-none tracking-widest">
-            <div class="flex space-x-2">
+    <!-- ========================= MODAL: PIN / ACCESO ========================= -->
+    <div id="modalPin" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+        <div class="surface-card p-6 max-w-xs w-full space-y-4 text-center shadow-2xl border border-white/[0.1]">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                <i class="fas fa-shield-halved text-lg"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-white text-base tracking-tight">Acceso Autenticado</h3>
+                <p class="text-xs text-zinc-400 mt-1">Ingresa tu PIN de Director o Administrador para habilitar opciones.</p>
+            </div>
+            
+            <input type="password" id="inputPin" placeholder="••••" maxlength="10"
+                class="w-full bg-[#161822] border border-white/[0.12] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-3 text-center text-white text-lg outline-none tracking-[0.4em] font-mono">
+            
+            <div class="flex space-x-2 pt-1">
                 <button onclick="cerrarModalPin()"
-                    class="flex-1 bg-slate-700 text-slate-300 py-2.5 rounded-lg text-xs font-bold">Cancelar</button>
+                    class="flex-1 bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 py-2.5 rounded-xl text-xs font-semibold transition">Cancelar</button>
                 <button onclick="autenticarPin()"
-                    class="flex-1 bg-indigo-600 text-white py-2.5 rounded-lg text-xs font-bold">Ingresar</button>
+                    class="flex-1 bg-brand-600 hover:bg-brand-500 text-white py-2.5 rounded-xl text-xs font-semibold shadow-md transition">Ingresar</button>
             </div>
         </div>
     </div>
 
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- ========================= JAVASCRIPT ========================= -->
     <script>
         // URL de tu Web App de Google Apps Script
         const API_URL = "https://script.google.com/macros/s/AKfycbwKUd7mc1G-2DGEmfSeA33ybmea9YgcOQb7DlPurXkdmqOnw7mpxCt51VJqFaKZyiU1rQ/exec";
@@ -320,6 +533,35 @@
         let userRole = 'public';
         let adminPinCache = "";
         let asistentesHoy = [];
+
+        // TOAST NOTIFICATIONS HELPER
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center space-x-2.5 px-4 py-3 rounded-xl text-xs font-medium border shadow-2xl transition-all duration-300 transform translate-y-3 opacity-0 ${
+                type === 'success' ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200' :
+                type === 'error' ? 'bg-rose-950/90 border-rose-500/30 text-rose-200' :
+                'bg-zinc-900/90 border-white/10 text-zinc-200'
+            }`;
+
+            const icon = type === 'success' ? 'fa-circle-check text-emerald-400' :
+                         type === 'error' ? 'fa-circle-exclamation text-rose-400' :
+                         'fa-circle-info text-indigo-400';
+
+            toast.innerHTML = `<i class="fas ${icon} text-sm"></i><span>${message}</span>`;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-3', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3200);
+        }
 
         window.onload = function () {
             document.getElementById('regFecha').valueAsDate = new Date();
@@ -333,6 +575,11 @@
                     dropdown.classList.add('hidden');
                 }
             });
+
+            // Enter key trigger for PIN input
+            document.getElementById('inputPin').addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') autenticarPin();
+            });
         };
 
         async function cargarDatos() {
@@ -342,7 +589,10 @@
                 if (data.error) throw new Error(data.error);
                 renderApp(data);
             } catch (err) {
-                document.getElementById('listaServicios').innerHTML = `<div class="p-4 text-red-400 text-xs">Error al cargar datos: ${err.message}</div>`;
+                document.getElementById('listaServicios').innerHTML = `
+                    <div class="surface-card p-6 text-center text-rose-400 text-xs">
+                        <i class="fas fa-triangle-exclamation mr-1.5 text-sm"></i> Error al cargar datos: ${err.message}
+                    </div>`;
             }
         }
 
@@ -366,9 +616,9 @@
                     let dia = String(d.getUTCDate()).padStart(2, '0');
                     let fechaLocal = new Date(anio, mes - 1, dia);
                     return fechaLocal.toLocaleDateString('es-ES', {
-                        weekday: 'long',
+                        weekday: 'short',
                         year: 'numeric',
-                        month: 'long',
+                        month: 'short',
                         day: 'numeric'
                     });
                 }
@@ -380,38 +630,47 @@
             let html = '';
             for (let i = 1; i <= 6; i++) {
                 html += `
-          <div id="bloqueCamara${i}" class="bg-slate-800/80 border border-slate-700 p-3 rounded-xl shadow-sm transition-all duration-300 space-y-2.5">
-            <h4 class="font-bold text-indigo-400 text-xs uppercase flex items-center space-x-1.5">
-              <i class="fas fa-video"></i> <span>Cámara ${i}</span>
-            </h4>
-            <select id="regCam${i}_asig" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-white outline-none cam-dropdown">
-              <option value="">-- Sin Asignar --</option>
-              <option value="[Cámara Fija]">📷 [Cámara Fija / Estática]</option>
-            </select>
-            
-            <div class="grid grid-cols-2 gap-2">
-              <div class="bg-slate-900/50 p-2 rounded-lg border border-slate-700/50 space-y-1">
-                <span class="block text-[10px] text-slate-400 font-bold">PRESET A</span>
-                <div class="flex space-x-1">
-                  <input type="text" id="regCam${i}_fa" placeholder="F" class="w-1/2 bg-slate-900 border border-slate-600 rounded p-1.5 text-xs text-white text-center outline-none">
-                  <input type="text" id="regCam${i}_ka" placeholder="Kelvin" class="w-1/2 bg-slate-900 border border-slate-600 rounded p-1.5 text-xs text-white text-center outline-none">
+                <div id="bloqueCamara${i}" class="surface-card p-3.5 space-y-3 transition-all duration-200">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-mono text-xs font-bold text-indigo-400 uppercase flex items-center space-x-1.5">
+                            <i class="fas fa-video text-[10px]"></i> <span>Cámara ${i}</span>
+                        </h4>
+                        <span class="text-[10px] text-zinc-500 font-mono">Activa</span>
+                    </div>
+
+                    <div class="relative">
+                        <select id="regCam${i}_asig" class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white outline-none cursor-pointer">
+                            <option value="">-- Sin Asignar --</option>
+                            <option value="[Cámara Fija]">📷 [Cámara Fija / Estática]</option>
+                        </select>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <!-- PRESET A -->
+                        <div class="bg-black/30 p-2.5 rounded-xl border border-white/[0.04] space-y-1.5">
+                            <span class="block text-[10px] font-mono font-bold text-zinc-400">PRESET A</span>
+                            <div class="flex space-x-1">
+                                <input type="text" id="regCam${i}_fa" placeholder="F" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500">
+                                <input type="text" id="regCam${i}_ka" placeholder="Kelvin" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500">
+                            </div>
+                        </div>
+
+                        <!-- PRESET B -->
+                        <div class="bg-black/30 p-2.5 rounded-xl border border-white/[0.04] space-y-1.5">
+                            <div class="flex justify-between items-center">
+                                <span class="block text-[10px] font-mono font-bold text-zinc-400">PRESET B</span>
+                                <button type="button" onclick="copiarPresetA(${i})" class="text-[9px] bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 hover:text-white px-1.5 py-0.5 rounded border border-indigo-500/20 transition" title="Copiar valores de Preset A">
+                                    <i class="fas fa-copy mr-0.5"></i> Copiar A
+                                </button>
+                            </div>
+                            <div class="flex space-x-1">
+                                <input type="text" id="regCam${i}_fb" placeholder="F" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500">
+                                <input type="text" id="regCam${i}_kb" placeholder="Kelvin" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-              <div class="bg-slate-900/50 p-2 rounded-lg border border-slate-700/50 space-y-1 relative">
-                <div class="flex justify-between items-center">
-                  <span class="block text-[10px] text-slate-400 font-bold">PRESET B</span>
-                  <button type="button" onclick="copiarPresetA(${i})" class="text-[10px] bg-indigo-600/40 hover:bg-indigo-600 text-indigo-200 hover:text-white px-1.5 py-0.5 rounded transition" title="Copiar Preset A">
-                    <i class="fas fa-copy mr-0.5"></i> Copiar A
-                  </button>
-                </div>
-                <div class="flex space-x-1">
-                  <input type="text" id="regCam${i}_fb" placeholder="F" class="w-1/2 bg-slate-900 border border-slate-600 rounded p-1.5 text-xs text-white text-center outline-none">
-                  <input type="text" id="regCam${i}_kb" placeholder="Kelvin" class="w-1/2 bg-slate-900 border border-slate-600 rounded p-1.5 text-xs text-white text-center outline-none">
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
+                `;
             }
             document.getElementById('contenedorCamarasForm').innerHTML = html;
         }
@@ -421,12 +680,13 @@
             let ka = document.getElementById(`regCam${num}_ka`).value;
             document.getElementById(`regCam${num}_fb`).value = fa;
             document.getElementById(`regCam${num}_kb`).value = ka;
+            showToast(`Preset A copiado a Preset B en Cámara ${num}`);
         }
 
         function copiarServicioAnterior() {
             let historial = appData.rawServicios;
             if (!historial || historial.length === 0) {
-                alert("No hay servicios anteriores registrados para copiar.");
+                showToast("No hay servicios anteriores registrados para copiar.", "error");
                 return;
             }
 
@@ -463,7 +723,7 @@
                 }
             }
 
-            alert("¡Se ha copiado el equipo y configuración del último servicio con éxito!");
+            showToast("¡Configuración y equipo del último servicio copiados!", "success");
         }
 
         function limpiarFormularioCompleto() {
@@ -483,6 +743,7 @@
                     document.getElementById(`regCam${i}_fb`).value = "";
                     document.getElementById(`regCam${i}_kb`).value = "";
                 }
+                showToast("Formulario restablecido.");
             }
         }
 
@@ -525,55 +786,73 @@
                 if (!document.getElementById('sec-dashboard').classList.contains('hidden') === false) switchTab('dashboard');
             }
 
-            // Render Dashboard
+            // Render Dashboard con tarjetas minimalistas
             let htmlServicios = '';
             if (data.servicios.length === 0) {
-                htmlServicios = `<div class="p-6 text-center text-slate-400 text-xs">No hay servicios registrados.</div>`;
+                htmlServicios = `
+                    <div class="surface-card p-12 text-center text-zinc-500 text-xs">
+                        <i class="fas fa-folder-open text-2xl mb-2 text-zinc-600 block"></i>
+                        No hay servicios registrados aún.
+                    </div>`;
             } else {
                 data.servicios.forEach((s) => {
                     let puedeEditar = (userRole === 'director' || userRole === 'admin');
                     let fechaFormateada = formatearFechaLimpia(s.fecha);
 
                     htmlServicios += `
-            <div class="bg-slate-800 border border-slate-700 rounded-xl p-3.5 sm:p-4 shadow-sm space-y-2.5 relative overflow-hidden">
-              <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
-              
-              <div class="flex justify-between items-start border-b border-slate-700/80 pb-2 pl-1.5">
-                <div>
-                  <h3 class="font-bold text-white text-sm sm:text-base flex items-center"><i class="fas fa-user-tie text-indigo-400 mr-1.5 text-xs"></i> Dir. ${s.director}</h3>
-                  <p class="text-[11px] text-slate-400 mt-0.5 capitalize"><i class="fas fa-calendar-day mr-1"></i> ${fechaFormateada}</p>
-                </div>
-                ${puedeEditar ? `
-                  <div class="flex space-x-1">
-                    <button onclick="cargarEdicionServicio('${s.id}')" class="text-blue-400 hover:text-blue-300 p-1.5 text-xs"><i class="fas fa-edit"></i></button>
-                    <button onclick="eliminarServicio('${s.id}')" class="text-red-400 hover:text-red-300 p-1.5 text-xs"><i class="fas fa-trash"></i></button>
-                  </div>
-                ` : ''}
-              </div>
+                    <div class="surface-card p-4 sm:p-5 space-y-3.5 relative overflow-hidden group">
+                        <!-- Top Bar: Director, Fecha & Acciones -->
+                        <div class="flex justify-between items-start border-b border-white/[0.06] pb-3">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xs">
+                                    <i class="fas fa-user-tie"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-white text-sm tracking-tight flex items-center">
+                                        Dir. ${s.director || 'Sin Director'}
+                                    </h3>
+                                    <p class="text-[11px] text-zinc-400 capitalize mt-0.5 flex items-center">
+                                        <i class="fas fa-calendar-day mr-1 text-[10px] text-zinc-500"></i> ${fechaFormateada}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            ${puedeEditar ? `
+                                <div class="flex items-center space-x-1">
+                                    <button onclick="cargarEdicionServicio('${s.id}')" title="Editar" class="text-zinc-400 hover:text-indigo-400 p-2 text-xs rounded-lg hover:bg-white/[0.05] transition">
+                                        <i class="fas fa-pen-to-square"></i>
+                                    </button>
+                                    <button onclick="eliminarServicio('${s.id}')" title="Eliminar" class="text-zinc-400 hover:text-rose-400 p-2 text-xs rounded-lg hover:bg-white/[0.05] transition">
+                                        <i class="fas fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pl-1.5">
-                ${[1, 2, 3, 4, 5, 6].map(i => {
-                        let cam = s[`cam${i}`];
-                        if (!cam || !cam.asig) return '';
-                        let tagCapDashboard = cam.esCapacitacion ? '<span class="text-[9px] bg-amber-500/20 text-amber-300 px-1 py-0.5 rounded ml-1">Capacitación</span>' : '';
-                        let infoCapacitador = cam.capacitador ? `<div class="text-[10px] text-slate-400 mt-0.5"><i class="fas fa-chalkboard-teacher mr-1"></i>Capacitador: ${cam.capacitador}</div>` : '';
-                        return `
-                    <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/50 space-y-1.5">
-                      <div class="flex justify-between items-center border-b border-slate-700/50 pb-1">
-                        <span class="text-[10px] font-bold text-indigo-400 uppercase">Cámara ${i}</span>
-                        <span class="text-xs font-bold text-white truncate max-w-[130px]">${cam.asig} ${tagCapDashboard}</span>
-                      </div>
-                      ${infoCapacitador}
-                      <div class="flex justify-between text-[10px] text-slate-300">
-                        <div><strong class="text-slate-500">PreA:</strong> ${cam.f_a || '-'} / ${cam.k_a || '-'}</div>
-                        <div><strong class="text-slate-500">PreB:</strong> ${cam.f_b || '-'} / ${cam.k_b || '-'}</div>
-                      </div>
+                        <!-- Grid de Cámaras Asignadas -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                            ${[1, 2, 3, 4, 5, 6].map(i => {
+                                let cam = s[`cam${i}`];
+                                if (!cam || !cam.asig) return '';
+                                let tagCapDashboard = cam.esCapacitacion ? '<span class="text-[9px] bg-amber-500/10 text-amber-300 border border-amber-500/20 px-1.5 py-0.5 rounded-full font-medium ml-1">Capacitación</span>' : '';
+                                let infoCapacitador = cam.capacitador ? `<div class="text-[10px] text-zinc-400 mt-0.5"><i class="fas fa-graduation-cap mr-1 text-zinc-500"></i>Capacitador: ${cam.capacitador}</div>` : '';
+                                return `
+                                <div class="bg-[#161822]/80 p-3 rounded-xl border border-white/[0.05] space-y-2 hover:border-white/[0.1] transition-colors">
+                                    <div class="flex justify-between items-center border-b border-white/[0.04] pb-1.5">
+                                        <span class="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-wider">CAM ${i}</span>
+                                        <span class="text-xs font-semibold text-white truncate max-w-[140px]">${cam.asig} ${tagCapDashboard}</span>
+                                    </div>
+                                    ${infoCapacitador}
+                                    <div class="flex justify-between text-[10px] font-mono text-zinc-400 pt-0.5">
+                                        <div><span class="text-zinc-500">PreA:</span> ${cam.f_a || '-'} / ${cam.k_a ? cam.k_a + 'K' : '-'}</div>
+                                        <div><span class="text-zinc-500">PreB:</span> ${cam.f_b || '-'} / ${cam.k_b ? cam.k_b + 'K' : '-'}</div>
+                                    </div>
+                                </div>
+                                `;
+                            }).join('')}
+                        </div>
                     </div>
-                  `;
-                    }).join('')}
-              </div>
-            </div>
-          `;
+                    `;
                 });
             }
             document.getElementById('listaServicios').innerHTML = htmlServicios;
@@ -587,34 +866,42 @@
             // Render Directorio General de Miembros con Tags Múltiples interactivos
             let htmlDirectorio = '';
             data.miembros.forEach(m => {
-                let tagDir = m.esDirector ? `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'director')" class="text-[10px] bg-blue-500/20 text-blue-300 hover:bg-blue-500/40 border border-blue-500/40 px-2 py-0.5 rounded-full font-semibold transition">Director</button>` : `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'director')" class="text-[10px] bg-slate-800 text-slate-500 hover:text-slate-300 border border-slate-700 px-2 py-0.5 rounded-full transition">+ Director</button>`;
+                let tagDir = m.esDirector ? 
+                    `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'director')" class="text-[10px] bg-blue-500/10 text-blue-300 hover:bg-blue-500/20 border border-blue-500/30 px-2 py-0.5 rounded-full font-medium transition">Director</button>` : 
+                    `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'director')" class="text-[10px] bg-white/[0.02] text-zinc-500 hover:text-zinc-300 border border-white/[0.06] px-2 py-0.5 rounded-full transition">+ Director</button>`;
 
-                let tagCapacitador = m.esCapacitador ? `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'capacitador')" class="text-[10px] bg-amber-500/20 text-amber-300 hover:bg-amber-500/40 border border-amber-500/40 px-2 py-0.5 rounded-full font-semibold transition">Capacitador</button>` : `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'capacitador')" class="text-[10px] bg-slate-800 text-slate-500 hover:text-slate-300 border border-slate-700 px-2 py-0.5 rounded-full transition">+ Capacitador</button>`;
+                let tagCapacitador = m.esCapacitador ? 
+                    `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'capacitador')" class="text-[10px] bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/30 px-2 py-0.5 rounded-full font-medium transition">Capacitador</button>` : 
+                    `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'capacitador')" class="text-[10px] bg-white/[0.02] text-zinc-500 hover:text-zinc-300 border border-white/[0.06] px-2 py-0.5 rounded-full transition">+ Capacitador</button>`;
 
-                let tagCam = m.esCamarografo ? `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'camarografo')" class="text-[10px] bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/40 border border-indigo-500/40 px-2 py-0.5 rounded-full font-semibold transition">Camarógrafo</button>` : `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'camarografo')" class="text-[10px] bg-slate-800 text-slate-500 hover:text-slate-300 border border-slate-700 px-2 py-0.5 rounded-full transition">+ Camarógrafo</button>`;
+                let tagCam = m.esCamarografo ? 
+                    `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'camarografo')" class="text-[10px] bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 border border-indigo-500/30 px-2 py-0.5 rounded-full font-medium transition">Camarógrafo</button>` : 
+                    `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'camarografo')" class="text-[10px] bg-white/[0.02] text-zinc-500 hover:text-zinc-300 border border-white/[0.06] px-2 py-0.5 rounded-full transition">+ Camarógrafo</button>`;
 
-                let tagEnCap = m.enCapacitacion ? `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'encapacitacion')" class="text-[10px] bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/40 border border-emerald-500/40 px-2 py-0.5 rounded-full font-semibold transition">⚡ En Capacitación</button>` : `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'encapacitacion')" class="text-[10px] bg-slate-800 text-slate-500 hover:text-slate-300 border border-slate-700 px-2 py-0.5 rounded-full transition">+ Capacitación</button>`;
+                let tagEnCap = m.enCapacitacion ? 
+                    `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'encapacitacion')" class="text-[10px] bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-full font-medium transition">⚡ En Capacitación</button>` : 
+                    `<button onclick="toggleTagMiembro('${m.id.replace(/'/g, "\\'")}', 'encapacitacion')" class="text-[10px] bg-white/[0.02] text-zinc-500 hover:text-zinc-300 border border-white/[0.06] px-2 py-0.5 rounded-full transition">+ Capacitación</button>`;
 
                 htmlDirectorio += `
-          <div class="bg-slate-900 border border-slate-700 p-3 rounded-xl space-y-2 flex flex-col justify-between">
-            <div class="flex justify-between items-center">
-              <span class="font-bold text-white text-xs sm:text-sm truncate pr-2">${m.id}</span>
-              ${userRole === 'admin' ? `
-                <div class="flex space-x-1 shrink-0">
-                  <button onclick="eliminarMiembro('${m.id.replace(/'/g, "\\'")}')" class="text-red-400 hover:text-red-300 p-1 text-xs" title="Eliminar miembro"><i class="fas fa-trash"></i></button>
+                <div class="bg-[#161822] border border-white/[0.06] p-3.5 rounded-2xl space-y-2.5 flex flex-col justify-between hover:border-white/[0.12] transition">
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold text-white text-xs sm:text-sm truncate pr-2">${m.id}</span>
+                        ${userRole === 'admin' ? `
+                            <button onclick="eliminarMiembro('${m.id.replace(/'/g, "\\'")}')" class="text-zinc-400 hover:text-rose-400 p-1 text-xs rounded transition" title="Eliminar miembro">
+                                <i class="fas fa-trash-can"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="flex flex-wrap gap-1.5">
+                        ${tagDir}
+                        ${tagCapacitador}
+                        ${tagCam}
+                        ${tagEnCap}
+                    </div>
                 </div>
-              ` : ''}
-            </div>
-            <div class="flex flex-wrap gap-1.5 pt-1">
-              ${tagDir}
-              ${tagCapacitador}
-              ${tagCam}
-              ${tagEnCap}
-            </div>
-          </div>
-        `;
+                `;
             });
-            document.getElementById('listaDirectorioGeneral').innerHTML = htmlDirectorio || '<p class="text-xs text-slate-500">Sin miembros registrados.</p>';
+            document.getElementById('listaDirectorioGeneral').innerHTML = htmlDirectorio || '<p class="text-xs text-zinc-500">Sin miembros registrados.</p>';
             document.getElementById('contadorMiembros').innerText = data.miembros.length;
 
             renderizarEstadisticas();
@@ -645,32 +932,32 @@
             let filtrados = camarografosList.filter(c => c.id.toLowerCase().includes(filtro));
 
             if (filtrados.length === 0) {
-                html = `<tr><td colspan="8" class="text-center p-4 text-slate-400">No se encontraron camarógrafos.</td></tr>`;
+                html = `<tr><td colspan="8" class="text-center p-6 text-zinc-500 text-xs">No se encontraron camarógrafos.</td></tr>`;
             } else {
                 filtrados.forEach(c => {
                     let st = stats[c.id] || { cam1: 0, cam2: 0, cam3: 0, cam4: 0, cam5: 0, cam6: 0, total: 0 };
-                    let badge = c.enCapacitacion ? '<span class="text-[9px] bg-amber-500/20 text-amber-300 px-1 py-0.5 rounded ml-1">Capacitación</span>' : '';
+                    let badge = c.enCapacitacion ? '<span class="text-[9px] bg-amber-500/10 text-amber-300 border border-amber-500/20 px-1.5 py-0.5 rounded-full ml-1.5 font-sans">Capacitación</span>' : '';
                     html += `
-            <tr class="hover:bg-slate-700/30 cursor-pointer" onclick="abrirHistorialCamarografo('${c.id.replace(/'/g, "\\'")}')" title="Haz clic para ver el historial">
-              <td class="p-2.5 font-semibold text-white hover:text-indigo-400 transition flex items-center">
-                <i class="fas fa-history text-[10px] text-slate-500 mr-1.5"></i> ${c.id} ${badge}
-              </td>
-              <td class="p-2.5 text-center ${st.cam1 > 0 ? 'text-indigo-300 font-bold' : 'text-slate-500'}">${st.cam1}</td>
-              <td class="p-2.5 text-center ${st.cam2 > 0 ? 'text-indigo-300 font-bold' : 'text-slate-500'}">${st.cam2}</td>
-              <td class="p-2.5 text-center ${st.cam3 > 0 ? 'text-indigo-300 font-bold' : 'text-slate-500'}">${st.cam3}</td>
-              <td class="p-2.5 text-center ${st.cam4 > 0 ? 'text-indigo-300 font-bold' : 'text-slate-500'}">${st.cam4}</td>
-              <td class="p-2.5 text-center ${st.cam5 > 0 ? 'text-indigo-300 font-bold' : 'text-slate-500'}">${st.cam5}</td>
-              <td class="p-2.5 text-center ${st.cam6 > 0 ? 'text-indigo-300 font-bold' : 'text-slate-500'}">${st.cam6}</td>
-              <td class="p-2.5 text-center font-black text-indigo-400">${st.total}</td>
-            </tr>
-          `;
+                    <tr class="hover:bg-white/[0.03] cursor-pointer transition-colors group" onclick="abrirHistorialCamarografo('${c.id.replace(/'/g, "\\'")}')" title="Ver historial">
+                        <td class="p-3 font-semibold text-white group-hover:text-brand-400 transition-colors flex items-center">
+                            <i class="fas fa-clock-rotate-left text-[10px] text-zinc-500 mr-2"></i> ${c.id} ${badge}
+                        </td>
+                        <td class="p-3 text-center font-mono ${st.cam1 > 0 ? 'text-zinc-200 font-semibold' : 'text-zinc-600'}">${st.cam1}</td>
+                        <td class="p-3 text-center font-mono ${st.cam2 > 0 ? 'text-zinc-200 font-semibold' : 'text-zinc-600'}">${st.cam2}</td>
+                        <td class="p-3 text-center font-mono ${st.cam3 > 0 ? 'text-zinc-200 font-semibold' : 'text-zinc-600'}">${st.cam3}</td>
+                        <td class="p-3 text-center font-mono ${st.cam4 > 0 ? 'text-zinc-200 font-semibold' : 'text-zinc-600'}">${st.cam4}</td>
+                        <td class="p-3 text-center font-mono ${st.cam5 > 0 ? 'text-zinc-200 font-semibold' : 'text-zinc-600'}">${st.cam5}</td>
+                        <td class="p-3 text-center font-mono ${st.cam6 > 0 ? 'text-zinc-200 font-semibold' : 'text-zinc-600'}">${st.cam6}</td>
+                        <td class="p-3 text-center font-mono font-bold text-brand-400 bg-white/[0.01]">${st.total}</td>
+                    </tr>
+                    `;
                 });
             }
             document.getElementById('tablaEstadisticasCuerpo').innerHTML = html;
         }
 
         function abrirHistorialCamarografo(nombreCamarografo) {
-            document.getElementById('modalHistorialTitulo').innerText = `Historial de: ${nombreCamarografo}`;
+            document.getElementById('modalHistorialTitulo').innerText = `${nombreCamarografo}`;
             let historial = appData.rawServicios;
             let listaAsignaciones = [];
 
@@ -691,28 +978,28 @@
 
             let htmlContenido = '';
             if (listaAsignaciones.length === 0) {
-                htmlContenido = `<div class="p-6 text-center text-slate-400 text-xs">Este camarógrafo aún no tiene servicios registrados en cámaras.</div>`;
+                htmlContenido = `<div class="p-8 text-center text-zinc-500 text-xs">Sin servicios registrados aún en el historial.</div>`;
             } else {
                 listaAsignaciones.reverse().forEach((item, idx) => {
-                    let esUltimo = idx === 0 ? '<span class="text-[10px] bg-indigo-500/30 text-indigo-200 border border-indigo-500/50 px-2 py-0.5 rounded-full font-semibold ml-2 inline-flex items-center"><i class="fas fa-star text-[9px] mr-1"></i> Última vez</span>' : '';
-                    let badgeCapHist = item.esCapacitacion ? '<div class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded mt-1 inline-block font-semibold">⚡ En Capacitación</div>' : '';
-                    let infoCapacitadorHist = item.capacitador ? `<div class="text-[10px] text-slate-400 mt-0.5"><i class="fas fa-chalkboard-teacher mr-1"></i>Capacitador: ${item.capacitador}</div>` : '';
+                    let esUltimo = idx === 0 ? '<span class="text-[9px] bg-brand-500/10 text-brand-300 border border-brand-500/20 px-2 py-0.5 rounded-full font-medium ml-2">Última vez</span>' : '';
+                    let badgeCapHist = item.esCapacitacion ? '<span class="text-[10px] bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2 py-0.5 rounded-full mt-1 inline-block">⚡ Capacitación</span>' : '';
+                    let infoCapacitadorHist = item.capacitador ? `<div class="text-[10px] text-zinc-400 mt-0.5"><i class="fas fa-graduation-cap mr-1 text-zinc-500"></i>Capacitador: ${item.capacitador}</div>` : '';
 
                     htmlContenido += `
-            <div class="bg-slate-900/80 border border-slate-700/70 p-3 rounded-xl flex justify-between items-center text-xs">
-              <div class="space-y-1 pr-2 flex-1">
-                <div class="font-bold text-white capitalize flex items-center flex-wrap">
-                  <i class="fas fa-calendar-day text-indigo-400 mr-1.5"></i> ${item.fecha} ${esUltimo}
-                </div>
-                <div class="text-slate-400"><i class="fas fa-user-tie mr-1 text-[10px]"></i> Dir. ${item.director}</div>
-                ${infoCapacitadorHist}
-                ${badgeCapHist}
-              </div>
-              <div class="bg-indigo-600/30 text-indigo-200 border border-indigo-500/40 px-3 py-1.5 rounded-lg font-bold text-center shrink-0">
-                ${item.camara}
-              </div>
-            </div>
-          `;
+                    <div class="bg-[#161822] border border-white/[0.06] p-3 rounded-xl flex justify-between items-center text-xs hover:border-white/[0.12] transition">
+                        <div class="space-y-1 pr-2 flex-1">
+                            <div class="font-semibold text-white capitalize flex items-center flex-wrap">
+                                <i class="fas fa-calendar-day text-brand-400 mr-1.5 text-[10px]"></i> ${item.fecha} ${esUltimo}
+                            </div>
+                            <div class="text-zinc-400 text-[11px]"><i class="fas fa-user-tie mr-1 text-[10px] text-zinc-500"></i> Dir. ${item.director || 'Sin Director'}</div>
+                            ${infoCapacitadorHist}
+                            ${badgeCapHist}
+                        </div>
+                        <div class="bg-brand-500/10 text-brand-300 border border-brand-500/20 px-3 py-1.5 rounded-xl font-mono text-xs font-semibold shrink-0">
+                            ${item.camara}
+                        </div>
+                    </div>
+                    `;
                 });
             }
 
@@ -741,13 +1028,13 @@
 
             let html = '';
             filtrados.forEach(c => {
-                let tagCap = c.enCapacitacion ? ' <span class="text-[10px] text-amber-400">(Capacitación)</span>' : '';
+                let tagCap = c.enCapacitacion ? ' <span class="text-[10px] text-amber-400 font-normal">(Capacitación)</span>' : '';
                 html += `
-          <div onclick="seleccionarCamarografoMovil('${c.id.replace(/'/g, "\\'")}')" class="p-3 text-xs sm:text-sm text-slate-200 hover:bg-indigo-600 hover:text-white cursor-pointer transition flex items-center justify-between">
-            <span>${c.id}${tagCap}</span>
-            <i class="fas fa-plus text-xs text-indigo-400"></i>
-          </div>
-        `;
+                <div onclick="seleccionarCamarografoMovil('${c.id.replace(/'/g, "\\'")}')" class="p-2.5 text-xs text-zinc-200 hover:bg-brand-600 hover:text-white cursor-pointer transition flex items-center justify-between">
+                    <span class="font-medium">${c.id}${tagCap}</span>
+                    <i class="fas fa-plus text-[10px] opacity-70"></i>
+                </div>
+                `;
             });
 
             dropdown.innerHTML = html;
@@ -790,12 +1077,12 @@
         function actualizarUIAsistentes() {
             let htmlPills = '';
             if (asistentesHoy.length === 0) {
-                htmlPills = '<span class="text-xs text-slate-500 italic">No hay nadie agregado aún.</span>';
+                htmlPills = '<div class="col-span-full py-2 text-xs text-zinc-500 italic">No hay camarógrafos agregados aún para este servicio.</div>';
             } else {
                 asistentesHoy.forEach(item => {
                     let mObj = appData.miembros.find(x => x.id === item.nombre);
                     let esCap = mObj && mObj.enCapacitacion;
-                    let borderStyle = esCap ? 'border border-amber-400/60 bg-amber-950/40 text-amber-200' : 'bg-slate-800 text-white border border-slate-700';
+                    let borderStyle = esCap ? 'border border-amber-500/30 bg-amber-950/20 text-amber-200' : 'bg-[#161822] text-white border border-white/[0.08]';
 
                     let capacitadoresList = appData.miembros.filter(m => m.esCapacitador);
                     let optionsCapacitadores = '<option value="">-- Seleccionar capacitador --</option>';
@@ -810,26 +1097,26 @@
                         optionsCapacitadores += `<option value="${item.capacitador}" selected>${item.capacitador} (Personalizado)</option>`;
                     }
 
-                    optionsCapacitadores += `<option value="__ver_mas__">➕ Otro camarógrafo (Ver más)...</option>`;
+                    optionsCapacitadores += `<option value="__ver_mas__">➕ Otro capacitador (Ver más)...</option>`;
 
                     let seccionCapacitador = esCap ? `
-            <div class="mt-2 pt-2 border-t border-amber-500/30 flex items-center space-x-2">
-              <span class="text-[10px] text-amber-300 font-bold whitespace-nowrap"><i class="fas fa-chalkboard-teacher mr-1"></i>Capacitador:</span>
-              <select onchange="actualizarCapacitadorAsistente('${item.nombre.replace(/'/g, "\\'")}', this.value)" class="w-full bg-slate-900 border border-amber-500/40 rounded p-1 text-xs text-white outline-none">
-                ${optionsCapacitadores}
-              </select>
-            </div>
-          ` : '';
+                    <div class="mt-2 pt-2 border-t border-amber-500/20 flex items-center space-x-2">
+                        <span class="text-[10px] text-amber-300 font-semibold whitespace-nowrap"><i class="fas fa-graduation-cap mr-1"></i>Capacitador:</span>
+                        <select onchange="actualizarCapacitadorAsistente('${item.nombre.replace(/'/g, "\\'")}', this.value)" class="w-full bg-[#111319] border border-amber-500/30 rounded-lg p-1 text-xs text-white outline-none">
+                            ${optionsCapacitadores}
+                        </select>
+                    </div>
+                    ` : '';
 
                     htmlPills += `
-            <div class="${borderStyle} text-xs p-2.5 rounded-xl shadow-sm flex flex-col justify-between">
-              <div class="flex justify-between items-center">
-                <span class="font-semibold">${item.nombre} ${esCap ? '⚡ (Capacitación)' : ''}</span>
-                <button onclick="removerAsistenteHoy('${item.nombre.replace(/'/g, "\\'")}')" class="text-slate-400 hover:text-white p-1"><i class="fas fa-times text-sm"></i></button>
-              </div>
-              ${seccionCapacitador}
-            </div>
-          `;
+                    <div class="${borderStyle} text-xs p-2.5 rounded-xl flex flex-col justify-between transition">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold truncate pr-1">${item.nombre} ${esCap ? '<span class="text-[9px] text-amber-400 font-mono">(Capacitación)</span>' : ''}</span>
+                            <button onclick="removerAsistenteHoy('${item.nombre.replace(/'/g, "\\'")}')" class="text-zinc-400 hover:text-white p-1 transition" title="Remover"><i class="fas fa-times text-xs"></i></button>
+                        </div>
+                        ${seccionCapacitador}
+                    </div>
+                    `;
                 });
             }
             document.getElementById('contenedorEtiquetasAsistentes').innerHTML = htmlPills;
@@ -846,14 +1133,20 @@
         }
 
         function sugerirRotacion() {
-            if (asistentesHoy.length === 0) { alert("Agrega a los camarógrafos disponibles primero."); return; }
+            if (asistentesHoy.length === 0) { 
+                showToast("Agrega a los camarógrafos disponibles primero.", "error"); 
+                return; 
+            }
 
             let camarasActivasArr = [];
             for (let i = 1; i <= 6; i++) {
                 if (document.getElementById(`chkActiva${i}`).checked) camarasActivasArr.push(`cam${i}`);
             }
 
-            if (camarasActivasArr.length === 0) { alert("¡Selecciona al menos una cámara activa!"); return; }
+            if (camarasActivasArr.length === 0) { 
+                showToast("¡Selecciona al menos una cámara activa!", "error"); 
+                return; 
+            }
 
             camarasActivasArr.forEach(c => {
                 let num = c.replace('cam', '');
@@ -897,14 +1190,17 @@
                 document.getElementById(`regCam${num}_asig`).value = asignaciones[c] || "";
             });
 
-            const btn = document.querySelector('button[onclick="sugerirRotacion()"]');
-            let orig = btn.innerHTML;
-            btn.innerHTML = `<i class="fas fa-check mr-1"></i> ¡Aplicado!`;
-            setTimeout(() => btn.innerHTML = orig, 1500);
+            showToast("¡Rotación inteligente aplicada con éxito!", "success");
         }
 
         async function guardarServicio() {
             if (userRole === 'public') return;
+            
+            const btnGuardar = document.getElementById('btnGuardar');
+            const originalBtnContent = btnGuardar.innerHTML;
+            btnGuardar.disabled = true;
+            btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...';
+
             let payloadData = {
                 director: document.getElementById('regDirector').value,
                 fecha: document.getElementById('regFecha').value,
@@ -937,7 +1233,13 @@
                 resetServiceForm();
                 renderApp(newData);
                 switchTab('dashboard');
-            } catch (err) { alert(err.message); }
+                showToast("¡Servicio guardado exitosamente!", "success");
+            } catch (err) { 
+                showToast(`Error al guardar: ${err.message}`, "error"); 
+            } finally {
+                btnGuardar.disabled = false;
+                btnGuardar.innerHTML = originalBtnContent;
+            }
         }
 
         function cargarEdicionServicio(id) {
@@ -978,7 +1280,7 @@
                 }
             }
 
-            document.getElementById('formServiceTitle').innerText = ' Editar Servicio';
+            document.getElementById('formServiceTitle').innerHTML = '<i class="fas fa-pen-to-square text-indigo-400 mr-2 text-sm"></i> Editar Servicio';
             document.getElementById('btnCancelEditService').classList.remove('hidden');
             switchTab('registro');
         }
@@ -1001,7 +1303,7 @@
                 document.getElementById(`regCam${i}_kb`).value = "";
             }
 
-            document.getElementById('formServiceTitle').innerText = ' Registrar / Planear Servicio';
+            document.getElementById('formServiceTitle').innerHTML = '<i class="fas fa-sliders text-indigo-400 mr-2 text-sm"></i> Registrar / Planear Servicio';
             document.getElementById('btnCancelEditService').classList.add('hidden');
         }
 
@@ -1011,39 +1313,62 @@
                 try {
                     let newData = await apiPost({ action: 'deleteServicio', pin: adminPinCache, servicioId: id });
                     renderApp(newData);
-                } catch (err) { alert(err.message); }
+                    showToast("Servicio eliminado del historial.", "info");
+                } catch (err) { 
+                    showToast(`Error al eliminar: ${err.message}`, "error"); 
+                }
             }
         }
 
         async function agregarMiembro() {
-            if (userRole !== 'admin') { alert("Se requiere PIN de Administrador."); return; }
+            if (userRole !== 'admin') { 
+                showToast("Se requiere PIN de Administrador.", "error"); 
+                return; 
+            }
             let nombre = document.getElementById('nuevoMiembroNombre').value.trim();
             let apellidos = document.getElementById('nuevoMiembroApellidos').value.trim();
-            if (!nombre) { alert("Ingresa un nombre."); return; }
+            if (!nombre) { 
+                showToast("Ingresa al menos un nombre.", "error"); 
+                return; 
+            }
 
             try {
                 let newData = await apiPost({ action: 'addMiembro', pin: adminPinCache, nombre, apellidos });
                 document.getElementById('nuevoMiembroNombre').value = '';
                 document.getElementById('nuevoMiembroApellidos').value = '';
                 renderApp(newData);
-            } catch (err) { alert(err.message); }
+                showToast("Miembro añadido exitosamente.", "success");
+            } catch (err) { 
+                showToast(`Error: ${err.message}`, "error"); 
+            }
         }
 
         async function toggleTagMiembro(idMiembro, tipoTag) {
-            if (userRole !== 'admin') { alert("Se requiere PIN de Administrador."); return; }
+            if (userRole !== 'admin') { 
+                showToast("Se requiere PIN de Administrador.", "error"); 
+                return; 
+            }
             try {
                 let newData = await apiPost({ action: 'toggleTagMiembro', pin: adminPinCache, idMiembro, tipoTag });
                 renderApp(newData);
-            } catch (err) { alert(err.message); }
+            } catch (err) { 
+                showToast(`Error: ${err.message}`, "error"); 
+            }
         }
 
         async function eliminarMiembro(id) {
-            if (userRole !== 'admin') { alert("Se requiere PIN de Administrador."); return; }
+            if (userRole !== 'admin') { 
+                showToast("Se requiere PIN de Administrador.", "error"); 
+                return; 
+            }
             if (confirm(`¿Estás seguro de eliminar a "${id}" del directorio?`)) {
                 try {
                     let newData = await apiPost({ action: 'deleteMiembro', pin: adminPinCache, idMiembro: id });
                     renderApp(newData);
-                } catch (err) { alert(err.message); }
+                    showToast("Miembro eliminado.", "info");
+                } catch (err) { 
+                    showToast(`Error: ${err.message}`, "error"); 
+                }
             }
         }
 
@@ -1053,14 +1378,17 @@
                     userRole = 'public';
                     adminPinCache = "";
                     document.getElementById('adminStatusText').innerText = "Ingresar";
-                    document.getElementById('iconLock').className = "fas fa-lock text-amber-400";
+                    document.getElementById('iconLock').className = "fas fa-lock text-[11px] text-zinc-400 group-hover:text-white transition-colors";
+                    document.getElementById('roleIndicatorDot').className = "w-1.5 h-1.5 rounded-full bg-amber-400/80 group-hover:scale-125 transition-transform";
                     renderApp(appData);
                     switchTab('dashboard');
+                    showToast("Sesión cerrada.");
                 }
                 return;
             }
             document.getElementById('modalPin').classList.remove('hidden');
             document.getElementById('inputPin').value = '';
+            setTimeout(() => document.getElementById('inputPin').focus(), 100);
         }
 
         function cerrarModalPin() {
@@ -1069,6 +1397,7 @@
 
         async function autenticarPin() {
             let pin = document.getElementById('inputPin').value;
+            if (!pin) return;
             try {
                 let resAdmin = await fetch(`${API_URL}?action=verifyPin&pin=${pin}&nivel=admin`);
                 let adminRes = await resAdmin.json();
@@ -1077,9 +1406,10 @@
                     adminPinCache = pin;
                     cerrarModalPin();
                     document.getElementById('adminStatusText').innerText = "Admin 👑";
-                    document.getElementById('iconLock').className = "fas fa-unlock text-emerald-400";
+                    document.getElementById('iconLock').className = "fas fa-unlock text-[11px] text-emerald-400";
+                    document.getElementById('roleIndicatorDot').className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
                     cargarDatos();
-                    alert("¡Acceso de Administrador concedido!");
+                    showToast("¡Acceso de Administrador concedido!", "success");
                     return;
                 }
 
@@ -1090,14 +1420,15 @@
                     adminPinCache = pin;
                     cerrarModalPin();
                     document.getElementById('adminStatusText').innerText = "Director 🎬";
-                    document.getElementById('iconLock').className = "fas fa-unlock text-emerald-400";
+                    document.getElementById('iconLock').className = "fas fa-unlock text-[11px] text-emerald-400";
+                    document.getElementById('roleIndicatorDot').className = "w-1.5 h-1.5 rounded-full bg-emerald-400";
                     cargarDatos();
-                    alert("¡Acceso de Director concedido!");
+                    showToast("¡Acceso de Director concedido!", "success");
                 } else {
-                    alert("PIN incorrecto.");
+                    showToast("PIN incorrecto.", "error");
                 }
             } catch (err) {
-                alert("Error de red al verificar PIN.");
+                showToast("Error de red al verificar PIN.", "error");
             }
         }
 
@@ -1112,7 +1443,7 @@
             let targetBtn = document.getElementById(`tab-${tab}-btn`);
             if (targetSec) targetSec.classList.remove('hidden');
             if (targetBtn) targetBtn.classList.add('tab-active');
-            window.scrollTo(0, 0);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     </script>
 </body>
