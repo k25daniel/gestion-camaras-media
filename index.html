@@ -686,7 +686,18 @@
                 </button>
             </div>
 
-            <div class="space-y-3 text-xs">
+            <!-- Tabs en Modal: API o Pegar/CSV -->
+            <div class="flex border-b border-white/[0.08] pb-1 space-x-2">
+                <button type="button" id="tabPcApiBtn" onclick="switchPcTab('api')" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                    <i class="fas fa-key mr-1"></i> Por API Token
+                </button>
+                <button type="button" id="tabPcPasteBtn" onclick="switchPcTab('paste')" class="text-xs font-semibold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition">
+                    <i class="fas fa-clipboard-list mr-1"></i> Pegar Nombres / CSV
+                </button>
+            </div>
+
+            <!-- Panel 1: API Token -->
+            <div id="panelPcApi" class="space-y-3 text-xs">
                 <p class="text-zinc-300 leading-relaxed">
                     Introduce tus credenciales de API (Personal Access Token) generadas en 
                     <a href="https://api.planningcenteronline.com/oauth/applications" target="_blank" class="text-indigo-400 hover:underline inline-flex items-center">
@@ -711,19 +722,34 @@
                     <input type="text" id="pcTeamId" value="2982202"
                         class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                 </div>
-
-                <div id="pcStatusMsg" class="hidden p-3 rounded-xl text-xs"></div>
             </div>
+
+            <!-- Panel 2: Pegar Nombres o CSV Directo de Services -->
+            <div id="panelPcPaste" class="hidden space-y-3 text-xs">
+                <p class="text-zinc-300 leading-relaxed">
+                    Si tu navegador bloquea la conexión externa, puedes copiar los nombres directamente desde tu página de 
+                    <a href="https://services.planningcenteronline.com/people?team_id%5B%5D=2982202" target="_blank" class="text-indigo-400 hover:underline inline-flex items-center">
+                        Services People <i class="fas fa-arrow-up-right-from-square ml-1 text-[9px]"></i>
+                    </a> y pegarlos aquí (un nombre por línea o separados por coma):
+                </p>
+                <div>
+                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Lista de Nombres o CSV</label>
+                    <textarea id="pcPasteText" rows="5" placeholder="Daniel Fernandez&#10;Kevin Bagnarello&#10;Mariana Rodriguez&#10;..."
+                        class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white outline-none resize-none font-mono"></textarea>
+                </div>
+            </div>
+
+            <div id="pcStatusMsg" class="hidden p-3 rounded-xl text-xs"></div>
 
             <div class="border-t border-white/[0.08] pt-3 flex justify-between items-center">
                 <button onclick="cerrarModalPlanningCenter()"
                     class="bg-white/[0.06] hover:bg-white/[0.12] text-zinc-200 px-4 py-2 rounded-xl text-xs font-semibold transition">
                     Cancelar
                 </button>
-                <button id="btnEjecutarSyncPC" onclick="ejecutarSincronizacionPlanningCenter()"
+                <button id="btnEjecutarSyncPC" onclick="ejecutarAccionSincronizacionPC()"
                     class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow-sm">
                     <i class="fas fa-rotate"></i>
-                    <span>Comenzar Sincronización</span>
+                    <span id="btnEjecutarSyncPCText">Comenzar Sincronización</span>
                 </button>
             </div>
         </div>
@@ -2279,6 +2305,31 @@
         }
 
         // ========================= PLANNING CENTER INTEGRATION =========================
+        let currentPcMode = 'api';
+
+        function switchPcTab(mode) {
+            currentPcMode = mode;
+            let btnApi = document.getElementById('tabPcApiBtn');
+            let btnPaste = document.getElementById('tabPcPasteBtn');
+            let panelApi = document.getElementById('panelPcApi');
+            let panelPaste = document.getElementById('panelPcPaste');
+            let btnText = document.getElementById('btnEjecutarSyncPCText');
+
+            if (mode === 'api') {
+                btnApi.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
+                btnPaste.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition';
+                panelApi.classList.remove('hidden');
+                panelPaste.classList.add('hidden');
+                btnText.innerText = 'Comenzar Sincronización';
+            } else {
+                btnPaste.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
+                btnApi.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition';
+                panelPaste.classList.remove('hidden');
+                panelApi.classList.add('hidden');
+                btnText.innerText = 'Importar Nombres';
+            }
+        }
+
         function abrirModalPlanningCenter() {
             // Cargar credenciales guardadas en localStorage si existen
             let savedAppId = localStorage.getItem('pc_app_id') || '';
@@ -2293,11 +2344,102 @@
             msg.className = 'hidden';
             msg.innerText = '';
 
+            switchPcTab('api');
             document.getElementById('modalPlanningCenter').classList.remove('hidden');
         }
 
         function cerrarModalPlanningCenter() {
             document.getElementById('modalPlanningCenter').classList.add('hidden');
+        }
+
+        async function ejecutarAccionSincronizacionPC() {
+            if (currentPcMode === 'api') {
+                await ejecutarSincronizacionPlanningCenter();
+            } else {
+                await ejecutarImportacionPegadaPC();
+            }
+        }
+
+        async function ejecutarImportacionPegadaPC() {
+            let texto = document.getElementById('pcPasteText').value.trim();
+            let msg = document.getElementById('pcStatusMsg');
+            let btn = document.getElementById('btnEjecutarSyncPC');
+
+            if (!texto) {
+                msg.className = 'p-3 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';
+                msg.innerText = 'Por favor, pega los nombres de las personas en el campo de texto.';
+                msg.classList.remove('hidden');
+                return;
+            }
+
+            let originalBtn = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Importando...';
+
+            msg.className = 'p-3 rounded-xl text-xs bg-indigo-500/10 border border-indigo-500/30 text-indigo-200';
+            msg.innerText = 'Guardando personas en Firebase...';
+            msg.classList.remove('hidden');
+
+            try {
+                // Separar por saltos de línea o comas
+                let lineas = texto.split(/[\r\n,]+/).map(x => x.trim()).filter(x => x.length > 0);
+                
+                // Obtener existentes en Firestore
+                let snapMiembros = await db.collection('miembros').get();
+                let nombresExistentes = new Set();
+                snapMiembros.forEach(doc => {
+                    let d = doc.data();
+                    let mId = (d.id || `${d.nombre || ''} ${d.apellidos || ''}`).trim().toLowerCase();
+                    if (mId) nombresExistentes.add(mId);
+                });
+
+                let agregados = 0;
+                for (let linea of lineas) {
+                    // Evitar encabezados como First Name, Last Name
+                    if (linea.toLowerCase().includes('first name') || linea.toLowerCase().includes('last name') || linea.toLowerCase().includes('nombre')) continue;
+
+                    let partes = linea.split(/\s+/);
+                    let nombre = partes[0] || '';
+                    let apellidos = partes.slice(1).join(' ') || '';
+                    let fullName = `${nombre} ${apellidos}`.trim();
+                    let compareKey = fullName.toLowerCase();
+
+                    if (fullName && !nombresExistentes.has(compareKey)) {
+                        await db.collection('miembros').add({
+                            id: fullName,
+                            nombre: nombre,
+                            apellidos: apellidos,
+                            esDirector: false,
+                            esCapacitador: false,
+                            esCamarografo: true,
+                            enCapacitacion: false,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        nombresExistentes.add(compareKey);
+                        agregados++;
+                    }
+                }
+
+                // Auditoría y refresco
+                logAuditoriaFirestore(currentUser ? currentUser.nombre : 'Admin', userRole, 'Importación Services', `Importó ${agregados} miembros del equipo`);
+                let freshData = await getDatabaseDataFirestore();
+                renderApp(freshData);
+
+                msg.className = 'p-3 rounded-xl text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-200';
+                msg.innerText = `¡Éxito! Se agregaron ${agregados} miembros nuevos al equipo.`;
+                showToast(`¡${agregados} personas añadidas al equipo!`, "success");
+
+                setTimeout(() => {
+                    cerrarModalPlanningCenter();
+                }, 2000);
+            } catch (err) {
+                console.error(err);
+                msg.className = 'p-3 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';
+                msg.innerText = `Error: ${err.message}`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtn;
+            }
         }
 
         async function ejecutarSincronizacionPlanningCenter() {
@@ -2329,21 +2471,29 @@
 
             try {
                 let basicAuth = btoa(`${appId}:${secret}`);
-                let endpoint = `https://api.planningcenteronline.com/services/v2/teams/${teamId}/people?per_page=100`;
+                let targetUrl = `https://api.planningcenteronline.com/services/v2/teams/${teamId}/people?per_page=100`;
 
-                let res = await fetch(endpoint, {
-                    headers: {
-                        'Authorization': `Basic ${basicAuth}`
-                    }
-                });
+                // Intentar petición directa, y si el navegador la bloquea por CORS, usar proxy seguro
+                let res = null;
+                try {
+                    res = await fetch(targetUrl, {
+                        headers: { 'Authorization': `Basic ${basicAuth}` }
+                    });
+                } catch (directErr) {
+                    // Fallback a proxy CORS para navegadores (Safari/Chrome)
+                    let proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+                    res = await fetch(proxyUrl, {
+                        headers: { 'Authorization': `Basic ${basicAuth}` }
+                    });
+                }
 
-                if (!res.ok) {
-                    if (res.status === 401) {
+                if (!res || !res.ok) {
+                    if (res && res.status === 401) {
                         throw new Error('Credenciales inválidas. Revisa tu Application ID y Secret.');
-                    } else if (res.status === 404) {
+                    } else if (res && res.status === 404) {
                         throw new Error(`No se encontró el Team ID ${teamId}. Verifica el número en la URL de Services.`);
                     } else {
-                        throw new Error(`Error ${res.status}: ${res.statusText}`);
+                        throw new Error(`No se pudo conectar con Planning Center (${res ? res.status : 'Error de red'}).`);
                     }
                 }
 
@@ -2356,7 +2506,7 @@
                     return;
                 }
 
-                msg.innerText = `Se encontraron ${people.length} personas. Sincronizando con la base de datos...`;
+                msg.innerText = `Se encontraron ${people.length} personas. Guardando en Firebase...`;
 
                 // Obtener miembros actuales de Firestore para no duplicar
                 let snapMiembros = await db.collection('miembros').get();
@@ -2400,7 +2550,7 @@
                 renderApp(freshData);
 
                 msg.className = 'p-3 rounded-xl text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-200';
-                msg.innerText = `¡Éxito! Se sincronizaron ${people.length} personas (+${agregados} nuevos registrados en el Equipo).`;
+                msg.innerText = `¡Éxito! Se sincronizaron ${people.length} personas (+${agregados} nuevos miembros registrados).`;
                 showToast(`¡${people.length} personas sincronizadas desde Planning Center!`, "success");
 
                 setTimeout(() => {
