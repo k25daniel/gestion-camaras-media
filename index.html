@@ -40,6 +40,11 @@
     <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+
     <style>
         :root {
             --bg-canvas: #090a0f;
@@ -659,10 +664,25 @@
 
     <!-- ========================= JAVASCRIPT ========================= -->
     <script>
-        // URL de tu Web App de Google Apps Script
-        const API_URL = "https://script.google.com/macros/s/AKfycbwKUd7mc1G-2DGEmfSeA33ybmea9YgcOQb7DlPurXkdmqOnw7mpxCt51VJqFaKZyiU1rQ/exec";
+        // ========================= FIREBASE INITIALIZATION =========================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBjoPTCJS73KnBLEheEfEavGX39WjP6jLs",
+            authDomain: "gestion-decamaras.firebaseapp.com",
+            projectId: "gestion-decamaras",
+            storageBucket: "gestion-decamaras.firebasestorage.app",
+            messagingSenderId: "812986109782",
+            appId: "1:812986109782:web:8b07d2a86f9da7c2c090f7",
+            measurementId: "G-671WMFQPJF"
+        };
 
-        let appData = { miembros: [], servicios: [], rawServicios: [] };
+        // Initialize Firebase & Firestore
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        if (typeof firebase.analytics === 'function') {
+            try { firebase.analytics(); } catch (e) {}
+        }
+
+        let appData = { miembros: [], servicios: [], rawServicios: [], usuarios: [] };
         let currentUser = null; // { nombre: string, rol: string, pin: string }
         let userRole = 'public';
         let adminPinCache = "";
@@ -697,6 +717,129 @@
             }, 3200);
         }
 
+        // ========================= FIRESTORE HELPERS =========================
+        async function logAuditoriaFirestore(usuario, rol, accion, detalle) {
+            try {
+                let ahora = new Date();
+                let fechaHora = ahora.getFullYear() + "-" + 
+                    String(ahora.getMonth() + 1).padStart(2, '0') + "-" + 
+                    String(ahora.getDate()).padStart(2, '0') + " " + 
+                    String(ahora.getHours()).padStart(2, '0') + ":" + 
+                    String(ahora.getMinutes()).padStart(2, '0') + ":" + 
+                    String(ahora.getSeconds()).padStart(2, '0');
+
+                await db.collection('auditoria').add({
+                    fechaHora: fechaHora,
+                    usuario: usuario || 'Anónimo',
+                    rol: rol || '',
+                    accion: accion || '',
+                    detalle: detalle || '',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (err) {
+                console.error("Error al registrar auditoría en Firestore:", err);
+            }
+        }
+
+        async function getDatabaseDataFirestore() {
+            // 1. Obtener miembros
+            let snapMiembros = await db.collection('miembros').get();
+            let miembros = [];
+            snapMiembros.forEach(doc => {
+                let d = doc.data();
+                let mNombre = String(d.nombre || '').trim();
+                let mApellidos = String(d.apellidos || '').trim();
+                miembros.push({
+                    id: d.id || (mNombre + ' ' + mApellidos).trim(),
+                    docId: doc.id,
+                    nombre: mNombre,
+                    apellidos: mApellidos,
+                    esDirector: !!d.esDirector,
+                    esCapacitador: !!d.esCapacitador,
+                    esCamarografo: !!d.esCamarografo,
+                    enCapacitacion: !!d.enCapacitacion
+                });
+            });
+            miembros.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+            // 2. Obtener servicios
+            let snapServicios = await db.collection('servicios').orderBy('createdAt', 'asc').get();
+            let servicios = [];
+            snapServicios.forEach(doc => {
+                let d = doc.data();
+                servicios.push({
+                    id: doc.id,
+                    director: d.director || 'Sin Director',
+                    fecha: d.fecha || '',
+                    cam1: d.cam1 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
+                    cam2: d.cam2 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
+                    cam3: d.cam3 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
+                    cam4: d.cam4 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
+                    cam5: d.cam5 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
+                    cam6: d.cam6 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' }
+                });
+            });
+
+            // 3. Obtener usuarios
+            let snapUsuarios = await db.collection('usuarios').get();
+            let usuarios = [];
+            snapUsuarios.forEach(doc => {
+                let d = doc.data();
+                usuarios.push({
+                    docId: doc.id,
+                    nombre: d.nombre,
+                    rol: d.rol || 'director',
+                    activo: d.activo !== false
+                });
+            });
+
+            return {
+                miembros: miembros,
+                servicios: servicios.slice().reverse(),
+                rawServicios: servicios,
+                usuarios: usuarios
+            };
+        }
+
+        async function authenticateUserFirestore(nombre, pin) {
+            let cleanNombre = String(nombre || '').trim();
+            let cleanPin = String(pin || '').trim();
+
+            if (!cleanNombre || !cleanPin) {
+                return { success: false, error: "Usuario y PIN requeridos" };
+            }
+
+            // Administrador de respaldo de emergencia inicial
+            if (cleanNombre === "Administrador General" && cleanPin === "1997") {
+                return {
+                    success: true,
+                    usuario: "Administrador General",
+                    rol: "admin"
+                };
+            }
+
+            let snap = await db.collection('usuarios').where('nombre', '==', cleanNombre).get();
+            if (snap.empty) {
+                return { success: false, error: "Usuario no encontrado." };
+            }
+
+            let userDoc = snap.docs[0].data();
+            if (userDoc.activo === false) {
+                return { success: false, error: "Usuario inactivo." };
+            }
+
+            if (String(userDoc.pin || '').trim() !== cleanPin) {
+                return { success: false, error: "PIN incorrecto para " + cleanNombre };
+            }
+
+            return {
+                success: true,
+                usuario: userDoc.nombre,
+                rol: userDoc.rol || 'director'
+            };
+        }
+
+        // ========================= LIFECYCLE & INICIALIZACIÓN =========================
         window.onload = function () {
             document.getElementById('regFecha').valueAsDate = new Date();
             generarEstructuraCamarasForm();
@@ -724,25 +867,42 @@
         async function cargarUsuariosLogin() {
             let select = document.getElementById('loginUsuarioSelect');
             try {
-                let res = await fetch(`${API_URL}?action=getPublicUsuarios`);
-                let data = await res.json();
-                if (data.usuarios && data.usuarios.length > 0) {
+                let snap = await db.collection('usuarios').get();
+                if (snap.empty) {
+                    // Si no hay usuarios en la colección, creamos el Administrador General por defecto
+                    await db.collection('usuarios').doc('admin_general').set({
+                        nombre: "Administrador General",
+                        pin: "1997",
+                        rol: "admin",
+                        activo: true
+                    });
+                    snap = await db.collection('usuarios').get();
+                }
+
+                let usuarios = [];
+                snap.forEach(doc => {
+                    let d = doc.data();
+                    if (d.nombre && d.activo !== false) {
+                        usuarios.push({ nombre: d.nombre, rol: d.rol || 'director' });
+                    }
+                });
+
+                if (usuarios.length > 0) {
                     let html = '<option value="">-- Selecciona tu Nombre --</option>';
-                    data.usuarios.forEach(u => {
+                    usuarios.forEach(u => {
                         let rolBadge = u.rol === 'admin' ? ' (Admin)' : u.rol === 'director' ? ' (Director)' : '';
                         html += `<option value="${u.nombre}">${u.nombre}${rolBadge}</option>`;
                     });
                     select.innerHTML = html;
                 } else {
                     select.innerHTML = `
-                        <option value="Administrador General">Administrador General</option>
-                        <option value="Director de Turno">Director de Turno</option>
+                        <option value="Administrador General">Administrador General (Admin)</option>
                     `;
                 }
             } catch (err) {
+                console.error("Error al cargar usuarios de Firestore:", err);
                 select.innerHTML = `
-                    <option value="Administrador General">Administrador General</option>
-                    <option value="Director de Turno">Director de Turno</option>
+                    <option value="Administrador General">Administrador General (Admin)</option>
                 `;
             }
         }
@@ -771,29 +931,34 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Verificando...</span>';
 
             try {
-                let res = await fetch(`${API_URL}?action=login&usuario=${encodeURIComponent(usuario)}&pin=${encodeURIComponent(pin)}`);
-                let data = await res.json();
+                let res = await authenticateUserFirestore(usuario, pin);
 
-                if (data.success) {
+                if (res.success) {
                     currentUser = {
-                        nombre: data.usuario,
-                        rol: data.rol,
+                        nombre: res.usuario,
+                        rol: res.rol,
                         pin: pin
                     };
-                    userRole = data.rol;
+                    userRole = res.rol;
                     adminPinCache = pin;
+
+                    // Registrar en auditoría
+                    logAuditoriaFirestore(res.usuario, res.rol, "Inicio de Sesión", "Ingreso exitoso al sistema");
 
                     // Guardar sesión en localStorage para persistencia
                     localStorage.setItem('media_session', JSON.stringify(currentUser));
 
-                    desbloquearInterfaz(data.data);
-                    showToast(`¡Bienvenido/a, ${data.usuario}!`, 'success');
+                    let data = await getDatabaseDataFirestore();
+                    desbloquearInterfaz(data);
+                    showToast(`¡Bienvenido/a, ${res.usuario}!`, 'success');
                 } else {
-                    errBox.innerText = data.error || "Credenciales incorrectas.";
+                    logAuditoriaFirestore(usuario || "Desconocido", "Desconocido", "Intento Fallido", "PIN inválido");
+                    errBox.innerText = res.error || "Credenciales incorrectas.";
                     errBox.classList.remove('hidden');
                 }
             } catch (err) {
-                errBox.innerText = "Error de conexión con el servidor.";
+                console.error(err);
+                errBox.innerText = "Error de conexión con la base de datos: " + err.message;
                 errBox.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
@@ -829,7 +994,7 @@
                 currentUser = null;
                 userRole = 'public';
                 adminPinCache = "";
-                appData = { miembros: [], servicios: [], rawServicios: [] };
+                appData = { miembros: [], servicios: [], rawServicios: [], usuarios: [] };
 
                 // Limpiar inputs
                 document.getElementById('loginPinInput').value = '';
@@ -850,17 +1015,17 @@
                 try {
                     let sess = JSON.parse(sesionStr);
                     if (sess && sess.nombre && sess.pin) {
-                        let res = await fetch(`${API_URL}?action=login&usuario=${encodeURIComponent(sess.nombre)}&pin=${encodeURIComponent(sess.pin)}`);
-                        let data = await res.json();
-                        if (data.success) {
+                        let res = await authenticateUserFirestore(sess.nombre, sess.pin);
+                        if (res.success) {
                             currentUser = {
-                                nombre: data.usuario,
-                                rol: data.rol,
+                                nombre: res.usuario,
+                                rol: res.rol,
                                 pin: sess.pin
                             };
-                            userRole = data.rol;
+                            userRole = res.rol;
                             adminPinCache = sess.pin;
-                            desbloquearInterfaz(data.data);
+                            let data = await getDatabaseDataFirestore();
+                            desbloquearInterfaz(data);
                             return;
                         } else {
                             localStorage.removeItem('media_session');
@@ -875,9 +1040,7 @@
         async function cargarDatos() {
             if (!currentUser) return;
             try {
-                let res = await fetch(`${API_URL}?action=getData&usuario=${encodeURIComponent(currentUser.nombre)}&pin=${encodeURIComponent(currentUser.pin)}`);
-                let data = await res.json();
-                if (data.error) throw new Error(data.error);
+                let data = await getDatabaseDataFirestore();
                 renderApp(data);
             } catch (err) {
                 document.getElementById('listaServicios').innerHTML = `
@@ -887,14 +1050,148 @@
             }
         }
 
+        // ADAPTADOR UNIVERSAL: Reemplaza todas las llamadas que antes iban a Apps Script
         async function apiPost(payload) {
-            let res = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-            let data = await res.json();
-            if (data.error) throw new Error(data.error);
-            return data;
+            let action = payload.action;
+            let usuario = payload.usuario || (currentUser ? currentUser.nombre : '');
+            let pin = payload.pin || adminPinCache;
+
+            if (action === 'saveServicio') {
+                let data = payload.data;
+                let servicioId = payload.servicioId;
+
+                if (servicioId) {
+                    // Editar servicio existente
+                    let docRef = db.collection('servicios').doc(servicioId);
+                    let docSnap = await docRef.get();
+                    if (!docSnap.exists) throw new Error("El servicio no existe.");
+                    let srvActual = docSnap.data();
+
+                    if (userRole !== 'admin' && String(srvActual.director || '').toLowerCase() !== String(usuario).toLowerCase()) {
+                        throw new Error(`Solo el director a cargo (${srvActual.director}) o un Administrador pueden modificar este servicio.`);
+                    }
+
+                    await docRef.update({
+                        director: data.director || 'Sin Director',
+                        fecha: data.fecha || '',
+                        cam1: data.cam1,
+                        cam2: data.cam2,
+                        cam3: data.cam3,
+                        cam4: data.cam4,
+                        cam5: data.cam5,
+                        cam6: data.cam6,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    logAuditoriaFirestore(usuario, userRole, 'Actualizar Servicio', `Editó servicio fecha: ${data.fecha} (Director: ${data.director})`);
+                } else {
+                    // Crear nuevo servicio
+                    let directorFinal = userRole === 'admin' ? (data.director || usuario) : usuario;
+                    await db.collection('servicios').add({
+                        director: directorFinal || 'Sin Director',
+                        fecha: data.fecha || '',
+                        cam1: data.cam1,
+                        cam2: data.cam2,
+                        cam3: data.cam3,
+                        cam4: data.cam4,
+                        cam5: data.cam5,
+                        cam6: data.cam6,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    logAuditoriaFirestore(usuario, userRole, 'Crear Servicio', `Creó nuevo servicio fecha: ${data.fecha} (Director: ${directorFinal})`);
+                }
+            } else if (action === 'deleteServicio') {
+                let docRef = db.collection('servicios').doc(payload.servicioId);
+                let docSnap = await docRef.get();
+                if (docSnap.exists) {
+                    let srvActual = docSnap.data();
+                    if (userRole !== 'admin' && String(srvActual.director || '').toLowerCase() !== String(usuario).toLowerCase()) {
+                        throw new Error(`Solo el director a cargo (${srvActual.director}) o un Administrador pueden eliminar este servicio.`);
+                    }
+                    await docRef.delete();
+                    logAuditoriaFirestore(usuario, userRole, 'Eliminar Servicio', `Eliminó servicio fecha: ${srvActual.fecha}`);
+                }
+            } else if (action === 'addMiembro') {
+                if (userRole !== 'admin') throw new Error("Se requiere rol de Administrador.");
+                let nuevoNombre = String(payload.nombre || '').trim();
+                let nuevosApellidos = String(payload.apellidos || '').trim();
+                let fullId = `${nuevoNombre} ${nuevosApellidos}`.trim();
+
+                await db.collection('miembros').add({
+                    id: fullId,
+                    nombre: nuevoNombre,
+                    apellidos: nuevosApellidos,
+                    esDirector: false,
+                    esCapacitador: false,
+                    esCamarografo: true,
+                    enCapacitacion: false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                logAuditoriaFirestore(usuario, 'admin', 'Agregar Miembro', `Añadió a: ${fullId}`);
+            } else if (action === 'toggleTagMiembro') {
+                if (userRole !== 'admin') throw new Error("Se requiere rol de Administrador.");
+                let idMiembro = payload.idMiembro;
+                let tipoTag = payload.tipoTag;
+                let snap = await db.collection('miembros').where('id', '==', idMiembro).get();
+                if (!snap.empty) {
+                    let mDoc = snap.docs[0];
+                    let mData = mDoc.data();
+                    let field = tipoTag === 'director' ? 'esDirector' :
+                                tipoTag === 'capacitador' ? 'esCapacitador' :
+                                tipoTag === 'camarografo' ? 'esCamarografo' :
+                                tipoTag === 'encapacitacion' ? 'enCapacitacion' : null;
+                    if (field) {
+                        let updateObj = {};
+                        updateObj[field] = !mData[field];
+                        await mDoc.ref.update(updateObj);
+                        logAuditoriaFirestore(usuario, 'admin', 'Modificar Rol Miembro', `Cambió tag ${tipoTag} para: ${idMiembro}`);
+                    }
+                }
+            } else if (action === 'deleteMiembro') {
+                if (userRole !== 'admin') throw new Error("Se requiere rol de Administrador.");
+                let idMiembro = payload.idMiembro;
+                let snap = await db.collection('miembros').where('id', '==', idMiembro).get();
+                if (!snap.empty) {
+                    await snap.docs[0].ref.delete();
+                    logAuditoriaFirestore(usuario, 'admin', 'Eliminar Miembro', `Eliminó a: ${idMiembro}`);
+                }
+            } else if (action === 'saveUsuario') {
+                if (userRole !== 'admin') throw new Error("Se requiere rol de Administrador.");
+                let nuevoNombre = String(payload.nuevoNombre || '').trim();
+                let nuevoPin = String(payload.nuevoPin || '').trim();
+                let nuevoRol = String(payload.nuevoRol || 'director').trim().toLowerCase();
+
+                let snap = await db.collection('usuarios').where('nombre', '==', nuevoNombre).get();
+                if (!snap.empty) {
+                    // Actualizar existente
+                    await snap.docs[0].ref.update({
+                        pin: nuevoPin,
+                        rol: nuevoRol,
+                        activo: true,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    logAuditoriaFirestore(usuario, 'admin', 'Actualizar Usuario', `Modificó credenciales de: ${nuevoNombre} (Rol: ${nuevoRol})`);
+                } else {
+                    // Crear nuevo
+                    await db.collection('usuarios').add({
+                        nombre: nuevoNombre,
+                        pin: nuevoPin,
+                        rol: nuevoRol,
+                        activo: true,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    logAuditoriaFirestore(usuario, 'admin', 'Crear Usuario', `Creó usuario: ${nuevoNombre} (Rol: ${nuevoRol})`);
+                }
+            } else if (action === 'deleteUsuario') {
+                if (userRole !== 'admin') throw new Error("Se requiere rol de Administrador.");
+                let targetNombre = String(payload.targetNombre || '').trim();
+                let snap = await db.collection('usuarios').where('nombre', '==', targetNombre).get();
+                if (!snap.empty) {
+                    await snap.docs[0].ref.delete();
+                    logAuditoriaFirestore(usuario, 'admin', 'Eliminar Usuario', `Eliminó al usuario: ${targetNombre}`);
+                }
+            }
+
+            return await getDatabaseDataFirestore();
         }
 
         function formatearFechaLimpia(fechaStr) {
@@ -1746,33 +2043,36 @@
             if (userRole !== 'admin' || !currentUser) return;
             let tbody = document.getElementById('tablaAuditoriaCuerpo');
             try {
-                let res = await fetch(`${API_URL}?action=getAuditoria&usuario=${encodeURIComponent(currentUser.nombre)}&pin=${encodeURIComponent(currentUser.pin)}`);
-                let data = await res.json();
-                if (data.error) throw new Error(data.error);
+                let snap = await db.collection('auditoria')
+                    .orderBy('timestamp', 'desc')
+                    .limit(100)
+                    .get();
 
-                if (!data.logs || data.logs.length === 0) {
+                if (snap.empty) {
                     tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-zinc-500">No hay registros de auditoría aún.</td></tr>`;
                     return;
                 }
 
                 let html = '';
-                data.logs.forEach(l => {
+                snap.forEach(doc => {
+                    let l = doc.data();
                     let badgeRol = l.rol === 'admin' ? 
                         '<span class="px-2 py-0.5 rounded-full text-[10px] bg-purple-500/10 text-purple-300 border border-purple-500/20">Admin</span>' : 
                         '<span class="px-2 py-0.5 rounded-full text-[10px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">Director</span>';
                     
                     html += `
                     <tr class="hover:bg-white/[0.02] transition-colors">
-                        <td class="p-3 text-zinc-400 text-[11px] whitespace-nowrap">${l.fechaHora}</td>
-                        <td class="p-3 font-semibold text-white text-xs">${l.usuario}</td>
+                        <td class="p-3 text-zinc-400 text-[11px] whitespace-nowrap">${l.fechaHora || '-'}</td>
+                        <td class="p-3 font-semibold text-white text-xs">${l.usuario || 'Anónimo'}</td>
                         <td class="p-3">${badgeRol}</td>
-                        <td class="p-3 text-indigo-300 font-medium text-xs">${l.accion}</td>
-                        <td class="p-3 text-zinc-400 text-xs">${l.detalle}</td>
+                        <td class="p-3 text-indigo-300 font-medium text-xs">${l.accion || '-'}</td>
+                        <td class="p-3 text-zinc-400 text-xs">${l.detalle || '-'}</td>
                     </tr>
                     `;
                 });
                 tbody.innerHTML = html;
             } catch (err) {
+                console.error("Error cargando auditoría de Firestore:", err);
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-rose-400">Error al cargar logs: ${err.message}</td></tr>`;
             }
         }
