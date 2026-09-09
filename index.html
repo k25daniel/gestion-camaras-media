@@ -271,6 +271,11 @@
                         <i class="fas fa-users text-[11px]"></i>
                         <span>Equipo</span>
                     </button>
+                    <button id="tab-usuarios-btn" onclick="switchTab('usuarios')"
+                        class="tab-btn hidden flex-1 min-w-[90px] py-2 px-3 flex items-center justify-center space-x-1.5 text-center">
+                        <i class="fas fa-user-shield text-[11px]"></i>
+                        <span>Usuarios & Roles</span>
+                    </button>
                     <button id="tab-auditoria-btn" onclick="switchTab('auditoria')"
                         class="tab-btn hidden flex-1 min-w-[90px] py-2 px-3 flex items-center justify-center space-x-1.5 text-center">
                         <i class="fas fa-clock-rotate-left text-[11px]"></i>
@@ -559,6 +564,58 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </section>
+        <!-- ========================= SECCIÓN: USUARIOS & ACCESO (SOLO ADMIN) ========================= -->
+        <section id="sec-usuarios" class="hidden space-y-4 animate-fade-in">
+            <!-- Formulario Crear/Editar Usuario -->
+            <div class="surface-card p-4 sm:p-5 space-y-4">
+                <div>
+                    <h2 class="text-sm sm:text-base font-bold text-white tracking-tight flex items-center">
+                        <i class="fas fa-user-shield text-indigo-400 mr-2 text-xs"></i> Crear o Asignar Usuario
+                    </h2>
+                    <p class="text-xs text-zinc-400 mt-0.5">Crea el acceso y asigna un PIN personal para un nuevo Director o Administrador.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <div class="sm:col-span-5">
+                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Nombre Completo</label>
+                        <input type="text" id="nuevoUsuarioNombre" placeholder="Ej: Daniel Fernandez"
+                            class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white outline-none transition">
+                    </div>
+                    <div class="sm:col-span-3">
+                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">PIN de Acceso</label>
+                        <input type="password" id="nuevoUsuarioPin" placeholder="••••" maxlength="10"
+                            class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Rol Asignado</label>
+                        <select id="nuevoUsuarioRol"
+                            class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-xs text-white outline-none transition">
+                            <option value="director">Director 🎬</option>
+                            <option value="admin">Administrador 👑</option>
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2 flex items-end">
+                        <button onclick="guardarNuevoUsuario()"
+                            class="w-full min-h-[42px] bg-brand-600 hover:bg-brand-500 active:scale-95 text-white font-semibold rounded-xl text-xs transition flex items-center justify-center shadow-sm">
+                            <i class="fas fa-plus mr-1.5"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de Usuarios Existentes -->
+            <div class="surface-card p-4 sm:p-5 space-y-3.5">
+                <div class="flex justify-between items-center pb-2 border-b border-white/[0.06]">
+                    <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center">
+                        <i class="fas fa-users-gear text-indigo-400 mr-2"></i> Usuarios con Acceso al Sistema
+                    </h3>
+                    <span class="text-[11px] text-zinc-500">Podrán ingresar desde el login con su PIN</span>
+                </div>
+                <div id="listaUsuariosSistema" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <p class="text-xs text-zinc-500 col-span-full">Cargando usuarios...</p>
                 </div>
             </div>
         </section>
@@ -1001,23 +1058,31 @@
             let btnPlanear = document.getElementById('tab-registro-btn');
             let btnStats = document.getElementById('tab-estadisticas-btn');
             let btnEquipo = document.getElementById('tab-equipo-btn');
+            let btnUsuarios = document.getElementById('tab-usuarios-btn');
             let btnAuditoria = document.getElementById('tab-auditoria-btn');
 
             if (userRole === 'admin') {
                 btnPlanear.classList.remove('hidden');
                 btnStats.classList.remove('hidden');
                 btnEquipo.classList.remove('hidden');
+                if (btnUsuarios) btnUsuarios.classList.remove('hidden');
                 btnAuditoria.classList.remove('hidden');
             } else if (userRole === 'director') {
                 btnPlanear.classList.remove('hidden');
                 btnStats.classList.remove('hidden');
                 btnEquipo.classList.add('hidden');
+                if (btnUsuarios) btnUsuarios.classList.add('hidden');
                 btnAuditoria.classList.add('hidden');
-                if (!document.getElementById('sec-equipo').classList.contains('hidden') || !document.getElementById('sec-auditoria').classList.contains('hidden')) switchTab('dashboard');
+                if (!document.getElementById('sec-equipo').classList.contains('hidden') || 
+                    !document.getElementById('sec-usuarios').classList.contains('hidden') || 
+                    !document.getElementById('sec-auditoria').classList.contains('hidden')) {
+                    switchTab('dashboard');
+                }
             } else {
                 btnPlanear.classList.add('hidden');
                 btnStats.classList.add('hidden');
                 btnEquipo.classList.add('hidden');
+                if (btnUsuarios) btnUsuarios.classList.add('hidden');
                 btnAuditoria.classList.add('hidden');
                 if (!document.getElementById('sec-dashboard').classList.contains('hidden') === false) switchTab('dashboard');
             }
@@ -1032,7 +1097,9 @@
                     </div>`;
             } else {
                 data.servicios.forEach((s) => {
-                    let puedeEditar = (userRole === 'director' || userRole === 'admin');
+                    // Solo el Admin o el Director a cargo de este servicio pueden modificarlo/eliminarlo
+                    let soyElDirectorACargo = currentUser && s.director && (s.director.toLowerCase() === currentUser.nombre.toLowerCase());
+                    let puedeEditar = (userRole === 'admin' || (userRole === 'director' && soyElDirectorACargo));
                     let fechaFormateada = formatearFechaLimpia(s.fecha);
 
                     htmlServicios += `
@@ -1093,11 +1160,34 @@
             }
             document.getElementById('listaServicios').innerHTML = htmlServicios;
 
-            // Select de Directores (filtrado solo para quienes tienen el tag de director)
+            // Select de Directores (filtrado para directores + usuario actual)
             let directoresArr = data.miembros.filter(m => m.esDirector);
             let optDirs = '<option value="">-- Seleccione Director --</option>';
-            directoresArr.forEach(d => { optDirs += `<option value="${d.id}">${d.id}</option>`; });
-            document.getElementById('regDirector').innerHTML = optDirs;
+            
+            // Si el usuario actual no está como director en miembros pero es director/admin, añadirlo
+            let usuarioActualId = currentUser ? currentUser.nombre : '';
+            let existeEnDirectores = directoresArr.some(d => d.id.toLowerCase() === usuarioActualId.toLowerCase());
+            if (usuarioActualId && !existeEnDirectores && userRole !== 'public') {
+                optDirs += `<option value="${usuarioActualId}">${usuarioActualId} (Tú)</option>`;
+            }
+
+            directoresArr.forEach(d => { 
+                let esTu = (usuarioActualId && d.id.toLowerCase() === usuarioActualId.toLowerCase()) ? ' (Tú)' : '';
+                optDirs += `<option value="${d.id}">${d.id}${esTu}</option>`; 
+            });
+            let selectRegDir = document.getElementById('regDirector');
+            let valorPrevioDir = selectRegDir.value;
+            selectRegDir.innerHTML = optDirs;
+
+            // Autoseleccionar al usuario actual por defecto si está vacante o si es un nuevo formulario
+            if (!valorPrevioDir && usuarioActualId && (userRole === 'director' || userRole === 'admin')) {
+                selectRegDir.value = usuarioActualId;
+            } else if (valorPrevioDir) {
+                selectRegDir.value = valorPrevioDir;
+            }
+
+            // Render Lista de Usuarios del Sistema (Para Administradores)
+            renderListaUsuarios(data.usuarios || []);
 
             // Render Directorio General de Miembros con Tags Múltiples interactivos
             let htmlDirectorio = '';
@@ -1529,7 +1619,9 @@
 
         function resetServiceForm() {
             document.getElementById('regServicioId').value = '';
-            document.getElementById('regDirector').value = '';
+            // Autoasignar al director actual por defecto
+            let defaultDir = (currentUser && (userRole === 'director' || userRole === 'admin')) ? currentUser.nombre : '';
+            document.getElementById('regDirector').value = defaultDir;
             document.getElementById('inputCamarografoHoy').value = '';
             document.getElementById('sugerenciasDropdown').classList.add('hidden');
             asistentesHoy = [];
@@ -1671,8 +1763,107 @@
             }
         }
 
+        // ========================= GESTIÓN DE USUARIOS (SOLO ADMIN) =========================
+        function renderListaUsuarios(usuarios) {
+            let container = document.getElementById('listaUsuariosSistema');
+            if (!container) return;
+
+            if (!usuarios || usuarios.length === 0) {
+                container.innerHTML = '<p class="text-xs text-zinc-500 col-span-full">No hay usuarios registrados aún.</p>';
+                return;
+            }
+
+            let html = '';
+            usuarios.forEach(u => {
+                let badge = u.rol === 'admin' ? 
+                    '<span class="px-2 py-0.5 rounded-full text-[10px] bg-purple-500/10 text-purple-300 border border-purple-500/20 font-mono">Administrador</span>' : 
+                    '<span class="px-2 py-0.5 rounded-full text-[10px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-mono">Director</span>';
+                
+                let esYo = (currentUser && currentUser.nombre.toLowerCase() === u.nombre.toLowerCase());
+
+                html += `
+                <div class="bg-[#161822] border border-white/[0.06] p-3.5 rounded-2xl flex items-center justify-between hover:border-white/[0.12] transition">
+                    <div class="space-y-1 truncate pr-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-semibold text-white text-xs sm:text-sm truncate">${u.nombre}</span>
+                            ${esYo ? '<span class="text-[9px] bg-emerald-500/10 text-emerald-300 px-1.5 py-0.2 rounded font-mono">Tú</span>' : ''}
+                        </div>
+                        <div>${badge}</div>
+                    </div>
+                    <div>
+                        ${!esYo ? `
+                            <button onclick="eliminarUsuarioSistema('${u.nombre.replace(/'/g, "\\'")}')" class="text-zinc-400 hover:text-rose-400 p-1.5 text-xs rounded-lg transition" title="Eliminar acceso">
+                                <i class="fas fa-trash-can"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function guardarNuevoUsuario() {
+            if (userRole !== 'admin') {
+                showToast("Se requiere rol de Administrador.", "error");
+                return;
+            }
+            let nombre = document.getElementById('nuevoUsuarioNombre').value.trim();
+            let pin = document.getElementById('nuevoUsuarioPin').value.trim();
+            let rol = document.getElementById('nuevoUsuarioRol').value;
+
+            if (!nombre) {
+                showToast("Ingresa el nombre del usuario.", "error");
+                return;
+            }
+            if (!pin) {
+                showToast("Ingresa un PIN para el usuario.", "error");
+                return;
+            }
+
+            try {
+                let newData = await apiPost({
+                    action: 'saveUsuario',
+                    usuario: currentUser.nombre,
+                    pin: adminPinCache,
+                    nuevoNombre: nombre,
+                    nuevoPin: pin,
+                    nuevoRol: rol
+                });
+                document.getElementById('nuevoUsuarioNombre').value = '';
+                document.getElementById('nuevoUsuarioPin').value = '';
+                renderApp(newData);
+                cargarUsuariosLogin(); // Actualizar lista desplegable del login
+                showToast(`¡Usuario ${nombre} guardado exitosamente!`, "success");
+            } catch (err) {
+                showToast(`Error: ${err.message}`, "error");
+            }
+        }
+
+        async function eliminarUsuarioSistema(targetNombre) {
+            if (userRole !== 'admin') {
+                showToast("Se requiere rol de Administrador.", "error");
+                return;
+            }
+            if (confirm(`¿Estás seguro de revocar el acceso a "${targetNombre}"? Ya no podrá ingresar al sistema.`)) {
+                try {
+                    let newData = await apiPost({
+                        action: 'deleteUsuario',
+                        usuario: currentUser.nombre,
+                        pin: adminPinCache,
+                        targetNombre: targetNombre
+                    });
+                    renderApp(newData);
+                    cargarUsuariosLogin();
+                    showToast("Usuario eliminado del sistema.", "info");
+                } catch (err) {
+                    showToast(`Error: ${err.message}`, "error");
+                }
+            }
+        }
+
         function switchTab(tab) {
-            ['dashboard', 'registro', 'estadisticas', 'equipo', 'auditoria'].forEach(t => {
+            ['dashboard', 'registro', 'estadisticas', 'equipo', 'usuarios', 'auditoria'].forEach(t => {
                 let sec = document.getElementById(`sec-${t}`);
                 let btn = document.getElementById(`tab-${t}-btn`);
                 if (sec) sec.classList.add('hidden');

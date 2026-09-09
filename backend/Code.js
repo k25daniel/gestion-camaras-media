@@ -168,6 +168,10 @@ function doPost(e) {
       output = toggleTagMiembro(usuario, pin, body.idMiembro, body.tipoTag);
     } else if (action === 'deleteMiembro') {
       output = deleteMiembro(usuario, pin, body.idMiembro);
+    } else if (action === 'saveUsuario') {
+      output = saveUsuario(usuario, pin, body.nuevoNombre, body.nuevoPin, body.nuevoRol);
+    } else if (action === 'deleteUsuario') {
+      output = deleteUsuario(usuario, pin, body.targetNombre);
     } else {
       output = { error: "Acción POST no válida" };
     }
@@ -212,9 +216,11 @@ function getDatabaseData() {
   initSheetsIfNeeded(ss);
   var miembroSheet = ss.getSheetByName('Miembros');
   var srvSheet = ss.getSheetByName('Servicios');
+  var userSheet = ss.getSheetByName('Usuarios');
   
   var miembroData = miembroSheet.getDataRange().getValues();
   var srvData = srvSheet.getDataRange().getValues();
+  var userData = userSheet.getDataRange().getValues();
   
   var miembros = [];
   for (var i = 1; i < miembroData.length; i++) {
@@ -251,7 +257,28 @@ function getDatabaseData() {
       });
     }
   }
-  return { miembros: miembros, servicios: servicios.slice().reverse(), rawServicios: servicios };
+
+  // Lista de usuarios registrados (ocultando PINs)
+  var usuarios = [];
+  for (var u = 1; u < userData.length; u++) {
+    var uNombre = String(userData[u][0] || '').trim();
+    var uRol = String(userData[u][2] || 'director').trim().toLowerCase();
+    var uActivo = userData[u][3] === true || String(userData[u][3]).toLowerCase() === 'true' || userData[u][3] === '';
+    if (uNombre) {
+      usuarios.push({
+        nombre: uNombre,
+        rol: uRol,
+        activo: uActivo
+      });
+    }
+  }
+
+  return { 
+    miembros: miembros, 
+    servicios: servicios.slice().reverse(), 
+    rawServicios: servicios,
+    usuarios: usuarios
+  };
 }
 
 function getSheetByNameRobust(ss, name) {
@@ -291,6 +318,62 @@ function initSheetsIfNeeded(ss) {
     auditSheet = ss.insertSheet('Auditoria');
     auditSheet.appendRow(['Timestamp', 'Usuario', 'Rol', 'Accion', 'Detalle']);
   }
+}
+
+// Guardar o actualizar un usuario desde la página (Solo Administrador)
+function saveUsuario(usuario, pin, nuevoNombre, nuevoPin, nuevoRol) {
+  if (!verifyAuthToken(usuario, pin, 'admin')) throw new Error('Se requiere rol de Administrador.');
+  var cleanNombre = String(nuevoNombre || '').trim();
+  var cleanNuevoPin = String(nuevoPin || '').trim();
+  var cleanRol = String(nuevoRol || 'director').trim().toLowerCase();
+  
+  if (!cleanNombre) throw new Error('El nombre de usuario es obligatorio.');
+  if (!cleanNuevoPin) throw new Error('El PIN es obligatorio.');
+  if (cleanRol !== 'admin' && cleanRol !== 'director') cleanRol = 'director';
+
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  initSheetsIfNeeded(ss);
+  var userSheet = getSheetByNameRobust(ss, 'Usuarios');
+  var data = userSheet.getDataRange().getValues();
+  var rowIndex = -1;
+
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim().toLowerCase() === cleanNombre.toLowerCase()) {
+      rowIndex = i + 1;
+      break;
+    }
+  }
+
+  if (rowIndex > -1) {
+    // Actualizar usuario existente
+    userSheet.getRange(rowIndex, 1, 1, 4).setValues([[cleanNombre, cleanNuevoPin, cleanRol, true]]);
+    logAuditoria(usuario, 'admin', 'Actualizar Usuario', 'Modificó credenciales de: ' + cleanNombre + ' (Rol: ' + cleanRol + ')');
+  } else {
+    // Crear nuevo usuario
+    userSheet.appendRow([cleanNombre, cleanNuevoPin, cleanRol, true]);
+    logAuditoria(usuario, 'admin', 'Crear Usuario', 'Creó usuario: ' + cleanNombre + ' (Rol: ' + cleanRol + ')');
+  }
+
+  return getDatabaseData();
+}
+
+// Eliminar un usuario desde la página (Solo Administrador)
+function deleteUsuario(usuario, pin, targetNombre) {
+  if (!verifyAuthToken(usuario, pin, 'admin')) throw new Error('Se requiere rol de Administrador.');
+  var cleanTarget = String(targetNombre || '').trim().toLowerCase();
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var userSheet = getSheetByNameRobust(ss, 'Usuarios');
+  var data = userSheet.getDataRange().getValues();
+
+  for (var i = 1; i < data.length; i++) {
+    if (String(data[i][0]).trim().toLowerCase() === cleanTarget) {
+      userSheet.deleteRow(i + 1);
+      logAuditoria(usuario, 'admin', 'Eliminar Usuario', 'Eliminó al usuario: ' + targetNombre);
+      break;
+    }
+  }
+
+  return getDatabaseData();
 }
 
 function addMiembro(usuario, pin, nombre, apellidos) {
@@ -335,35 +418,49 @@ function deleteMiembro(usuario, pin, idMiembro) {
 
 function saveServicio(usuario, pin, data, servicioId) {
   if (!verifyAuthToken(usuario, pin, 'director')) throw new Error('Se requiere rol de Director o Administrador.');
+  var auth = authenticateUser(usuario, pin);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var srvSheet = ss.getSheetByName('Servicios');
   var srvData = srvSheet.getDataRange().getValues();
-  var rowData = [data.director || 'Sin Director', data.fecha, JSON.stringify(data.cam1), JSON.stringify(data.cam2), JSON.stringify(data.cam3), JSON.stringify(data.cam4), JSON.stringify(data.cam5), JSON.stringify(data.cam6)];
   
+  // Regla de Permisos: Si no es admin, solo puede modificar si él es el director del servicio
   if (servicioId) {
     for (var j = 1; j < srvData.length; j++) {
       if (String(srvData[j][0]) === String(servicioId)) {
+        var directorActual = String(srvData[j][1] || '').trim();
+        if (auth.rol !== 'admin' && directorActual.toLowerCase() !== String(usuario).trim().toLowerCase()) {
+          throw new Error('Solo el director a cargo (' + directorActual + ') o un Administrador pueden modificar este servicio.');
+        }
+        var rowData = [data.director || 'Sin Director', data.fecha, JSON.stringify(data.cam1), JSON.stringify(data.cam2), JSON.stringify(data.cam3), JSON.stringify(data.cam4), JSON.stringify(data.cam5), JSON.stringify(data.cam6)];
         srvSheet.getRange(j + 1, 2, 1, 8).setValues([rowData]);
-        logAuditoria(usuario, 'director', 'Actualizar Servicio', 'Editó servicio fecha: ' + data.fecha + ' (Director: ' + data.director + ')');
-        break;
+        logAuditoria(usuario, auth.rol, 'Actualizar Servicio', 'Editó servicio fecha: ' + data.fecha + ' (Director: ' + data.director + ')');
+        return getDatabaseData();
       }
     }
   } else {
-    srvSheet.appendRow([Date.now()].concat(rowData));
-    logAuditoria(usuario, 'director', 'Crear Servicio', 'Creó nuevo servicio fecha: ' + data.fecha + ' (Director: ' + data.director + ')');
+    // Si es director creando un servicio, asegurar que el director sea él mismo (o el asignado)
+    var directorFinal = auth.rol === 'admin' ? (data.director || usuario) : usuario;
+    var rowDataNew = [directorFinal || 'Sin Director', data.fecha, JSON.stringify(data.cam1), JSON.stringify(data.cam2), JSON.stringify(data.cam3), JSON.stringify(data.cam4), JSON.stringify(data.cam5), JSON.stringify(data.cam6)];
+    srvSheet.appendRow([Date.now()].concat(rowDataNew));
+    logAuditoria(usuario, auth.rol, 'Crear Servicio', 'Creó nuevo servicio fecha: ' + data.fecha + ' (Director: ' + directorFinal + ')');
   }
   return getDatabaseData();
 }
 
 function deleteServicio(usuario, pin, servicioId) {
   if (!verifyAuthToken(usuario, pin, 'director')) throw new Error('Se requiere rol de Director o Administrador.');
+  var auth = authenticateUser(usuario, pin);
   var srvSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Servicios');
   var srvData = srvSheet.getDataRange().getValues();
   for (var j = 1; j < srvData.length; j++) {
     if (String(srvData[j][0]) === String(servicioId)) {
+      var directorActual = String(srvData[j][1] || '').trim();
+      if (auth.rol !== 'admin' && directorActual.toLowerCase() !== String(usuario).trim().toLowerCase()) {
+        throw new Error('Solo el director a cargo (' + directorActual + ') o un Administrador pueden eliminar este servicio.');
+      }
       var srvFecha = srvData[j][2];
       srvSheet.deleteRow(j + 1);
-      logAuditoria(usuario, 'director', 'Eliminar Servicio', 'Eliminó servicio fecha: ' + srvFecha + ' (ID: ' + servicioId + ')');
+      logAuditoria(usuario, auth.rol, 'Eliminar Servicio', 'Eliminó servicio fecha: ' + srvFecha + ' (ID: ' + servicioId + ')');
       break;
     }
   }
