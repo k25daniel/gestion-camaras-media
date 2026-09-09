@@ -42,27 +42,13 @@ function getUsuariosLogin() {
   return usuarios;
 }
 
-// Valida credenciales de un usuario
+// Valida credenciales de un usuario: el PIN debe coincidir estrictamente con el usuario registrado
 function authenticateUser(nombre, pin) {
   var cleanNombre = String(nombre || '').trim();
   var cleanPin = String(pin || '').trim();
 
-  // Maestro Admin Fallback
-  if (cleanPin === MASTER_ADMIN_PIN) {
-    return {
-      success: true,
-      usuario: cleanNombre || "Admin Maestro",
-      rol: "admin"
-    };
-  }
-
-  // Maestro Director Fallback
-  if (cleanPin === MASTER_DIRECTOR_PIN) {
-    return {
-      success: true,
-      usuario: cleanNombre || "Director Maestro",
-      rol: "director"
-    };
+  if (!cleanNombre || !cleanPin) {
+    return { success: false, error: "Usuario y PIN requeridos" };
   }
 
   var ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -83,11 +69,22 @@ function authenticateUser(nombre, pin) {
           usuario: rowUser,
           rol: rowRol
         };
+      } else {
+        return { success: false, error: "PIN incorrecto para " + rowUser };
       }
     }
   }
 
-  return { success: false, error: "Credenciales incorrectas" };
+  // Si no está en Usuarios pero es el Admin Maestro
+  if (cleanNombre === "Administrador General" && cleanPin === MASTER_ADMIN_PIN) {
+    return {
+      success: true,
+      usuario: "Administrador General",
+      rol: "admin"
+    };
+  }
+
+  return { success: false, error: "Usuario no encontrado o inactivo" };
 }
 
 // Valida si las credenciales pasadas en peticiones tienen el rol requerido

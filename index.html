@@ -573,16 +573,18 @@
             <div class="surface-card p-4 sm:p-5 space-y-4">
                 <div>
                     <h2 class="text-sm sm:text-base font-bold text-white tracking-tight flex items-center">
-                        <i class="fas fa-user-shield text-indigo-400 mr-2 text-xs"></i> Crear o Asignar Usuario
+                        <i class="fas fa-user-shield text-indigo-400 mr-2 text-xs"></i> Asignar PIN a Directores del Equipo
                     </h2>
-                    <p class="text-xs text-zinc-400 mt-0.5">Crea el acceso y asigna un PIN personal para un nuevo Director o Administrador.</p>
+                    <p class="text-xs text-zinc-400 mt-0.5">Selecciona un Director ya registrado en el Equipo y asígnale su PIN personal de acceso.</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
                     <div class="sm:col-span-5">
-                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Nombre Completo</label>
-                        <input type="text" id="nuevoUsuarioNombre" placeholder="Ej: Daniel Fernandez"
-                            class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white outline-none transition">
+                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Director del Equipo</label>
+                        <select id="selectDirectorParaUsuario"
+                            class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-xs text-white outline-none transition">
+                            <option value="">-- Seleccionar Director --</option>
+                        </select>
                     </div>
                     <div class="sm:col-span-3">
                         <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">PIN de Acceso</label>
@@ -590,7 +592,7 @@
                             class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Rol Asignado</label>
+                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Rol en Sistema</label>
                         <select id="nuevoUsuarioRol"
                             class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-xs text-white outline-none transition">
                             <option value="director">Director 🎬</option>
@@ -600,7 +602,7 @@
                     <div class="sm:col-span-2 flex items-end">
                         <button onclick="guardarNuevoUsuario()"
                             class="w-full min-h-[42px] bg-brand-600 hover:bg-brand-500 active:scale-95 text-white font-semibold rounded-xl text-xs transition flex items-center justify-center shadow-sm">
-                            <i class="fas fa-plus mr-1.5"></i> Guardar
+                            <i class="fas fa-key mr-1.5"></i> Asignar PIN
                         </button>
                     </div>
                 </div>
@@ -1184,6 +1186,18 @@
                 selectRegDir.value = usuarioActualId;
             } else if (valorPrevioDir) {
                 selectRegDir.value = valorPrevioDir;
+            }
+
+            // Poblar dropdown de Directores para asignación de PIN en la pestaña Usuarios
+            let selectDirUsuario = document.getElementById('selectDirectorParaUsuario');
+            if (selectDirUsuario) {
+                let htmlDirUser = '<option value="">-- Seleccionar Director --</option>';
+                directoresArr.forEach(d => {
+                    let yaTienePin = (data.usuarios || []).some(u => u.nombre.toLowerCase() === d.id.toLowerCase());
+                    let estadoTag = yaTienePin ? ' (PIN Asignado ✓)' : ' (Pendiente de PIN ⚠️)';
+                    htmlDirUser += `<option value="${d.id}">${d.id}${estadoTag}</option>`;
+                });
+                selectDirUsuario.innerHTML = htmlDirUser;
             }
 
             // Render Lista de Usuarios del Sistema (Para Administradores)
@@ -1808,12 +1822,13 @@
                 showToast("Se requiere rol de Administrador.", "error");
                 return;
             }
-            let nombre = document.getElementById('nuevoUsuarioNombre').value.trim();
+            let selectDir = document.getElementById('selectDirectorParaUsuario');
+            let nombre = selectDir ? selectDir.value.trim() : '';
             let pin = document.getElementById('nuevoUsuarioPin').value.trim();
             let rol = document.getElementById('nuevoUsuarioRol').value;
 
             if (!nombre) {
-                showToast("Ingresa el nombre del usuario.", "error");
+                showToast("Selecciona un Director de la lista.", "error");
                 return;
             }
             if (!pin) {
@@ -1830,11 +1845,11 @@
                     nuevoPin: pin,
                     nuevoRol: rol
                 });
-                document.getElementById('nuevoUsuarioNombre').value = '';
                 document.getElementById('nuevoUsuarioPin').value = '';
+                if (selectDir) selectDir.value = '';
                 renderApp(newData);
                 cargarUsuariosLogin(); // Actualizar lista desplegable del login
-                showToast(`¡Usuario ${nombre} guardado exitosamente!`, "success");
+                showToast(`¡PIN asignado a ${nombre} exitosamente!`, "success");
             } catch (err) {
                 showToast(`Error: ${err.message}`, "error");
             }
