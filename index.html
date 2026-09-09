@@ -578,17 +578,17 @@
             <div class="surface-card p-4 sm:p-5 space-y-4">
                 <div>
                     <h2 class="text-sm sm:text-base font-bold text-white tracking-tight flex items-center">
-                        <i class="fas fa-user-shield text-indigo-400 mr-2 text-xs"></i> Asignar PIN a Directores del Equipo
+                        <i class="fas fa-user-shield text-indigo-400 mr-2 text-xs"></i> Asignar PIN a Miembros del Equipo
                     </h2>
-                    <p class="text-xs text-zinc-400 mt-0.5">Selecciona un Director ya registrado en el Equipo y asígnale su PIN personal de acceso.</p>
+                    <p class="text-xs text-zinc-400 mt-0.5">Selecciona un Director o Camarógrafo registrado en el Equipo y asígnale su PIN personal de acceso.</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
                     <div class="sm:col-span-5">
-                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Director del Equipo</label>
+                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Miembro del Equipo</label>
                         <select id="selectDirectorParaUsuario"
                             class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-xs text-white outline-none transition">
-                            <option value="">-- Seleccionar Director --</option>
+                            <option value="">-- Seleccionar Miembro --</option>
                         </select>
                     </div>
                     <div class="sm:col-span-3">
@@ -1485,15 +1485,28 @@
                 selectRegDir.value = valorPrevioDir;
             }
 
-            // Poblar dropdown de Directores para asignación de PIN en la pestaña Usuarios
+            // Poblar dropdown de Miembros (Directores y Camarógrafos) para asignación de PIN en la pestaña Usuarios
             let selectDirUsuario = document.getElementById('selectDirectorParaUsuario');
             if (selectDirUsuario) {
-                let htmlDirUser = '<option value="">-- Seleccionar Director --</option>';
-                directoresArr.forEach(d => {
-                    let yaTienePin = (data.usuarios || []).some(u => u.nombre.toLowerCase() === d.id.toLowerCase());
-                    let estadoTag = yaTienePin ? ' (PIN Asignado ✓)' : ' (Pendiente de PIN ⚠️)';
-                    htmlDirUser += `<option value="${d.id}">${d.id}${estadoTag}</option>`;
-                });
+                let htmlDirUser = '<option value="">-- Seleccionar Miembro (Director o Camarógrafo) --</option>';
+                
+                // Si hay miembros en el equipo
+                if (data.miembros && data.miembros.length > 0) {
+                    data.miembros.forEach(m => {
+                        let rolesList = [];
+                        if (m.esDirector) rolesList.push('Director');
+                        if (m.esCamarografo) rolesList.push('Camarógrafo');
+                        if (m.esCapacitador) rolesList.push('Capacitador');
+                        let rolStr = rolesList.length > 0 ? ` [${rolesList.join(', ')}]` : '';
+
+                        let yaTienePin = (data.usuarios || []).some(u => u.nombre.toLowerCase() === m.id.toLowerCase());
+                        let estadoTag = yaTienePin ? ' (PIN Asignado ✓)' : ' (Pendiente de PIN ⚠️)';
+                        htmlDirUser += `<option value="${m.id}">${m.id}${rolStr}${estadoTag}</option>`;
+                    });
+                } else {
+                    // Si aún no hay miembros creados en la pestaña Equipo
+                    htmlDirUser += '<option value="" disabled>Primero añade miembros en la pestaña "Equipo"</option>';
+                }
                 selectDirUsuario.innerHTML = htmlDirUser;
             }
 
@@ -2128,7 +2141,7 @@
             let rol = document.getElementById('nuevoUsuarioRol').value;
 
             if (!nombre) {
-                showToast("Selecciona un Director de la lista.", "error");
+                showToast("Selecciona un Miembro de la lista.", "error");
                 return;
             }
             if (!pin) {
