@@ -327,7 +327,7 @@
                     </div>
 
                     <div class="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap gap-2">
-                        <button type="button" onclick="abrirModalImportarPlanHoy()"
+                        <button type="button" id="btnImportarPlanHeader" onclick="abrirModalImportarPlanHoy()"
                             class="bg-[#1e1b4b] hover:bg-[#312e81] active:scale-95 text-indigo-200 hover:text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border border-indigo-500/30 flex items-center shadow-sm">
                             <i class="fas fa-file-import mr-1.5 text-[11px] text-indigo-400"></i> Importar de Plan (Services)
                         </button>
@@ -358,10 +358,10 @@
                         </div>
                         <div class="flex items-center space-x-2">
                             <span id="pcoPlanesStatus" class="text-[11px] text-zinc-400">Selecciona el día para cargar director y camarógrafos</span>
-                            <button type="button" onclick="cargarPlanesPcoDropdown(true)" id="btnRecargarPlanesPco"
-                                class="bg-indigo-500/15 hover:bg-indigo-500/30 text-indigo-300 px-2 py-1 rounded-lg text-[11px] font-semibold transition flex items-center border border-indigo-500/20"
-                                title="Recargar planes en vivo desde Firestore">
-                                <i class="fas fa-rotate mr-1 text-[10px]"></i> Actualizar
+                            <button type="button" onclick="sincronizarPlanesPcoEnVivo()" id="btnRecargarPlanesPco"
+                                class="bg-indigo-500/15 hover:bg-indigo-500/30 text-indigo-300 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition flex items-center border border-indigo-500/20 shadow-sm"
+                                title="Actualizar y sincronizar planes desde Planning Center">
+                                <i class="fas fa-rotate mr-1 text-[10px]"></i> Actualizar desde Services
                             </button>
                         </div>
                     </div>
@@ -1605,18 +1605,21 @@
             let btnUsuarios = document.getElementById('tab-usuarios-btn');
             let btnAuditoria = document.getElementById('tab-auditoria-btn');
 
+            let btnImportarHeader = document.getElementById('btnImportarPlanHeader');
             if (userRole === 'admin') {
                 btnPlanear.classList.remove('hidden');
                 btnStats.classList.remove('hidden');
                 btnEquipo.classList.remove('hidden');
                 if (btnUsuarios) btnUsuarios.classList.remove('hidden');
                 btnAuditoria.classList.remove('hidden');
+                if (btnImportarHeader) btnImportarHeader.classList.remove('hidden');
             } else if (userRole === 'director') {
                 btnPlanear.classList.remove('hidden');
                 btnStats.classList.remove('hidden');
                 btnEquipo.classList.add('hidden');
                 if (btnUsuarios) btnUsuarios.classList.add('hidden');
                 btnAuditoria.classList.add('hidden');
+                if (btnImportarHeader) btnImportarHeader.classList.add('hidden');
                 if (!document.getElementById('sec-equipo').classList.contains('hidden') || 
                     !document.getElementById('sec-usuarios').classList.contains('hidden') || 
                     !document.getElementById('sec-auditoria').classList.contains('hidden')) {
@@ -1628,6 +1631,7 @@
                 btnEquipo.classList.add('hidden');
                 if (btnUsuarios) btnUsuarios.classList.add('hidden');
                 btnAuditoria.classList.add('hidden');
+                if (btnImportarHeader) btnImportarHeader.classList.add('hidden');
                 if (!document.getElementById('sec-dashboard').classList.contains('hidden') === false) switchTab('dashboard');
             }
 
@@ -2999,6 +3003,111 @@
         // ==================== DROPDOWN DE PLANES PLANNING CENTER ====================
         let planesPcoCache = [];
         let planHoyDetectado = null;
+
+        async function sincronizarPlanesPcoEnVivo() {
+            let savedAppId = localStorage.getItem('pc_app_id') || '';
+            let savedSecret = localStorage.getItem('pc_secret') || '';
+
+            // Si hay credenciales guardadas en el sistema (por el administrador), sincronizar directamente vía API
+            if (savedAppId && savedSecret) {
+                let btnRecarga = document.getElementById('btnRecargarPlanesPco');
+                if (btnRecarga) {
+                    btnRecarga.disabled = true;
+                    btnRecarga.innerHTML = '<i class="fas fa-arrows-rotate fa-spin mr-1 text-[10px]"></i> Sincronizando API...';
+                }
+
+                try {
+                    let basicAuth = btoa(`${savedAppId}:${savedSecret}`);
+                    // 1. Obtener Service Types
+                    let stUrl = `https://api.planningcenteronline.com/services/v2/service_types?per_page=100`;
+                    let resSt = null;
+                    try {
+                        resSt = await fetch(stUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
+                    } catch (e) {
+                        resSt = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(stUrl)}`, { headers: { 'Authorization': `Basic ${basicAuth}` } });
+                    }
+
+                    if (resSt && resSt.ok) {
+                        let dataSt = await resSt.json();
+                        let stList = dataSt.data || [];
+
+                        for (let st of stList) {
+                            let stId = st.id;
+                            let stName = st.attributes.name;
+
+                            let plansUrl = `https://api.planningcenteronline.com/services/v2/service_types/${stId}/plans?filter=future&per_page=6`;
+                            let resPlans = null;
+                            try {
+                                resPlans = await fetch(plansUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
+                            } catch (e) {
+                                resPlans = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(plansUrl)}`, { headers: { 'Authorization': `Basic ${basicAuth}` } });
+                            }
+
+                            if (resPlans && resPlans.ok) {
+                                let dataPlans = await resPlans.json();
+                                let plans = dataPlans.data || [];
+
+                                for (let p of plans) {
+                                    let planId = p.id;
+                                    let dates = p.attributes.dates || '';
+                                    let title = p.attributes.title || '';
+
+                                    let membersUrl = `https://api.planningcenteronline.com/services/v2/service_types/${stId}/plans/${planId}/team_members?per_page=100`;
+                                    let resM = null;
+                                    try {
+                                        resM = await fetch(membersUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
+                                    } catch (e) {
+                                        resM = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(membersUrl)}`, { headers: { 'Authorization': `Basic ${basicAuth}` } });
+                                    }
+
+                                    let camarografos = [];
+                                    let directores = [];
+
+                                    if (resM && resM.ok) {
+                                        let dataM = await resM.json();
+                                        let members = dataM.data || [];
+
+                                        members.forEach(m => {
+                                            let attrs = m.attributes || {};
+                                            let pos = (attrs.team_position_name || '').toLowerCase();
+                                            let name = attrs.name || '';
+                                            let status = attrs.status || 'U';
+
+                                            if (!name) return;
+
+                                            if (pos.includes('realizador') || pos.includes('switcher') || pos.includes('dirección de cámaras') || pos.includes('direccion de camaras') || pos.includes('director de cámaras') || pos.includes('director de camaras')) {
+                                                directores.push({ name: name, position: attrs.team_position_name, status: status });
+                                            } else if (pos.includes('cámara') || pos.includes('camara') || pos.includes('camarografo') || pos.includes('camarógrafo')) {
+                                                camarografos.push({ name: name, position: attrs.team_position_name, status: status });
+                                            }
+                                        });
+                                    }
+
+                                    // Guardar / actualizar en Firestore
+                                    await db.collection('pco_planes').doc(planId).set({
+                                        planId: String(planId),
+                                        serviceTypeId: String(stId),
+                                        serviceName: String(stName),
+                                        dates: String(dates),
+                                        title: String(title),
+                                        totalCamaras: camarografos.length,
+                                        camarografosJson: JSON.stringify(camarografos),
+                                        directoresJson: JSON.stringify(directores),
+                                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                                    }, { merge: true });
+                                }
+                            }
+                        }
+                        showToast("¡Planes sincronizados exitosamente desde Planning Center API!", "success");
+                    }
+                } catch (e) {
+                    console.warn("Sincronización directa API no completada, recargando desde base de datos:", e);
+                }
+            }
+
+            // Recargar el dropdown con los datos más recientes
+            await cargarPlanesPcoDropdown(true);
+        }
 
         async function cargarPlanesPcoDropdown(forzarRecarga = false) {
             let select = document.getElementById('selectPlanPcoDirecto');
