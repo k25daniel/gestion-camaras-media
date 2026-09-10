@@ -356,7 +356,14 @@
                                 <i class="fas fa-calendar-check mr-1.5 text-indigo-400"></i> Servicios de Planning Center
                             </span>
                         </div>
-                        <span class="text-[11px] text-zinc-400">Selecciona el día para cargar director y camarógrafos</span>
+                        <div class="flex items-center space-x-2">
+                            <span id="pcoPlanesStatus" class="text-[11px] text-zinc-400">Selecciona el día para cargar director y camarógrafos</span>
+                            <button type="button" onclick="cargarPlanesPcoDropdown(true)" id="btnRecargarPlanesPco"
+                                class="bg-indigo-500/15 hover:bg-indigo-500/30 text-indigo-300 px-2 py-1 rounded-lg text-[11px] font-semibold transition flex items-center border border-indigo-500/20"
+                                title="Recargar planes en vivo desde Firestore">
+                                <i class="fas fa-rotate mr-1 text-[10px]"></i> Actualizar
+                            </button>
+                        </div>
                     </div>
                     <div class="relative">
                         <select id="selectPlanPcoDirecto" onchange="aplicarPlanPcoSeleccionado(this.value)"
@@ -2712,13 +2719,20 @@
         // ==================== DROPDOWN DE PLANES PLANNING CENTER ====================
         let planesPcoCache = [];
 
-        async function cargarPlanesPcoDropdown() {
+        async function cargarPlanesPcoDropdown(forzarRecarga = false) {
             let select = document.getElementById('selectPlanPcoDirecto');
+            let btnRecarga = document.getElementById('btnRecargarPlanesPco');
+            let statusText = document.getElementById('pcoPlanesStatus');
             if (!select) return;
 
             try {
-                // Si ya están en caché local, re-renderizar manteniendo selección previa
-                if (planesPcoCache.length === 0) {
+                if (btnRecarga) {
+                    btnRecarga.disabled = true;
+                    btnRecarga.innerHTML = '<i class="fas fa-spinner fa-spin mr-1 text-[10px]"></i> Cargando...';
+                }
+
+                // Si se fuerza recarga o la caché está vacía, consultar directamente
+                if (forzarRecarga || planesPcoCache.length === 0) {
                     let snap = await db.collection('pco_planes').get();
                     if (!snap.empty) {
                         planesPcoCache = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -2758,6 +2772,11 @@
 
             } catch (err) {
                 console.error("Error al cargar planes de PCO desde Firestore:", err);
+            } finally {
+                if (btnRecarga) {
+                    btnRecarga.disabled = false;
+                    btnRecarga.innerHTML = '<i class="fas fa-rotate mr-1 text-[10px]"></i> Actualizar';
+                }
             }
         }
 
