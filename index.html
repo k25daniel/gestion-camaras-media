@@ -191,7 +191,9 @@
                     <div class="relative">
                         <select id="loginUsuarioSelect" 
                             class="w-full bg-[#161822] border border-white/[0.12] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl px-3 py-2.5 text-sm text-white outline-none appearance-none cursor-pointer">
-                            <option value="">Cargando usuarios...</option>
+                            <option value="">-- Selecciona tu Nombre --</option>
+                            <option value="Administrador General">Administrador General (Admin)</option>
+                            <option value="Daniel Fernandez">Daniel Fernandez (Director)</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400">
                             <i class="fas fa-chevron-down text-xs"></i>
@@ -997,46 +999,60 @@
             verificarSesionGuardada();
         };
 
+        // Usuarios precargados para visualización instantánea (0ms)
+        const USUARIOS_SISTEMA_LOCAL = [
+            { nombre: "Administrador General", rol: "admin" },
+            { nombre: "Daniel Fernandez", rol: "director" }
+        ];
+
         async function cargarUsuariosLogin() {
             let select = document.getElementById('loginUsuarioSelect');
-            try {
-                let snap = await db.collection('usuarios').get();
-                if (snap.empty) {
-                    // Si no hay usuarios en la colección, creamos el Administrador General por defecto
-                    await db.collection('usuarios').doc('admin_general').set({
-                        nombre: "Administrador General",
-                        pin: "1997",
-                        rol: "admin",
-                        activo: true
-                    });
-                    snap = await db.collection('usuarios').get();
-                }
+            if (!select) return;
 
-                let usuarios = [];
+            // 1. Carga INSTANTÁNEA sin esperar a la red (0 ms)
+            let guardadosCache = [];
+            try {
+                let cached = localStorage.getItem('usuarios_sistema_cache');
+                if (cached) guardadosCache = JSON.parse(cached);
+            } catch (e) { }
+
+            let listaInicial = guardadosCache.length > 0 ? guardadosCache : USUARIOS_SISTEMA_LOCAL;
+            let renderOptions = (arr) => {
+                let html = '<option value="">-- Selecciona tu Nombre --</option>';
+                arr.forEach(u => {
+                    let rolBadge = u.rol === 'admin' ? ' (Admin)' : u.rol === 'director' ? ' (Director)' : '';
+                    html += `<option value="${u.nombre}">${u.nombre}${rolBadge}</option>`;
+                });
+                select.innerHTML = html;
+            };
+
+            // Mostrar inmediatamente en pantalla
+            renderOptions(listaInicial);
+
+            // 2. En segundo plano, verificar con Firestore por si se añadió un nuevo usuario
+            try {
+                // Timeout de 3 segundos para evitar que la red se quede pegada
+                let fetchPromise = db.collection('usuarios').get();
+                let timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000));
+                let snap = await Promise.race([fetchPromise, timeoutPromise]);
+
+                let usuariosRemotos = [];
                 snap.forEach(doc => {
                     let d = doc.data();
                     if (d.nombre && d.activo !== false) {
-                        usuarios.push({ nombre: d.nombre, rol: d.rol || 'director' });
+                        usuariosRemotos.push({ nombre: d.nombre, rol: d.rol || 'director' });
                     }
                 });
 
-                if (usuarios.length > 0) {
-                    let html = '<option value="">-- Selecciona tu Nombre --</option>';
-                    usuarios.forEach(u => {
-                        let rolBadge = u.rol === 'admin' ? ' (Admin)' : u.rol === 'director' ? ' (Director)' : '';
-                        html += `<option value="${u.nombre}">${u.nombre}${rolBadge}</option>`;
-                    });
-                    select.innerHTML = html;
-                } else {
-                    select.innerHTML = `
-                        <option value="Administrador General">Administrador General (Admin)</option>
-                    `;
+                if (usuariosRemotos.length > 0) {
+                    let valActual = select.value;
+                    renderOptions(usuariosRemotos);
+                    if (valActual) select.value = valActual;
+                    localStorage.setItem('usuarios_sistema_cache', JSON.stringify(usuariosRemotos));
                 }
             } catch (err) {
-                console.error("Error al cargar usuarios de Firestore:", err);
-                select.innerHTML = `
-                    <option value="Administrador General">Administrador General (Admin)</option>
-                `;
+                // Si la conexión tarda o falla, ya los usuarios están mostrados instantáneamente
+                console.warn("Carga de fondo de usuarios finalizada o usó caché.");
             }
         }
 
