@@ -325,6 +325,10 @@
                     </div>
 
                     <div class="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap gap-2">
+                        <button type="button" onclick="abrirModalImportarPlanHoy()"
+                            class="bg-[#1e1b4b] hover:bg-[#312e81] active:scale-95 text-indigo-200 hover:text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border border-indigo-500/30 flex items-center shadow-sm">
+                            <i class="fas fa-file-import mr-1.5 text-[11px] text-indigo-400"></i> Importar de Plan (Services)
+                        </button>
                         <button type="button" onclick="copiarServicioAnterior()"
                             class="bg-indigo-500/10 hover:bg-indigo-500/20 active:scale-95 text-indigo-300 hover:text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border border-indigo-500/20 flex items-center">
                             <i class="fas fa-copy mr-1.5 text-[11px]"></i> Copiar Anterior
@@ -692,14 +696,14 @@
                     <i class="fas fa-key mr-1"></i> Por API Token
                 </button>
                 <button type="button" id="tabPcPasteBtn" onclick="switchPcTab('paste')" class="text-xs font-semibold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition">
-                    <i class="fas fa-clipboard-list mr-1"></i> Pegar Nombres / CSV
+                    <i class="fas fa-clipboard-list mr-1"></i> Pegar Plan / Nombres
                 </button>
             </div>
 
             <!-- Panel 1: API Token -->
             <div id="panelPcApi" class="space-y-3 text-xs">
                 <p class="text-zinc-300 leading-relaxed">
-                    Introduce tus credenciales de API (Personal Access Token) generadas en 
+                    Introduce tus credenciales de API generadas en 
                     <a href="https://api.planningcenteronline.com/oauth/applications" target="_blank" class="text-indigo-400 hover:underline inline-flex items-center">
                         Planning Center API <i class="fas fa-arrow-up-right-from-square ml-1 text-[9px]"></i>
                     </a>.
@@ -707,7 +711,7 @@
 
                 <div>
                     <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Application ID</label>
-                    <input type="text" id="pcAppId" placeholder="Ej: e74b78912..."
+                    <input type="text" id="pcAppId" placeholder="Ej: ca01a8d20c361f..."
                         class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                 </div>
 
@@ -718,23 +722,37 @@
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Team ID (Services)</label>
+                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Qué sincronizar</label>
+                    <select id="pcSyncScope" class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white outline-none">
+                        <option value="all_teams">⭐ Todos los equipos de Media (Servicio Jueves, LINK, Servicio Finde, Ayuno, KZN)</option>
+                        <option value="single_team">Solo un Team ID específico</option>
+                    </select>
+                </div>
+
+                <div id="pcTeamIdWrapper" class="hidden">
+                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Team ID específico</label>
                     <input type="text" id="pcTeamId" value="2982202"
                         class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                 </div>
             </div>
 
-            <!-- Panel 2: Pegar Nombres o CSV Directo de Services -->
+            <!-- Panel 2: Pegar Nombres o Asignaciones de un Plan -->
             <div id="panelPcPaste" class="hidden space-y-3 text-xs">
                 <p class="text-zinc-300 leading-relaxed">
-                    Si tu navegador bloquea la conexión externa, puedes copiar los nombres directamente desde tu página de 
-                    <a href="https://services.planningcenteronline.com/people?team_id%5B%5D=2982202" target="_blank" class="text-indigo-400 hover:underline inline-flex items-center">
-                        Services People <i class="fas fa-arrow-up-right-from-square ml-1 text-[9px]"></i>
-                    </a> y pegarlos aquí (un nombre por línea o separados por coma):
+                    Puedes copiar el texto o nombres de tu plan en Services (por ejemplo, los camarógrafos de <b>LINK</b> o <b>Servicio Jueves</b>) y pegarlos aquí. Se detectarán sus nombres automáticamente:
                 </p>
+
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Tipo de importación</label>
+                    <select id="pcPasteDestino" class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2 text-xs text-white outline-none">
+                        <option value="hoy">🎯 Cargar directamente a "Camarógrafos Disponibles Hoy" en Planear</option>
+                        <option value="equipo">📁 Guardar en el Directorio General de Miembros</option>
+                    </select>
+                </div>
+
                 <div>
-                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Lista de Nombres o CSV</label>
-                    <textarea id="pcPasteText" rows="5" placeholder="Daniel Fernandez&#10;Kevin Bagnarello&#10;Mariana Rodriguez&#10;..."
+                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Pegar texto de Services / Nombres</label>
+                    <textarea id="pcPasteText" rows="6" placeholder="Alfonso Vargas Miranda&#10;Carlos Andrés Gamboa Mesén&#10;Treicy Arroyo Cantillo&#10;Monica Zamora Chavarria&#10;Daniel Fernandez Piedra"
                         class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white outline-none resize-none font-mono"></textarea>
                 </div>
             </div>
@@ -2360,31 +2378,105 @@
             }
         }
 
+        function abrirModalImportarPlanHoy() {
+            abrirModalPlanningCenter();
+            switchPcTab('paste');
+            let selectDestino = document.getElementById('pcPasteDestino');
+            if (selectDestino) selectDestino.value = 'hoy';
+            let msg = document.getElementById('pcStatusMsg');
+            msg.className = 'p-2.5 rounded-xl text-xs bg-indigo-500/10 border border-indigo-500/20 text-indigo-300';
+            msg.innerText = 'Copia y pega los camarógrafos y directores de tu plan de hoy (ej. LINK) para cargarlos de inmediato a este servicio.';
+            msg.classList.remove('hidden');
+        }
+
         async function ejecutarImportacionPegadaPC() {
             let texto = document.getElementById('pcPasteText').value.trim();
+            let destino = document.getElementById('pcPasteDestino') ? document.getElementById('pcPasteDestino').value : 'hoy';
             let msg = document.getElementById('pcStatusMsg');
             let btn = document.getElementById('btnEjecutarSyncPC');
 
             if (!texto) {
                 msg.className = 'p-3 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';
-                msg.innerText = 'Por favor, pega los nombres de las personas en el campo de texto.';
+                msg.innerText = 'Por favor, pega el texto o nombres en el campo.';
                 msg.classList.remove('hidden');
                 return;
             }
 
             let originalBtn = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Importando...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Procesando...';
 
             msg.className = 'p-3 rounded-xl text-xs bg-indigo-500/10 border border-indigo-500/30 text-indigo-200';
-            msg.innerText = 'Guardando personas en Firebase...';
+            msg.innerText = 'Procesando personas detectadas...';
             msg.classList.remove('hidden');
 
             try {
-                // Separar por saltos de línea o comas
                 let lineas = texto.split(/[\r\n,]+/).map(x => x.trim()).filter(x => x.length > 0);
-                
-                // Obtener existentes en Firestore
+
+                let personasDetectadas = [];
+                let ignorarPalabras = ['needed', 'cámaras', 'camaras', 'dirección de cámaras', 'direccion de camaras', 'jefe de piso', 'capacitacion', 'capacitaciones', 'arena', 'bajo', 'batería', 'foh', 'asistente', 'eléctrica', 'acústica', 'pastor', 'anfitriones', 'sonido', 'predica', 'unsent', 'email', 'teams', 'order', 'rehearse', 'times', 'files', 'notes', 'first name', 'last name', 'nombre', 'pending', 'confirmed', 'declined', 'media'];
+
+                for (let linea of lineas) {
+                    let linLower = linea.toLowerCase();
+                    // Saltar líneas de encabezados o estados
+                    if (ignorarPalabras.some(palabra => linLower === palabra || linLower.startsWith(palabra + ':') || linLower.startsWith(palabra + ' '))) continue;
+                    if (linLower.match(/^\d+\s+needed/)) continue;
+                    if (linLower.match(/^\d{1,2}:\d{2}/)) continue;
+
+                    // Si es un nombre válido de al menos 2 palabras o caracteres legibles
+                    let limpio = linea.replace(/[✓✕?✉•]/g, '').trim();
+                    if (limpio.length >= 3 && !limpio.includes('http') && !limpio.includes('@')) {
+                        personasDetectadas.push(limpio);
+                    }
+                }
+
+                if (personasDetectadas.length === 0) {
+                    throw new Error('No se detectaron nombres legibles en el texto pegado.');
+                }
+
+                // 1. Si el destino es cargarlos a "Hoy" en Planear Servicio
+                if (destino === 'hoy') {
+                    let agregadosHoy = 0;
+                    for (let nombrePers of personasDetectadas) {
+                        // Si ya está en asistentesHoy, ignorar
+                        if (!asistentesHoy.some(a => a.nombre.toLowerCase() === nombrePers.toLowerCase())) {
+                            asistentesHoy.push({ nombre: nombrePers, capacitador: '' });
+                            agregadosHoy++;
+                        }
+
+                        // Además, asegurarse de que quede guardado en el directorio de Firebase si no existía
+                        let existeEnFirebase = appData.miembros.some(m => m.id.toLowerCase() === nombrePers.toLowerCase());
+                        if (!existeEnFirebase) {
+                            let partes = nombrePers.split(/\s+/);
+                            let nom = partes[0];
+                            let ape = partes.slice(1).join(' ');
+                            await db.collection('miembros').add({
+                                id: nombrePers,
+                                nombre: nom,
+                                apellidos: ape,
+                                esDirector: false,
+                                esCapacitador: false,
+                                esCamarografo: true,
+                                enCapacitacion: false,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                        }
+                    }
+
+                    // Actualizar dropdowns y UI de la pestaña Planear
+                    actualizarUIAsistentes();
+                    let freshData = await getDatabaseDataFirestore();
+                    renderApp(freshData);
+
+                    msg.className = 'p-3 rounded-xl text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-200';
+                    msg.innerText = `¡Listo! Se cargaron ${agregadosHoy} camarógrafos al servicio de hoy.`;
+                    showToast(`¡${agregadosHoy} camarógrafos asignados a hoy!`, "success");
+                    switchTab('registro');
+                    setTimeout(() => cerrarModalPlanningCenter(), 1800);
+                    return;
+                }
+
+                // 2. Si el destino es guardar en Directorio General (Equipo)
                 let snapMiembros = await db.collection('miembros').get();
                 let nombresExistentes = new Set();
                 snapMiembros.forEach(doc => {
@@ -2394,17 +2486,13 @@
                 });
 
                 let agregados = 0;
-                for (let linea of lineas) {
-                    // Evitar encabezados como First Name, Last Name
-                    if (linea.toLowerCase().includes('first name') || linea.toLowerCase().includes('last name') || linea.toLowerCase().includes('nombre')) continue;
-
-                    let partes = linea.split(/\s+/);
-                    let nombre = partes[0] || '';
-                    let apellidos = partes.slice(1).join(' ') || '';
-                    let fullName = `${nombre} ${apellidos}`.trim();
+                for (let fullName of personasDetectadas) {
                     let compareKey = fullName.toLowerCase();
+                    if (!nombresExistentes.has(compareKey)) {
+                        let partes = fullName.split(/\s+/);
+                        let nombre = partes[0] || '';
+                        let apellidos = partes.slice(1).join(' ') || '';
 
-                    if (fullName && !nombresExistentes.has(compareKey)) {
                         await db.collection('miembros').add({
                             id: fullName,
                             nombre: nombre,
@@ -2420,18 +2508,14 @@
                     }
                 }
 
-                // Auditoría y refresco
-                logAuditoriaFirestore(currentUser ? currentUser.nombre : 'Admin', userRole, 'Importación Services', `Importó ${agregados} miembros del equipo`);
                 let freshData = await getDatabaseDataFirestore();
                 renderApp(freshData);
 
                 msg.className = 'p-3 rounded-xl text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-200';
-                msg.innerText = `¡Éxito! Se agregaron ${agregados} miembros nuevos al equipo.`;
-                showToast(`¡${agregados} personas añadidas al equipo!`, "success");
+                msg.innerText = `¡Éxito! Se registraron ${agregados} personas en el Equipo.`;
+                showToast(`¡${agregados} miembros añadidos!`, "success");
+                setTimeout(() => cerrarModalPlanningCenter(), 1800);
 
-                setTimeout(() => {
-                    cerrarModalPlanningCenter();
-                }, 2000);
             } catch (err) {
                 console.error(err);
                 msg.className = 'p-3 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';
@@ -2445,7 +2529,8 @@
         async function ejecutarSincronizacionPlanningCenter() {
             let appId = document.getElementById('pcAppId').value.trim();
             let secret = document.getElementById('pcSecret').value.trim();
-            let teamId = document.getElementById('pcTeamId').value.trim() || '2982202';
+            let scope = document.getElementById('pcSyncScope').value;
+            let teamIdInput = document.getElementById('pcTeamId').value.trim() || '2982202';
             let msg = document.getElementById('pcStatusMsg');
             let btn = document.getElementById('btnEjecutarSyncPC');
 
@@ -2456,10 +2541,10 @@
                 return;
             }
 
-            // Guardar credenciales para no tener que escribirlas cada vez
+            // Guardar credenciales para persistencia
             localStorage.setItem('pc_app_id', appId);
             localStorage.setItem('pc_secret', secret);
-            localStorage.setItem('pc_team_id', teamId);
+            localStorage.setItem('pc_team_id', teamIdInput);
 
             let originalBtn = btn.innerHTML;
             btn.disabled = true;
@@ -2471,44 +2556,67 @@
 
             try {
                 let basicAuth = btoa(`${appId}:${secret}`);
-                let targetUrl = `https://api.planningcenteronline.com/services/v2/teams/${teamId}/people?per_page=100`;
+                
+                // Si el usuario seleccionó sincronizar todos los equipos de Media
+                let teamsToFetch = [];
+                if (scope === 'all_teams') {
+                    // Obtener todos los equipos de Services
+                    let teamsUrl = `https://api.planningcenteronline.com/services/v2/teams?per_page=100`;
+                    let resTeams = null;
+                    try {
+                        resTeams = await fetch(teamsUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
+                    } catch (e) {
+                        let proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(teamsUrl)}`;
+                        resTeams = await fetch(proxyUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
+                    }
 
-                // Intentar petición directa, y si el navegador la bloquea por CORS, usar proxy seguro
-                let res = null;
-                try {
-                    res = await fetch(targetUrl, {
-                        headers: { 'Authorization': `Basic ${basicAuth}` }
-                    });
-                } catch (directErr) {
-                    // Fallback a proxy CORS para navegadores (Safari/Chrome)
-                    let proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-                    res = await fetch(proxyUrl, {
-                        headers: { 'Authorization': `Basic ${basicAuth}` }
-                    });
-                }
-
-                if (!res || !res.ok) {
-                    if (res && res.status === 401) {
-                        throw new Error('Credenciales inválidas. Revisa tu Application ID y Secret.');
-                    } else if (res && res.status === 404) {
-                        throw new Error(`No se encontró el Team ID ${teamId}. Verifica el número en la URL de Services.`);
-                    } else {
-                        throw new Error(`No se pudo conectar con Planning Center (${res ? res.status : 'Error de red'}).`);
+                    if (resTeams && resTeams.ok) {
+                        let dataTeams = await resTeams.json();
+                        let allTeams = dataTeams.data || [];
+                        // Filtrar equipos que contengan "PAS Media" o "Media"
+                        let mediaTeams = allTeams.filter(t => {
+                            let nom = ((t.attributes && t.attributes.name) || '').toLowerCase();
+                            return nom.includes('media') || nom.includes('camara') || nom.includes('link') || nom.includes('jueves') || nom.includes('finde') || nom.includes('kzn');
+                        });
+                        if (mediaTeams.length > 0) {
+                            teamsToFetch = mediaTeams.map(t => t.id);
+                        }
                     }
                 }
 
-                let data = await res.json();
-                let people = data.data || [];
-
-                if (people.length === 0) {
-                    msg.className = 'p-3 rounded-xl text-xs bg-amber-500/10 border border-amber-500/30 text-amber-200';
-                    msg.innerText = `No se encontraron personas en el equipo con ID ${teamId}.`;
-                    return;
+                // Si no hay lista dinámica o es equipo único, usar el teamIdInput
+                if (teamsToFetch.length === 0) {
+                    teamsToFetch = [teamIdInput];
                 }
 
-                msg.innerText = `Se encontraron ${people.length} personas. Guardando en Firebase...`;
+                msg.innerText = `Descargando personas de ${teamsToFetch.length} equipo(s) de Media...`;
 
-                // Obtener miembros actuales de Firestore para no duplicar
+                let todasLasPersonas = [];
+                for (let tId of teamsToFetch) {
+                    let targetUrl = `https://api.planningcenteronline.com/services/v2/teams/${tId}/people?per_page=100`;
+                    let res = null;
+                    try {
+                        res = await fetch(targetUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
+                    } catch (e) {
+                        let proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+                        res = await fetch(proxyUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
+                    }
+
+                    if (res && res.ok) {
+                        let data = await res.json();
+                        if (data.data) {
+                            todasLasPersonas = todasLasPersonas.concat(data.data);
+                        }
+                    }
+                }
+
+                if (todasLasPersonas.length === 0) {
+                    throw new Error('No se encontraron personas en los equipos seleccionados. Revisa tus credenciales o Team ID.');
+                }
+
+                msg.innerText = `Se encontraron ${todasLasPersonas.length} registros. Guardando en Firebase...`;
+
+                // Guardar en Firestore evitando duplicados
                 let snapMiembros = await db.collection('miembros').get();
                 let nombresExistentes = new Set();
                 snapMiembros.forEach(doc => {
@@ -2518,7 +2626,7 @@
                 });
 
                 let agregados = 0;
-                for (let p of people) {
+                for (let p of todasLasPersonas) {
                     let attrs = p.attributes || {};
                     let firstName = String(attrs.first_name || '').trim();
                     let lastName = String(attrs.last_name || '').trim();
@@ -2532,7 +2640,7 @@
                             apellidos: lastName,
                             esDirector: false,
                             esCapacitador: false,
-                            esCamarografo: true, // Por defecto camarógrafo del equipo
+                            esCamarografo: true,
                             enCapacitacion: false,
                             planningCenterId: p.id,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -2542,23 +2650,18 @@
                     }
                 }
 
-                // Registrar en auditoría
-                logAuditoriaFirestore(currentUser ? currentUser.nombre : 'Admin', userRole, 'Sincronización Planning Center', `Sincronizó ${people.length} personas del Team ${teamId} (+${agregados} nuevos añadidos)`);
-
-                // Recargar interfaz
+                logAuditoriaFirestore(currentUser ? currentUser.nombre : 'Admin', userRole, 'Sincronización Planning Center', `Sincronizó equipos de Media (+${agregados} nuevos miembros añadidos)`);
                 let freshData = await getDatabaseDataFirestore();
                 renderApp(freshData);
 
                 msg.className = 'p-3 rounded-xl text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-200';
-                msg.innerText = `¡Éxito! Se sincronizaron ${people.length} personas (+${agregados} nuevos miembros registrados).`;
-                showToast(`¡${people.length} personas sincronizadas desde Planning Center!`, "success");
+                msg.innerText = `¡Éxito! Se sincronizaron las personas de tus equipos (+${agregados} nuevos registrados).`;
+                showToast(`¡${todasLasPersonas.length} personas sincronizadas con éxito!`, "success");
 
-                setTimeout(() => {
-                    cerrarModalPlanningCenter();
-                }, 2000);
+                setTimeout(() => cerrarModalPlanningCenter(), 2000);
 
             } catch (err) {
-                console.error("Error sincronizando con Planning Center:", err);
+                console.error("Error en sincronización PC:", err);
                 msg.className = 'p-3 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';
                 msg.innerText = `Error: ${err.message}`;
             } finally {
