@@ -365,6 +365,21 @@
                             </button>
                         </div>
                     </div>
+                    <!-- BANNER DE SERVICIO DE HOY SUGERIDO -->
+                    <div id="bannerPlanPcoHoy" class="hidden bg-indigo-500/15 border border-indigo-500/30 rounded-xl p-3 flex items-center justify-between gap-2">
+                        <div class="flex items-center space-x-2 min-w-0">
+                            <span class="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
+                            <div class="truncate">
+                                <span class="text-[11px] font-bold text-indigo-200 block uppercase tracking-wider">¡Hay un servicio programado para hoy!</span>
+                                <span id="bannerPlanPcoHoyTexto" class="text-xs text-white truncate block"></span>
+                            </div>
+                        </div>
+                        <button type="button" id="btnCargarPlanHoyAuto"
+                            class="bg-brand-600 hover:bg-brand-500 active:scale-95 text-white px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shadow-md transition flex items-center">
+                            <i class="fas fa-bolt mr-1.5 text-[11px]"></i> Cargar Ahora
+                        </button>
+                    </div>
+
                     <div class="relative">
                         <select id="selectPlanPcoDirecto" onchange="aplicarPlanPcoSeleccionado(this.value)"
                             class="w-full bg-[#161822] border border-indigo-500/30 focus:border-indigo-400 rounded-xl p-3 text-xs sm:text-sm text-white outline-none cursor-pointer">
@@ -663,6 +678,21 @@
                 </div>
                 <div id="listaUsuariosSistema" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <p class="text-xs text-zinc-500 col-span-full">Cargando usuarios...</p>
+                </div>
+            </div>
+
+            <!-- Configuración de Servicios Planning Center (Habilitar / Deshabilitar Tipos) -->
+            <div class="surface-card p-4 sm:p-5 space-y-4 border border-indigo-500/20">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 pb-2 border-b border-white/[0.06]">
+                    <div>
+                        <h3 class="text-xs font-bold text-indigo-300 uppercase tracking-wider flex items-center">
+                            <i class="fas fa-sliders text-indigo-400 mr-2"></i> Configuración de Servicios Planning Center
+                        </h3>
+                        <p class="text-xs text-zinc-400 mt-0.5">Elige cuáles tipos de servicios aparecen en el selector de planes (ej. ocultar KZN si por ahora no usa cámaras).</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="contenedorTogglesTiposServicios">
+                    <!-- Toggles generados dinámicamente -->
                 </div>
             </div>
         </section>
@@ -1713,6 +1743,7 @@
             renderizarEstadisticas();
             actualizarUIAsistentes();
             cargarPlanesPcoDropdown();
+            renderTogglesTiposServicios();
         }
 
         function renderizarEstadisticas() {
@@ -2716,13 +2747,72 @@
             }
         }
 
+        // ==================== CONFIGURACIÓN DE TIPOS DE SERVICIOS PCO ====================
+        const TIPOS_SERVICIOS_DISPONIBLES = [
+            { id: "Servicio Finde", nombre: "Servicio Finde (Sáb & Dom)" },
+            { id: "LINK", nombre: "LINK (Miércoles)" },
+            { id: "Servicio Jueves", nombre: "Servicio Jueves" },
+            { id: "Ayuno", nombre: "Ayuno" },
+            { id: "KZN", nombre: "KZN" }
+        ];
+
+        function obtenerTiposServiciosHabilitados() {
+            try {
+                let guardado = localStorage.getItem('pco_tipos_habilitados');
+                if (guardado) return JSON.parse(guardado);
+            } catch (e) { }
+            // Por defecto, habilitar los principales (KZN deshabilitado inicialmente como solicitó el usuario)
+            return {
+                "Servicio Finde": true,
+                "LINK": true,
+                "Servicio Jueves": true,
+                "Ayuno": true,
+                "KZN": false
+            };
+        }
+
+        function guardarToggleTipoServicio(tipoId, habilitado) {
+            let config = obtenerTiposServiciosHabilitados();
+            config[tipoId] = habilitado;
+            localStorage.setItem('pco_tipos_habilitados', JSON.stringify(config));
+            cargarPlanesPcoDropdown();
+            showToast(`Servicio "${tipoId}" ${habilitado ? 'habilitado' : 'ocultado'} en la lista.`);
+        }
+
+        function renderTogglesTiposServicios() {
+            let container = document.getElementById('contenedorTogglesTiposServicios');
+            if (!container) return;
+
+            let config = obtenerTiposServiciosHabilitados();
+            let html = '';
+
+            TIPOS_SERVICIOS_DISPONIBLES.forEach(t => {
+                let isChecked = config[t.id] !== false;
+                html += `
+                <label class="flex items-center justify-between p-3 rounded-xl bg-[#161822] border border-white/[0.08] hover:border-indigo-500/40 cursor-pointer transition">
+                    <div class="pr-2">
+                        <span class="block text-xs font-semibold text-white">${t.id}</span>
+                        <span class="block text-[10px] text-zinc-400 truncate">${t.nombre}</span>
+                    </div>
+                    <input type="checkbox" onchange="guardarToggleTipoServicio('${t.id}', this.checked)"
+                        ${isChecked ? 'checked' : ''}
+                        class="w-4 h-4 rounded text-indigo-600 bg-zinc-800 border-zinc-700 focus:ring-indigo-500 cursor-pointer">
+                </label>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
         // ==================== DROPDOWN DE PLANES PLANNING CENTER ====================
         let planesPcoCache = [];
+        let planHoyDetectado = null;
 
         async function cargarPlanesPcoDropdown(forzarRecarga = false) {
             let select = document.getElementById('selectPlanPcoDirecto');
             let btnRecarga = document.getElementById('btnRecargarPlanesPco');
-            let statusText = document.getElementById('pcoPlanesStatus');
+            let bannerHoy = document.getElementById('bannerPlanPcoHoy');
+            let bannerTexto = document.getElementById('bannerPlanPcoHoyTexto');
+            let btnCargarHoy = document.getElementById('btnCargarPlanHoyAuto');
             if (!select) return;
 
             try {
@@ -2745,35 +2835,89 @@
                 }
 
                 let valorSeleccionado = select.value;
-                let html = '<option value="">-- Selecciona el Plan (ej. LINK, Servicio Jueves, Finde) --</option>';
+                let tiposHabilitados = obtenerTiposServiciosHabilitados();
+
+                // Filtrar según tipos habilitados por el administrador
+                let planesFiltrados = planesPcoCache.filter(p => {
+                    let serviceName = p.serviceName || '';
+                    return tiposHabilitados[serviceName] !== false;
+                });
 
                 // Ordenar planes por fecha
-                let planesOrdenados = [...planesPcoCache].sort((a, b) => {
-                    let fechaA = Date.parse(a.dates || '') || 0;
-                    let fechaB = Date.parse(b.dates || '') || 0;
+                let planesOrdenados = [...planesFiltrados].sort((a, b) => {
+                    let fechaA = Date.parse((a.dates || '').replace(/\d+\s*&\s*/, '')) || 0;
+                    let fechaB = Date.parse((b.dates || '').replace(/\d+\s*&\s*/, '')) || 0;
                     return fechaA - fechaB;
                 });
 
-                planesOrdenados.forEach(p => {
-                    let camarografos = [];
-                    try { camarografos = JSON.parse(p.camarografosJson || '[]'); } catch (e) { }
-                    let directores = [];
-                    try { directores = JSON.parse(p.directoresJson || '[]'); } catch (e) { }
+                // Detectar si hoy coincide con algún plan programado
+                let hoy = new Date();
+                let hoyDia = hoy.getDate();
+                let hoyMes = hoy.toLocaleString('en-US', { month: 'long' }); // ej. "September"
+                let hoyAnio = hoy.getFullYear();
 
-                    let dirInfo = '';
-                    if (directores.length > 0) {
-                        let primerDir = directores[0];
-                        let pos = primerDir.position ? `${primerDir.position}: ` : '';
-                        dirInfo = ` • ${pos}${primerDir.name}`;
-                    }
-                    let camsInfo = camarografos.length > 0 ? ` (${camarografos.length} cámaras)` : ' (0 cámaras)';
-                    let label = `${p.serviceName || 'Servicio'} - ${p.dates || ''}${camsInfo}${dirInfo}`;
-
-                    html += `<option value="${p.id || p.planId}">${label}</option>`;
+                planHoyDetectado = planesOrdenados.find(p => {
+                    let dStr = (p.dates || '');
+                    return dStr.includes(String(hoyDia)) && dStr.includes(hoyMes);
                 });
 
+                if (planHoyDetectado && bannerHoy) {
+                    let directores = [];
+                    try { directores = JSON.parse(planHoyDetectado.directoresJson || '[]'); } catch (e) { }
+                    let dirText = directores.length > 0 ? ` • ${directores[0].position || 'Dir'}: ${directores[0].name}` : '';
+                    bannerTexto.innerText = `${planHoyDetectado.serviceName} (${planHoyDetectado.dates})${dirText}`;
+                    bannerHoy.classList.remove('hidden');
+
+                    btnCargarHoy.onclick = () => {
+                        select.value = planHoyDetectado.id || planHoyDetectado.planId;
+                        aplicarPlanPcoSeleccionado(planHoyDetectado.id || planHoyDetectado.planId);
+                    };
+                } else if (bannerHoy) {
+                    bannerHoy.classList.add('hidden');
+                }
+
+                // Agrupar planes por Tipo de Servicio (LINK, Servicio Jueves, Servicio Finde, etc.)
+                let grupos = {};
+                planesOrdenados.forEach(p => {
+                    let grupoNom = p.serviceName || 'Otros Servicios';
+                    if (!grupos[grupoNom]) grupos[grupoNom] = [];
+                    grupos[grupoNom].push(p);
+                });
+
+                let html = '<option value="">-- Selecciona el Plan a preparar --</option>';
+
+                // Recorrer grupos con <optgroup>
+                for (let grupoNom in grupos) {
+                    html += `<optgroup label="━━━━ ${grupoNom.toUpperCase()} ━━━━" class="font-bold text-indigo-400 bg-zinc-900">`;
+                    grupos[grupoNom].forEach(p => {
+                        let camarografos = [];
+                        try { camarografos = JSON.parse(p.camarografosJson || '[]'); } catch (e) { }
+                        let directores = [];
+                        try { directores = JSON.parse(p.directoresJson || '[]'); } catch (e) { }
+
+                        let dirInfo = '';
+                        if (directores.length > 0) {
+                            let primerDir = directores[0];
+                            let pos = primerDir.position ? `${primerDir.position}: ` : '';
+                            dirInfo = ` • ${pos}${primerDir.name}`;
+                        }
+                        let camsInfo = camarografos.length > 0 ? ` (${camarografos.length} cámaras)` : ' (0 cámaras)';
+                        let esHoyTag = (planHoyDetectado && (p.id === planHoyDetectado.id || p.planId === planHoyDetectado.planId)) ? ' ★ HOY ★ ' : '';
+                        let label = `${esHoyTag}${p.dates || ''}${camsInfo}${dirInfo}`;
+
+                        html += `<option value="${p.id || p.planId}">${label}</option>`;
+                    });
+                    html += `</optgroup>`;
+                }
+
                 select.innerHTML = html;
-                if (valorSeleccionado) select.value = valorSeleccionado;
+
+                // Si se detectó el plan de hoy y el select no tiene valor, autoseleccionarlo
+                if (!valorSeleccionado && planHoyDetectado) {
+                    select.value = planHoyDetectado.id || planHoyDetectado.planId;
+                } else if (valorSeleccionado) {
+                    select.value = valorSeleccionado;
+                }
 
             } catch (err) {
                 console.error("Error al cargar planes de PCO desde Firestore:", err);
@@ -2850,7 +2994,7 @@
             actualizarUIAsistentes();
 
             let mensaje = `Plan "${plan.serviceName}" cargado: `;
-            if (directores.length > 0) mensaje += `Director ${directores[0].name}, `;
+            if (directores.length > 0) mensaje += `${directores[0].position || 'Director'}: ${directores[0].name}, `;
             mensaje += `${asistentesHoy.length} camarógrafos listos para asignar.`;
             showToast(mensaje, "success");
         }
