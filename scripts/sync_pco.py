@@ -101,10 +101,13 @@ def sync_pco():
                     if not name:
                         continue
 
-                    if "cámara" in pos or "camara" in pos:
-                        camarografos.append({"name": name, "position": t_attrs.get("team_position_name"), "status": status})
-                    elif "director" in pos or "switcher" in pos:
+                    # 1. Realizador, Switcher o Dirección de Cámaras de PAS Media
+                    if any(kw in pos for kw in ["realizador", "switcher", "dirección de cámaras", "direccion de camaras", "director de cámaras", "director de camaras"]):
                         directores.append({"name": name, "position": t_attrs.get("team_position_name"), "status": status})
+                    
+                    # 2. Operadores de Cámaras
+                    elif pos == "cámaras" or pos == "camaras" or pos.startswith("cámara") or pos.startswith("camara") or "camarografo" in pos or "camarógrafo" in pos:
+                        camarografos.append({"name": name, "position": t_attrs.get("team_position_name"), "status": status})
 
             # Guardar plan en Firestore
             plan_fields = {

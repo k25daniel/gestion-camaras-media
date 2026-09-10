@@ -2760,7 +2760,12 @@
                     let directores = [];
                     try { directores = JSON.parse(p.directoresJson || '[]'); } catch (e) { }
 
-                    let dirInfo = directores.length > 0 ? ` • Dir: ${directores[0].name}` : '';
+                    let dirInfo = '';
+                    if (directores.length > 0) {
+                        let primerDir = directores[0];
+                        let pos = primerDir.position ? `${primerDir.position}: ` : '';
+                        dirInfo = ` • ${pos}${primerDir.name}`;
+                    }
                     let camsInfo = camarografos.length > 0 ? ` (${camarografos.length} cámaras)` : ' (0 cámaras)';
                     let label = `${p.serviceName || 'Servicio'} - ${p.dates || ''}${camsInfo}${dirInfo}`;
 
