@@ -388,23 +388,61 @@
                     </div>
                 </div>
 
-                <!-- Director & Fecha -->
-                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
-                    <div class="sm:col-span-7 min-w-0 space-y-1.5">
-                        <label class="block text-xs font-semibold text-zinc-300">Director a cargo</label>
-                        <div class="relative">
-                            <select id="regDirector"
-                                class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-3 text-sm text-white outline-none transition appearance-none cursor-pointer">
-                            </select>
-                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400">
-                                <i class="fas fa-chevron-down text-xs"></i>
+                <!-- Liderazgo: Realizador, Switcher, Fecha & Quién llenó los blancos -->
+                <div class="space-y-3 bg-black/20 p-3.5 sm:p-4 rounded-2xl border border-white/[0.06]">
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
+                        <!-- Realizador / Dirección de Cámaras -->
+                        <div class="sm:col-span-4 min-w-0 space-y-1.5">
+                            <label class="block text-xs font-semibold text-zinc-300 flex items-center justify-between">
+                                <span><i class="fas fa-video text-indigo-400 mr-1 text-[11px]"></i> Realizador / Dir.</span>
+                                <span class="text-[10px] text-zinc-500 font-normal">PAS Media</span>
+                            </label>
+                            <div class="relative">
+                                <select id="regRealizador" onchange="actualizarOpcionesQuienLleno()"
+                                    class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-xs sm:text-sm text-white outline-none transition appearance-none cursor-pointer">
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400">
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </div>
                             </div>
                         </div>
+
+                        <!-- Switcher -->
+                        <div class="sm:col-span-4 min-w-0 space-y-1.5">
+                            <label class="block text-xs font-semibold text-zinc-300 flex items-center justify-between">
+                                <span><i class="fas fa-sliders text-indigo-400 mr-1 text-[11px]"></i> Switcher</span>
+                                <span class="text-[10px] text-zinc-500 font-normal">PAS Media</span>
+                            </label>
+                            <div class="relative">
+                                <select id="regSwitcher" onchange="actualizarOpcionesQuienLleno()"
+                                    class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-xs sm:text-sm text-white outline-none transition appearance-none cursor-pointer">
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-zinc-400">
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fecha del servicio -->
+                        <div class="sm:col-span-4 min-w-0 space-y-1.5">
+                            <label class="block text-xs font-semibold text-zinc-300 flex items-center justify-between">
+                                <span><i class="fas fa-calendar-day text-indigo-400 mr-1 text-[11px]"></i> Fecha del servicio</span>
+                            </label>
+                            <input type="date" id="regFecha"
+                                class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-xs sm:text-sm text-white outline-none transition">
+                        </div>
                     </div>
-                    <div class="sm:col-span-5 min-w-0 space-y-1.5">
-                        <label class="block text-xs font-semibold text-zinc-300">Fecha del servicio</label>
-                        <input type="date" id="regFecha"
-                            class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-3 text-sm text-white outline-none transition">
+
+                    <!-- Diferenciador: Quién completó los blancos en la app -->
+                    <div class="pt-2 border-t border-white/[0.05] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex items-center space-x-1.5 text-xs text-zinc-400">
+                            <i class="fas fa-signature text-indigo-400 text-xs"></i>
+                            <span class="font-medium text-zinc-300">Llenó los blancos en la app:</span>
+                        </div>
+                        <div id="contenedorQuienLleno" class="flex flex-wrap items-center gap-1.5 text-xs">
+                            <!-- Se genera dinámicamente con botones/badges seleccionables -->
+                        </div>
+                        <input type="hidden" id="regLlenadoPor" value="">
                     </div>
                 </div>
 
@@ -942,6 +980,9 @@
                 servicios.push({
                     id: doc.id,
                     director: d.director || 'Sin Director',
+                    realizador: d.realizador || (d.director || ''),
+                    switcher: d.switcher || '',
+                    registradoPor: d.registradoPor || d.director || '',
                     fecha: d.fecha || '',
                     cam1: d.cam1 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
                     cam2: d.cam2 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
@@ -1258,7 +1299,10 @@
                     }
 
                     await docRef.update({
-                        director: data.director || 'Sin Director',
+                        director: data.director || data.realizador || data.switcher || 'Sin Director',
+                        realizador: data.realizador || '',
+                        switcher: data.switcher || '',
+                        registradoPor: data.registradoPor || usuario || '',
                         fecha: data.fecha || '',
                         cam1: data.cam1,
                         cam2: data.cam2,
@@ -1268,12 +1312,15 @@
                         cam6: data.cam6,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    logAuditoriaFirestore(usuario, userRole, 'Actualizar Servicio', `Editó servicio fecha: ${data.fecha} (Director: ${data.director})`);
+                    logAuditoriaFirestore(usuario, userRole, 'Actualizar Servicio', `Editó servicio fecha: ${data.fecha} (Realizador: ${data.realizador || '-'}, Switcher: ${data.switcher || '-'})`);
                 } else {
                     // Crear nuevo servicio
-                    let directorFinal = userRole === 'admin' ? (data.director || usuario) : usuario;
+                    let directorFinal = data.director || data.realizador || data.switcher || (userRole === 'admin' ? usuario : usuario);
                     await db.collection('servicios').add({
                         director: directorFinal || 'Sin Director',
+                        realizador: data.realizador || '',
+                        switcher: data.switcher || '',
+                        registradoPor: data.registradoPor || usuario || '',
                         fecha: data.fecha || '',
                         cam1: data.cam1,
                         cam2: data.cam2,
@@ -1283,7 +1330,7 @@
                         cam6: data.cam6,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    logAuditoriaFirestore(usuario, userRole, 'Crear Servicio', `Creó nuevo servicio fecha: ${data.fecha} (Director: ${directorFinal})`);
+                    logAuditoriaFirestore(usuario, userRole, 'Crear Servicio', `Creó nuevo servicio fecha: ${data.fecha} (Realizador: ${data.realizador || '-'}, Switcher: ${data.switcher || '-'})`);
                 }
             } else if (action === 'deleteServicio') {
                 let docRef = db.collection('servicios').doc(payload.servicioId);
@@ -1465,7 +1512,13 @@
             }
 
             let ultimoServicio = historial[historial.length - 1];
-            document.getElementById('regDirector').value = ultimoServicio.director || "";
+            let selRealizador = document.getElementById('regRealizador');
+            let selSwitcher = document.getElementById('regSwitcher');
+
+            if (selRealizador) selRealizador.value = ultimoServicio.realizador || ultimoServicio.director || "";
+            if (selSwitcher) selSwitcher.value = ultimoServicio.switcher || "";
+            document.getElementById('regLlenadoPor').value = ultimoServicio.registradoPor || (currentUser ? currentUser.nombre : '');
+            actualizarOpcionesQuienLleno();
 
             asistentesHoy = [];
             for (let i = 1; i <= 6; i++) {
@@ -1502,7 +1555,13 @@
 
         function limpiarFormularioCompleto() {
             if (confirm("¿Estás seguro de limpiar todo el formulario? Se borrarán los asistentes y asignaciones actuales.")) {
-                document.getElementById('regDirector').value = "";
+                let selRealizador = document.getElementById('regRealizador');
+                let selSwitcher = document.getElementById('regSwitcher');
+                if (selRealizador) selRealizador.value = "";
+                if (selSwitcher) selSwitcher.value = "";
+                document.getElementById('regLlenadoPor').value = (currentUser ? currentUser.nombre : '');
+                actualizarOpcionesQuienLleno();
+
                 document.getElementById('regFecha').valueAsDate = new Date();
                 asistentesHoy = [];
                 actualizarUIAsistentes();
@@ -1587,18 +1646,62 @@
                     let puedeEditar = (userRole === 'admin' || (userRole === 'director' && soyElDirectorACargo));
                     let fechaFormateada = formatearFechaLimpia(s.fecha);
 
+                    let tieneRealizador = !!s.realizador;
+                    let tieneSwitcher = !!s.switcher;
+                    let llenadoPor = s.registradoPor || s.director || '';
+
+                    let lideresHtml = '';
+                    if (tieneRealizador && tieneSwitcher) {
+                        let esRealizadorCreador = llenadoPor && s.realizador.toLowerCase() === llenadoPor.toLowerCase();
+                        let esSwitcherCreador = llenadoPor && s.switcher.toLowerCase() === llenadoPor.toLowerCase();
+
+                        let badgeRealizador = esRealizadorCreador ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded font-semibold ml-1.5" title="Llenó los blancos en el app"><i class="fas fa-check-circle mr-0.5"></i>Llenó app</span>' : '';
+                        let badgeSwitcher = esSwitcherCreador ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded font-semibold ml-1.5" title="Llenó los blancos en el app"><i class="fas fa-check-circle mr-0.5"></i>Llenó app</span>' : '';
+
+                        lideresHtml = `
+                            <div class="space-y-0.5">
+                                <div class="text-xs sm:text-sm font-bold text-white flex items-center flex-wrap">
+                                    <span class="text-indigo-300 font-mono text-[11px] mr-1">Realizador:</span> ${s.realizador} ${badgeRealizador}
+                                </div>
+                                <div class="text-[11px] text-zinc-300 flex items-center flex-wrap">
+                                    <span class="text-indigo-400/80 font-mono text-[10px] mr-1">Switcher:</span> ${s.switcher} ${badgeSwitcher}
+                                </div>
+                            </div>
+                        `;
+                    } else if (tieneRealizador || tieneSwitcher) {
+                        let nombreUnico = s.realizador || s.switcher;
+                        let rolUnico = tieneRealizador ? 'Realizador' : 'Switcher';
+                        let badgeUnico = (llenadoPor && nombreUnico.toLowerCase() === llenadoPor.toLowerCase()) ? 
+                            '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded font-semibold ml-1.5" title="Llenó los blancos en el app"><i class="fas fa-check-circle mr-0.5"></i>Llenó app</span>' : '';
+
+                        lideresHtml = `
+                            <div>
+                                <h3 class="font-bold text-white text-xs sm:text-sm tracking-tight flex items-center flex-wrap">
+                                    <span class="text-indigo-300 font-mono text-[11px] mr-1">${rolUnico}:</span> ${nombreUnico} ${badgeUnico}
+                                </h3>
+                                <span class="text-[10px] text-amber-400/80 italic">(${tieneRealizador ? 'Switcher sin asignar' : 'Realizador sin asignar'})</span>
+                            </div>
+                        `;
+                    } else {
+                        lideresHtml = `
+                            <div>
+                                <h3 class="font-bold text-zinc-400 text-xs sm:text-sm tracking-tight">
+                                    ${s.director || 'Sin asignar'}
+                                </h3>
+                            </div>
+                        `;
+                    }
+
                     htmlServicios += `
                     <div class="surface-card p-4 sm:p-5 space-y-3.5 relative overflow-hidden group">
-                        <!-- Top Bar: Director, Fecha & Acciones -->
+                        <!-- Top Bar: Realizador, Switcher, Fecha & Acciones -->
                         <div class="flex justify-between items-start border-b border-white/[0.06] pb-3">
                             <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xs">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xs flex-shrink-0">
                                     <i class="fas fa-user-tie"></i>
                                 </div>
                                 <div>
-                                    <h3 class="font-bold text-white text-sm tracking-tight flex items-center">
-                                        Dir. ${s.director || 'Sin Director'}
-                                    </h3>
+                                    ${lideresHtml}
                                     <p class="text-[11px] text-zinc-400 capitalize mt-0.5 flex items-center">
                                         <i class="fas fa-calendar-day mr-1 text-[10px] text-zinc-500"></i> ${fechaFormateada}
                                     </p>
@@ -1606,7 +1709,7 @@
                             </div>
                             
                             ${puedeEditar ? `
-                                <div class="flex items-center space-x-1">
+                                <div class="flex items-center space-x-1 flex-shrink-0 ml-2">
                                     <button onclick="cargarEdicionServicio('${s.id}')" title="Editar" class="text-zinc-400 hover:text-indigo-400 p-2 text-xs rounded-lg hover:bg-white/[0.05] transition">
                                         <i class="fas fa-pen-to-square"></i>
                                     </button>
@@ -1645,31 +1748,41 @@
             }
             document.getElementById('listaServicios').innerHTML = htmlServicios;
 
-            // Select de Directores (filtrado para directores + usuario actual)
+            // Selects de Liderazgo (Realizador y Switcher - filtrado para directores + usuario actual)
             let directoresArr = data.miembros.filter(m => m.esDirector);
-            let optDirs = '<option value="">-- Seleccione Director --</option>';
+            let optRealizador = '<option value="">-- Sin Asignar (Realizador) --</option>';
+            let optSwitcher = '<option value="">-- Sin Asignar (Switcher) --</option>';
             
-            // Si el usuario actual no está como director en miembros pero es director/admin, añadirlo
             let usuarioActualId = currentUser ? currentUser.nombre : '';
             let existeEnDirectores = directoresArr.some(d => d.id.toLowerCase() === usuarioActualId.toLowerCase());
             if (usuarioActualId && !existeEnDirectores && userRole !== 'public') {
-                optDirs += `<option value="${usuarioActualId}">${usuarioActualId} (Tú)</option>`;
+                optRealizador += `<option value="${usuarioActualId}">${usuarioActualId} (Tú)</option>`;
+                optSwitcher += `<option value="${usuarioActualId}">${usuarioActualId} (Tú)</option>`;
             }
 
             directoresArr.forEach(d => { 
                 let esTu = (usuarioActualId && d.id.toLowerCase() === usuarioActualId.toLowerCase()) ? ' (Tú)' : '';
-                optDirs += `<option value="${d.id}">${d.id}${esTu}</option>`; 
+                optRealizador += `<option value="${d.id}">${d.id}${esTu}</option>`; 
+                optSwitcher += `<option value="${d.id}">${d.id}${esTu}</option>`; 
             });
-            let selectRegDir = document.getElementById('regDirector');
-            let valorPrevioDir = selectRegDir.value;
-            selectRegDir.innerHTML = optDirs;
 
-            // Autoseleccionar al usuario actual por defecto si está vacante o si es un nuevo formulario
-            if (!valorPrevioDir && usuarioActualId && (userRole === 'director' || userRole === 'admin')) {
-                selectRegDir.value = usuarioActualId;
-            } else if (valorPrevioDir) {
-                selectRegDir.value = valorPrevioDir;
+            let selectRealizador = document.getElementById('regRealizador');
+            let selectSwitcher = document.getElementById('regSwitcher');
+
+            if (selectRealizador) {
+                let valorPrevioRealizador = selectRealizador.value;
+                selectRealizador.innerHTML = optRealizador;
+                if (valorPrevioRealizador) selectRealizador.value = valorPrevioRealizador;
             }
+
+            if (selectSwitcher) {
+                let valorPrevioSwitcher = selectSwitcher.value;
+                selectSwitcher.innerHTML = optSwitcher;
+                if (valorPrevioSwitcher) selectSwitcher.value = valorPrevioSwitcher;
+            }
+
+            // Actualizar opciones de quién llenó el formulario
+            actualizarOpcionesQuienLleno();
 
             // Poblar dropdown de Miembros (Directores y Camarógrafos) para asignación de PIN en la pestaña Usuarios
             let selectDirUsuario = document.getElementById('selectDirectorParaUsuario');
@@ -2031,6 +2144,66 @@
             showToast("¡Rotación inteligente aplicada con éxito!", "success");
         }
 
+        function actualizarOpcionesQuienLleno() {
+            let contenedor = document.getElementById('contenedorQuienLleno');
+            let inputHidden = document.getElementById('regLlenadoPor');
+            if (!contenedor || !inputHidden) return;
+
+            let selRealizador = document.getElementById('regRealizador');
+            let selSwitcher = document.getElementById('regSwitcher');
+
+            let realizador = selRealizador ? selRealizador.value.trim() : '';
+            let switcher = selSwitcher ? selSwitcher.value.trim() : '';
+            let usuarioActual = currentUser ? currentUser.nombre : '';
+
+            let valorActual = inputHidden.value || usuarioActual;
+
+            let opciones = [];
+            if (realizador) opciones.push({ nombre: realizador, rol: 'Realizador' });
+            if (switcher && !opciones.some(o => o.nombre.toLowerCase() === switcher.toLowerCase())) {
+                opciones.push({ nombre: switcher, rol: 'Switcher' });
+            }
+            if (usuarioActual && !opciones.some(o => o.nombre.toLowerCase() === usuarioActual.toLowerCase())) {
+                opciones.push({ nombre: usuarioActual, rol: 'Tú' });
+            }
+
+            if (opciones.length === 0) {
+                contenedor.innerHTML = '<span class="text-[11px] text-zinc-500 italic">Asigna primero Realizador o Switcher</span>';
+                inputHidden.value = usuarioActual;
+                return;
+            }
+
+            // Si el valor actual no coincide con ninguna opción, seleccionar la primera
+            if (!opciones.some(o => o.nombre.toLowerCase() === valorActual.toLowerCase())) {
+                valorActual = opciones[0].nombre;
+                inputHidden.value = valorActual;
+            }
+
+            let html = '';
+            opciones.forEach(opt => {
+                let esSeleccionado = opt.nombre.toLowerCase() === valorActual.toLowerCase();
+                let bgClass = esSeleccionado ? 
+                    'bg-indigo-600 text-white border-indigo-400 font-bold shadow-sm shadow-indigo-500/30' : 
+                    'bg-[#161822] text-zinc-400 border-white/[0.08] hover:text-white hover:border-white/[0.2]';
+
+                html += `
+                    <button type="button" onclick="seleccionarQuienLleno('${opt.nombre.replace(/'/g, "\\'")}')" 
+                        class="px-2.5 py-1 rounded-lg border text-xs transition flex items-center space-x-1.5 ${bgClass}">
+                        <i class="fas ${esSeleccionado ? 'fa-circle-check text-emerald-400' : 'fa-circle text-zinc-600'} text-[10px]"></i>
+                        <span>${opt.nombre}</span>
+                        <span class="text-[10px] opacity-75 font-normal">(${opt.rol})</span>
+                    </button>
+                `;
+            });
+            contenedor.innerHTML = html;
+        }
+
+        function seleccionarQuienLleno(nombre) {
+            let inputHidden = document.getElementById('regLlenadoPor');
+            if (inputHidden) inputHidden.value = nombre;
+            actualizarOpcionesQuienLleno();
+        }
+
         async function guardarServicio() {
             if (userRole === 'public') return;
             
@@ -2039,8 +2212,16 @@
             btnGuardar.disabled = true;
             btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...';
 
+            let realizadorVal = (document.getElementById('regRealizador') ? document.getElementById('regRealizador').value : '').trim();
+            let switcherVal = (document.getElementById('regSwitcher') ? document.getElementById('regSwitcher').value : '').trim();
+            let llenadoPorVal = (document.getElementById('regLlenadoPor') ? document.getElementById('regLlenadoPor').value : '').trim();
+            if (!llenadoPorVal) llenadoPorVal = currentUser ? currentUser.nombre : '';
+
             let payloadData = {
-                director: document.getElementById('regDirector').value,
+                realizador: realizadorVal,
+                switcher: switcherVal,
+                director: realizadorVal || switcherVal || 'Sin Director',
+                registradoPor: llenadoPorVal,
                 fecha: document.getElementById('regFecha').value,
             };
 
@@ -2092,7 +2273,14 @@
             if (!s) return;
 
             document.getElementById('regServicioId').value = s.id;
-            document.getElementById('regDirector').value = s.director;
+            
+            let selRealizador = document.getElementById('regRealizador');
+            let selSwitcher = document.getElementById('regSwitcher');
+            if (selRealizador) selRealizador.value = s.realizador || s.director || '';
+            if (selSwitcher) selSwitcher.value = s.switcher || '';
+            document.getElementById('regLlenadoPor').value = s.registradoPor || (currentUser ? currentUser.nombre : '');
+            actualizarOpcionesQuienLleno();
+
             document.getElementById('regFecha').value = s.fecha;
 
             asistentesHoy = [];
@@ -2131,9 +2319,14 @@
 
         function resetServiceForm() {
             document.getElementById('regServicioId').value = '';
-            // Autoasignar al director actual por defecto
-            let defaultDir = (currentUser && (userRole === 'director' || userRole === 'admin')) ? currentUser.nombre : '';
-            document.getElementById('regDirector').value = defaultDir;
+            
+            let selRealizador = document.getElementById('regRealizador');
+            let selSwitcher = document.getElementById('regSwitcher');
+            if (selRealizador) selRealizador.value = '';
+            if (selSwitcher) selSwitcher.value = '';
+            document.getElementById('regLlenadoPor').value = (currentUser ? currentUser.nombre : '');
+            actualizarOpcionesQuienLleno();
+
             document.getElementById('inputCamarografoHoy').value = '';
             document.getElementById('sugerenciasDropdown').classList.add('hidden');
             asistentesHoy = [];
@@ -2864,7 +3057,12 @@
                 if (planHoyDetectado && bannerHoy) {
                     let directores = [];
                     try { directores = JSON.parse(planHoyDetectado.directoresJson || '[]'); } catch (e) { }
-                    let dirText = directores.length > 0 ? ` • ${directores[0].position || 'Dir'}: ${directores[0].name}` : '';
+                    let dirParts = [];
+                    directores.forEach(d => {
+                        let pos = d.position ? `${d.position}: ` : '';
+                        dirParts.push(`${pos}${d.name}`);
+                    });
+                    let dirText = dirParts.length > 0 ? ` • ${dirParts.join(' | ')}` : '';
                     bannerTexto.innerText = `${planHoyDetectado.serviceName} (${planHoyDetectado.dates})${dirText}`;
                     bannerHoy.classList.remove('hidden');
 
@@ -2895,12 +3093,12 @@
                         let directores = [];
                         try { directores = JSON.parse(p.directoresJson || '[]'); } catch (e) { }
 
-                        let dirInfo = '';
-                        if (directores.length > 0) {
-                            let primerDir = directores[0];
-                            let pos = primerDir.position ? `${primerDir.position}: ` : '';
-                            dirInfo = ` • ${pos}${primerDir.name}`;
-                        }
+                        let dirParts = [];
+                        directores.forEach(d => {
+                            let pos = d.position ? `${d.position}: ` : '';
+                            dirParts.push(`${pos}${d.name}`);
+                        });
+                        let dirInfo = dirParts.length > 0 ? ` • ${dirParts.join(' | ')}` : '';
                         let camsInfo = camarografos.length > 0 ? ` (${camarografos.length} cámaras)` : ' (0 cámaras)';
                         let esHoyTag = (planHoyDetectado && (p.id === planHoyDetectado.id || p.planId === planHoyDetectado.planId)) ? ' ★ HOY ★ ' : '';
                         let label = `${esHoyTag}${p.dates || ''}${camsInfo}${dirInfo}`;
@@ -2950,21 +3148,64 @@
             let directores = [];
             try { directores = JSON.parse(plan.directoresJson || '[]'); } catch (e) { }
 
-            // 1. Establecer Director en el formulario
-            if (directores.length > 0) {
-                let directorPco = directores[0].name;
-                let selectDir = document.getElementById('regDirector');
-                
-                // Asegurarse de que esté como opción
-                let existeOpcion = Array.from(selectDir.options).some(opt => opt.value === directorPco);
-                if (!existeOpcion) {
-                    let nuevaOpt = document.createElement('option');
-                    nuevaOpt.value = directorPco;
-                    nuevaOpt.innerText = `${directorPco} (PCO)`;
-                    selectDir.appendChild(nuevaOpt);
+            // 1. Clasificar y Asignar Realizador y Switcher en el formulario
+            let detectadoRealizador = '';
+            let detectadoSwitcher = '';
+
+            for (let d of directores) {
+                let pos = (d.position || '').toLowerCase();
+                let name = (d.name || '').trim();
+                if (!name) continue;
+
+                if (pos.includes('switcher')) {
+                    if (!detectadoSwitcher) detectadoSwitcher = name;
+                } else if (pos.includes('realizador') || pos.includes('dirección de cámaras') || pos.includes('direccion de camaras') || pos.includes('director')) {
+                    if (!detectadoRealizador) detectadoRealizador = name;
                 }
-                selectDir.value = directorPco;
             }
+
+            // Si hay directores pero ninguno coincidió con las palabras clave exactas
+            if (directores.length > 0) {
+                if (!detectadoRealizador && !detectadoSwitcher) {
+                    detectadoRealizador = directores[0].name;
+                    if (directores.length > 1) detectadoSwitcher = directores[1].name;
+                }
+            }
+
+            let selectRealizador = document.getElementById('regRealizador');
+            let selectSwitcher = document.getElementById('regSwitcher');
+
+            function asegurarOpcionEnSelect(selectElem, nombrePersona) {
+                if (!selectElem || !nombrePersona) return;
+                let existe = Array.from(selectElem.options).some(opt => opt.value.toLowerCase() === nombrePersona.toLowerCase());
+                if (!existe) {
+                    let opt = document.createElement('option');
+                    opt.value = nombrePersona;
+                    opt.innerText = `${nombrePersona} (PCO)`;
+                    selectElem.appendChild(opt);
+                }
+                selectElem.value = nombrePersona;
+            }
+
+            if (detectadoRealizador) {
+                asegurarOpcionEnSelect(selectRealizador, detectadoRealizador);
+            } else if (selectRealizador) {
+                selectRealizador.value = '';
+            }
+
+            if (detectadoSwitcher) {
+                asegurarOpcionEnSelect(selectSwitcher, detectadoSwitcher);
+            } else if (selectSwitcher) {
+                selectSwitcher.value = '';
+            }
+
+            // Establecer quién llenó los blancos por defecto al usuario logueado
+            let usuarioActual = currentUser ? currentUser.nombre : '';
+            let inputHiddenLlenado = document.getElementById('regLlenadoPor');
+            if (inputHiddenLlenado) {
+                inputHiddenLlenado.value = usuarioActual || detectadoRealizador || detectadoSwitcher || '';
+            }
+            actualizarOpcionesQuienLleno();
 
             // 2. Establecer Fecha del Servicio
             if (plan.dates) {
@@ -2993,9 +3234,12 @@
             // Actualizar interfaz y selector de cámaras
             actualizarUIAsistentes();
 
-            let mensaje = `Plan "${plan.serviceName}" cargado: `;
-            if (directores.length > 0) mensaje += `${directores[0].position || 'Director'}: ${directores[0].name}, `;
-            mensaje += `${asistentesHoy.length} camarógrafos listos para asignar.`;
+            let partesMensaje = [];
+            if (detectadoRealizador) partesMensaje.push(`Realizador: ${detectadoRealizador}`);
+            if (detectadoSwitcher) partesMensaje.push(`Switcher: ${detectadoSwitcher}`);
+            let lideresResumen = partesMensaje.length > 0 ? ` [${partesMensaje.join(' | ')}]` : '';
+
+            let mensaje = `Plan "${plan.serviceName}" cargado${lideresResumen}: ${asistentesHoy.length} camarógrafos listos.`;
             showToast(mensaje, "success");
         }
     </script>
