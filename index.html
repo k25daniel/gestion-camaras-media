@@ -345,6 +345,25 @@
 
                 <input type="hidden" id="regServicioId" value="">
 
+                <!-- SELECTOR RÁPIDO DE PLANES PLANNING CENTER -->
+                <div class="bg-indigo-950/30 border border-indigo-500/25 rounded-2xl p-3.5 sm:p-4 space-y-2.5">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span class="text-xs font-bold text-indigo-300 uppercase tracking-wider font-mono flex items-center">
+                                <i class="fas fa-calendar-check mr-1.5 text-indigo-400"></i> Servicios de Planning Center
+                            </span>
+                        </div>
+                        <span class="text-[11px] text-zinc-400">Selecciona el día para cargar director y camarógrafos</span>
+                    </div>
+                    <div class="relative">
+                        <select id="selectPlanPcoDirecto" onchange="aplicarPlanPcoSeleccionado(this.value)"
+                            class="w-full bg-[#161822] border border-indigo-500/30 focus:border-indigo-400 rounded-xl p-3 text-xs sm:text-sm text-white outline-none cursor-pointer">
+                            <option value="">-- Elige un Plan programado (ej. LINK, Servicio Jueves, Finde) --</option>
+                        </select>
+                    </div>
+                </div>
+
                 <!-- Director & Fecha -->
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
                     <div class="sm:col-span-7 min-w-0 space-y-1.5">
@@ -1670,6 +1689,7 @@
 
             renderizarEstadisticas();
             actualizarUIAsistentes();
+            cargarPlanesPcoDropdown();
         }
 
         function renderizarEstadisticas() {
@@ -2319,6 +2339,9 @@
             if (tab === 'auditoria') {
                 cargarAuditoria();
             }
+            if (tab === 'registro') {
+                cargarPlanesPcoDropdown();
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -2668,6 +2691,126 @@
                 btn.disabled = false;
                 btn.innerHTML = originalBtn;
             }
+        // ==================== DROPDOWN DE PLANES PLANNING CENTER ====================
+        let planesPcoCache = [];
+
+        async function cargarPlanesPcoDropdown() {
+            let select = document.getElementById('selectPlanPcoDirecto');
+            if (!select) return;
+
+            try {
+                // Si ya están en caché local, re-renderizar manteniendo selección previa
+                if (planesPcoCache.length === 0) {
+                    let snap = await db.collection('pco_planes').get();
+                    if (!snap.empty) {
+                        planesPcoCache = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    }
+                }
+
+                if (planesPcoCache.length === 0) {
+                    select.innerHTML = '<option value="">-- No hay planes sincronizados aún --</option>';
+                    return;
+                }
+
+                let valorSeleccionado = select.value;
+                let html = '<option value="">-- Selecciona el Plan (ej. LINK, Servicio Jueves, Finde) --</option>';
+
+                // Ordenar planes por fecha
+                let planesOrdenados = [...planesPcoCache].sort((a, b) => {
+                    let fechaA = Date.parse(a.dates || '') || 0;
+                    let fechaB = Date.parse(b.dates || '') || 0;
+                    return fechaA - fechaB;
+                });
+
+                planesOrdenados.forEach(p => {
+                    let camarografos = [];
+                    try { camarografos = JSON.parse(p.camarografosJson || '[]'); } catch (e) { }
+                    let directores = [];
+                    try { directores = JSON.parse(p.directoresJson || '[]'); } catch (e) { }
+
+                    let dirInfo = directores.length > 0 ? ` • Dir: ${directores[0].name}` : '';
+                    let camsInfo = camarografos.length > 0 ? ` (${camarografos.length} cámaras)` : ' (0 cámaras)';
+                    let label = `${p.serviceName || 'Servicio'} - ${p.dates || ''}${camsInfo}${dirInfo}`;
+
+                    html += `<option value="${p.id || p.planId}">${label}</option>`;
+                });
+
+                select.innerHTML = html;
+                if (valorSeleccionado) select.value = valorSeleccionado;
+
+            } catch (err) {
+                console.error("Error al cargar planes de PCO desde Firestore:", err);
+            }
+        }
+
+        async function aplicarPlanPcoSeleccionado(planDocId) {
+            if (!planDocId) return;
+
+            let plan = planesPcoCache.find(p => p.id === planDocId || p.planId === planDocId);
+            if (!plan) {
+                try {
+                    let doc = await db.collection('pco_planes').doc(planDocId).get();
+                    if (doc.exists) plan = { id: doc.id, ...doc.data() };
+                } catch (e) { }
+            }
+
+            if (!plan) {
+                showToast("No se encontró la información del plan seleccionado.", "error");
+                return;
+            }
+
+            let camarografos = [];
+            try { camarografos = JSON.parse(plan.camarografosJson || '[]'); } catch (e) { }
+            let directores = [];
+            try { directores = JSON.parse(plan.directoresJson || '[]'); } catch (e) { }
+
+            // 1. Establecer Director en el formulario
+            if (directores.length > 0) {
+                let directorPco = directores[0].name;
+                let selectDir = document.getElementById('regDirector');
+                
+                // Asegurarse de que esté como opción
+                let existeOpcion = Array.from(selectDir.options).some(opt => opt.value === directorPco);
+                if (!existeOpcion) {
+                    let nuevaOpt = document.createElement('option');
+                    nuevaOpt.value = directorPco;
+                    nuevaOpt.innerText = `${directorPco} (PCO)`;
+                    selectDir.appendChild(nuevaOpt);
+                }
+                selectDir.value = directorPco;
+            }
+
+            // 2. Establecer Fecha del Servicio
+            if (plan.dates) {
+                try {
+                    // Si viene como "9 September 2026" o "12 & 13 September 2026"
+                    let fechaLimpia = plan.dates.replace(/\d+\s*&\s*/, '');
+                    let parsedDate = new Date(fechaLimpia);
+                    if (!isNaN(parsedDate.getTime())) {
+                        let y = parsedDate.getFullYear();
+                        let m = String(parsedDate.getMonth() + 1).padStart(2, '0');
+                        let d = String(parsedDate.getDate()).padStart(2, '0');
+                        document.getElementById('regFecha').value = `${y}-${m}-${d}`;
+                    }
+                } catch (e) { }
+            }
+
+            // 3. Asignar camarógrafos a asistentesHoy
+            asistentesHoy = [];
+            for (let c of camarografos) {
+                let nombreCam = (c.name || '').trim();
+                if (nombreCam && !asistentesHoy.some(a => a.nombre.toLowerCase() === nombreCam.toLowerCase())) {
+                    asistentesHoy.push({ nombre: nombreCam, capacitador: '' });
+                }
+            }
+
+            // Actualizar interfaz y selector de cámaras
+            actualizarUIAsistentes();
+
+            let mensaje = `Plan "${plan.serviceName}" cargado: `;
+            if (directores.length > 0) mensaje += `Director ${directores[0].name}, `;
+            mensaje += `${asistentesHoy.length} camarógrafos listos para asignar.`;
+            showToast(mensaje, "success");
         }
     </script>
 </body>

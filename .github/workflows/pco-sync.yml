@@ -1,0 +1,28 @@
+name: Sincronización Automática Planning Center a Firestore
+
+on:
+  schedule:
+    # Corre automáticamente cada 6 horas (o a las 00:00, 06:00, 12:00, 18:00 UTC)
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Permite ejecutar manualmente con un clic desde la pestaña Actions en GitHub
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Ejecutar Sincronizador de Planning Center
+        env:
+          PCO_APP_ID: ${{ secrets.PCO_APP_ID }}
+          PCO_SECRET: ${{ secrets.PCO_SECRET }}
+          FIREBASE_PROJECT_ID: 'gestion-decamaras'
+        run: |
+          python3 scripts/sync_pco.py
