@@ -328,7 +328,7 @@
 
                     <div class="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap gap-2">
                         <button type="button" id="btnImportarPlanHeader" onclick="abrirModalImportarPlanHoy()"
-                            class="bg-[#1e1b4b] hover:bg-[#312e81] active:scale-95 text-indigo-200 hover:text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border border-indigo-500/30 flex items-center shadow-sm">
+                            class="hidden bg-[#1e1b4b] hover:bg-[#312e81] active:scale-95 text-indigo-200 hover:text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border border-indigo-500/30 flex items-center shadow-sm">
                             <i class="fas fa-file-import mr-1.5 text-[11px] text-indigo-400"></i> Importar de Plan (Services)
                         </button>
                         <button type="button" onclick="copiarServicioAnterior()"
@@ -2623,6 +2623,10 @@
         }
 
         function abrirModalPlanningCenter() {
+            if (userRole !== 'admin') {
+                showToast("Esta opción está reservada exclusivamente para el Administrador. Usa 'Actualizar desde Services'.", "info");
+                return;
+            }
             // Cargar credenciales guardadas en localStorage si existen
             let savedAppId = localStorage.getItem('pc_app_id') || '';
             let savedSecret = localStorage.getItem('pc_secret') || '';
@@ -2645,6 +2649,10 @@
         }
 
         async function ejecutarAccionSincronizacionPC() {
+            if (userRole !== 'admin') {
+                showToast("Esta acción solo está permitida para el Administrador.", "error");
+                return;
+            }
             if (currentPcMode === 'api') {
                 await ejecutarSincronizacionPlanningCenter();
             } else {
@@ -2653,6 +2661,10 @@
         }
 
         function abrirModalImportarPlanHoy() {
+            if (userRole !== 'admin') {
+                showToast("Esta opción está reservada exclusivamente para el Administrador. Usa 'Actualizar desde Services'.", "info");
+                return;
+            }
             abrirModalPlanningCenter();
             switchPcTab('paste');
             let selectDestino = document.getElementById('pcPasteDestino');
