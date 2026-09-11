@@ -725,8 +725,8 @@
                         </select>
                     </div>
                     <div class="sm:col-span-3">
-                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">PIN Provisional</label>
-                        <input type="password" id="nuevoUsuarioPin" placeholder="••••" maxlength="20"
+                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">PIN Provisional (Mín. 6 dígitos)</label>
+                        <input type="password" id="nuevoUsuarioPin" placeholder="Mín. 6 dígitos" maxlength="30"
                             class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
                     </div>
                     <div class="sm:col-span-2">
@@ -738,7 +738,7 @@
                         </select>
                     </div>
                     <div class="sm:col-span-2 flex items-end">
-                        <button onclick="guardarNuevoUsuario()"
+                        <button onclick="guardarNuevoUsuario()" id="btnGuardarNuevoUsuario"
                             class="w-full min-h-[42px] bg-brand-600 hover:bg-brand-500 active:scale-95 text-white font-semibold rounded-xl text-xs transition flex items-center justify-center shadow-sm">
                             <i class="fas fa-key mr-1.5"></i> Asignar PIN
                         </button>
@@ -913,6 +913,7 @@
                 </button>
             </div>
         </div>
+    </div>
     <!-- ==================== MODAL OBLIGATORIO: PRIMER CAMBIO DE PIN (CLAVE DE 1 USO) ==================== -->
     <div id="modalPrimerCambioPin" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
         <div class="surface-card w-full max-w-md p-5 sm:p-6 space-y-4 border border-amber-500/30 rounded-2xl shadow-2xl animate-scale-up">
@@ -936,7 +937,7 @@
             <div class="space-y-3">
                 <div class="space-y-1">
                     <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Nuevo PIN / Contraseña</label>
-                    <input type="password" id="primerNuevoPin" placeholder="Mínimo 4 caracteres o dígitos" maxlength="30"
+                    <input type="password" id="primerNuevoPin" placeholder="Mínimo 6 caracteres o dígitos" maxlength="30"
                         class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
                 </div>
 
@@ -987,7 +988,7 @@
 
                 <div class="space-y-1">
                     <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Nuevo PIN / Contraseña</label>
-                    <input type="password" id="cambiarPinNuevoInput" placeholder="Mínimo 4 caracteres o dígitos" maxlength="30"
+                    <input type="password" id="cambiarPinNuevoInput" placeholder="Mínimo 6 caracteres o dígitos" maxlength="30"
                         class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
                 </div>
 
@@ -2921,40 +2922,70 @@
             }
             let selectDir = document.getElementById('selectDirectorParaUsuario');
             let nombre = selectDir ? selectDir.value.trim() : '';
-            let pin = document.getElementById('nuevoUsuarioPin').value.trim();
+            let pinInput = document.getElementById('nuevoUsuarioPin');
+            let pin = pinInput ? pinInput.value.trim() : '';
             let rol = document.getElementById('nuevoUsuarioRol').value;
             let esTemporal = document.getElementById('nuevoUsuarioTemporal') ? document.getElementById('nuevoUsuarioTemporal').checked : true;
 
+            // Limpiar errores visuales previos
+            if (selectDir) selectDir.classList.remove('!border-rose-500', '!ring-1', '!ring-rose-500');
+            if (pinInput) pinInput.classList.remove('!border-rose-500', '!ring-1', '!ring-rose-500');
+
             if (!nombre) {
+                if (selectDir) {
+                    selectDir.classList.add('!border-rose-500', '!ring-1', '!ring-rose-500');
+                    selectDir.focus();
+                }
                 showToast("Selecciona un Miembro de la lista.", "error");
                 return;
             }
             if (!pin) {
-                showToast("Ingresa un PIN para el usuario.", "error");
+                if (pinInput) {
+                    pinInput.classList.add('!border-rose-500', '!ring-1', '!ring-rose-500');
+                    pinInput.focus();
+                }
+                showToast("Ingresa un PIN provisional de al menos 6 dígitos.", "error");
                 return;
             }
             if (pin.length < 6) {
+                if (pinInput) {
+                    pinInput.classList.add('!border-rose-500', '!ring-1', '!ring-rose-500');
+                    pinInput.focus();
+                }
                 showToast("El PIN debe contener al menos 6 caracteres o números.", "error");
                 return;
             }
 
+            let btn = document.getElementById('btnGuardarNuevoUsuario');
+            let origBtn = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Asignando...';
+            }
+
             try {
+                let adminNombre = currentUser ? currentUser.nombre : 'Administrador General';
                 let newData = await apiPost({
                     action: 'saveUsuario',
-                    usuario: currentUser.nombre,
+                    usuario: adminNombre,
                     pin: adminPinCache,
                     nuevoNombre: nombre,
                     nuevoPin: pin,
                     nuevoRol: rol,
                     debeCambiarPin: esTemporal
                 });
-                document.getElementById('nuevoUsuarioPin').value = '';
+                if (pinInput) pinInput.value = '';
                 if (selectDir) selectDir.value = '';
                 renderApp(newData);
                 cargarUsuariosLogin(); // Actualizar lista desplegable del login
                 showToast(`¡PIN provisional asignado a ${nombre}! (Deberá cambiarlo al entrar)`, "success");
             } catch (err) {
                 showToast(`Error: ${err.message}`, "error");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = origBtn;
+                }
             }
         }
 
@@ -3030,7 +3061,12 @@
         }
 
         function abrirModalCambiarPinActual() {
-            if (!currentUser) return;
+            if (!currentUser) {
+                let sesionStr = localStorage.getItem('media_session');
+                if (sesionStr) {
+                    try { currentUser = JSON.parse(sesionStr); } catch(e){}
+                }
+            }
             let modal = document.getElementById('modalCambiarPinActual');
             if (!modal) return;
             document.getElementById('cambiarPinActualInput').value = '';
@@ -3039,7 +3075,9 @@
             let errBox = document.getElementById('cambiarPinError');
             if (errBox) errBox.classList.add('hidden');
             let sub = document.getElementById('cambiarPinSubtitulo');
-            if (sub) sub.innerText = `Usuario activo: ${currentUser.nombre} (${currentUser.rol === 'admin' ? 'Administrador' : 'Director'})`;
+            let nombreMostrar = currentUser ? currentUser.nombre : 'Usuario';
+            let rolMostrar = (currentUser && currentUser.rol === 'admin') ? 'Administrador' : 'Director';
+            if (sub) sub.innerText = `Usuario activo: ${nombreMostrar} (${rolMostrar})`;
             modal.classList.remove('hidden');
             setTimeout(() => {
                 document.getElementById('cambiarPinActualInput')?.focus();
@@ -3937,6 +3975,8 @@
         window.ejecutarCambioPinActual = ejecutarCambioPinActual;
         window.abrirModalPrimerCambioPin = abrirModalPrimerCambioPin;
         window.guardarPrimerPinPersonal = guardarPrimerPinPersonal;
+        window.guardarNuevoUsuario = guardarNuevoUsuario;
+        window.eliminarUsuarioSistema = eliminarUsuarioSistema;
 
     </script>
 </body>
