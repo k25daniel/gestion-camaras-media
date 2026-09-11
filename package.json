@@ -3,12 +3,6 @@
   "version": "1.0.0",
   "description": "Sistema de gestión de cámaras y servicios para el equipo de Media",
   "scripts": {
-    "login": "clasp login",
-    "pull": "clasp pull",
-    "push": "clasp push",
-    "deploy": "clasp deploy"
-  },
-  "devDependencies": {
-    "@google/clasp": "^2.4.2"
+    "sync:pco": "python3 scripts/sync_pco.py"
   }
 }

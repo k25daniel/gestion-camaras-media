@@ -1485,7 +1485,7 @@
             }
         }
 
-        // ADAPTADOR UNIVERSAL: Reemplaza todas las llamadas que antes iban a Apps Script
+        // ========================= CAPA DE OPERACIONES (FIRESTORE) =========================
         async function apiPost(payload) {
             let action = payload.action;
             let usuario = payload.usuario || (currentUser ? currentUser.nombre : '');
