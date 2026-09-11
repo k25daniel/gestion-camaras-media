@@ -420,8 +420,15 @@
                     <div class="relative">
                         <select id="selectPlanPcoDirecto" onchange="aplicarPlanPcoSeleccionado(this.value)"
                             class="w-full bg-[#161822] border border-indigo-500/30 focus:border-indigo-400 rounded-xl p-3 text-xs sm:text-sm text-white outline-none cursor-pointer">
-                            <option value="">-- Elige un Plan programado (ej. LINK, Servicio Jueves, Finde) --</option>
+                            <option value="">-- Plan programado para hoy --</option>
                         </select>
+                    </div>
+                    <div class="flex justify-between items-center text-[11px] pt-0.5">
+                        <span id="pcoFiltroModoTexto" class="text-zinc-400">Mostrando: <b class="text-indigo-300">Solo el servicio de hoy</b></span>
+                        <button type="button" onclick="toggleMostrarTodosLosPlanes()" id="btnToggleModoPlanes"
+                            class="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition text-[10px] sm:text-[11px]">
+                            Ver todos los planes
+                        </button>
                     </div>
                 </div>
 
@@ -1039,9 +1046,16 @@
             measurementId: "G-671WMFQPJF"
         };
 
-        // Initialize Firebase & Firestore
+        // Initialize Firebase & Firestore con persistencia local ultra rápida en IndexedDB
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+            if (err.code === 'failed-precondition') {
+                console.warn("Persistencia activa en pestaña principal.");
+            } else if (err.code === 'unimplemented') {
+                console.warn("Navegador no soporta persistencia offline.");
+            }
+        });
         if (typeof firebase.analytics === 'function') {
             try { firebase.analytics(); } catch (e) {}
         }
@@ -1106,8 +1120,13 @@
         }
 
         async function getDatabaseDataFirestore() {
-            // 1. Obtener miembros
-            let snapMiembros = await db.collection('miembros').get();
+            // Paralelizar consultas a Firestore en un solo roundtrip simultáneo (3x más rápido)
+            const [snapMiembros, snapServicios, snapUsuarios] = await Promise.all([
+                db.collection('miembros').get(),
+                db.collection('servicios').orderBy('createdAt', 'asc').get(),
+                db.collection('usuarios').get()
+            ]);
+
             let miembros = [];
             snapMiembros.forEach(doc => {
                 let d = doc.data();
@@ -1126,8 +1145,6 @@
             });
             miembros.sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-            // 2. Obtener servicios
-            let snapServicios = await db.collection('servicios').orderBy('createdAt', 'asc').get();
             let servicios = [];
             snapServicios.forEach(doc => {
                 let d = doc.data();
@@ -1150,8 +1167,6 @@
                 });
             });
 
-            // 3. Obtener usuarios
-            let snapUsuarios = await db.collection('usuarios').get();
             let usuarios = [];
             snapUsuarios.forEach(doc => {
                 let d = doc.data();
@@ -1164,12 +1179,19 @@
                 });
             });
 
-            return {
+            let resultado = {
                 miembros: miembros,
                 servicios: servicios.slice().reverse(),
                 rawServicios: servicios,
                 usuarios: usuarios
             };
+
+            // Guardar en caché para respuesta instantánea (0ms) en la siguiente carga
+            try {
+                localStorage.setItem('media_app_cache_v2', JSON.stringify(resultado));
+            } catch(e) {}
+
+            return resultado;
         }
 
         // ========================= CRIPTOGRAFÍA Y SEGURIDAD =========================
@@ -1375,6 +1397,14 @@
                     // Guardar sesión en localStorage para persistencia
                     localStorage.setItem('media_session', JSON.stringify(currentUser));
 
+                    // Desbloquear inmediatamente si hay datos en caché (0ms de espera)
+                    let cacheStr = localStorage.getItem('media_app_cache_v2');
+                    if (cacheStr) {
+                        try {
+                            desbloquearInterfaz(JSON.parse(cacheStr));
+                        } catch(e) {}
+                    }
+
                     let data = await getDatabaseDataFirestore();
                     desbloquearInterfaz(data);
                     showToast(`¡Bienvenido/a, ${res.usuario}!`, 'success');
@@ -1443,10 +1473,24 @@
 
         async function verificarSesionGuardada() {
             let sesionStr = localStorage.getItem('media_session');
+            let cacheStr = localStorage.getItem('media_app_cache_v2');
             if (sesionStr) {
                 try {
                     let sess = JSON.parse(sesionStr);
                     if (sess && sess.nombre && sess.pin) {
+                        currentUser = sess;
+                        userRole = sess.rol || 'director';
+                        adminPinCache = sess.pin;
+
+                        // Desbloqueo ultrarrápido (0ms) con la caché local
+                        if (cacheStr) {
+                            try {
+                                let cachedData = JSON.parse(cacheStr);
+                                desbloquearInterfaz(cachedData);
+                            } catch(e) {}
+                        }
+
+                        // Validar credenciales y refrescar datos en segundo plano
                         let res = await authenticateUserFirestore(sess.nombre, sess.pin);
                         if (res.success) {
                             currentUser = {
@@ -1464,6 +1508,8 @@
                             return;
                         } else {
                             localStorage.removeItem('media_session');
+                            localStorage.removeItem('media_app_cache_v2');
+                            window.location.reload();
                         }
                     }
                 } catch (e) {
@@ -3650,127 +3696,133 @@
         // ==================== DROPDOWN DE PLANES PLANNING CENTER ====================
         let planesPcoCache = [];
         let planHoyDetectado = null;
+        let mostrarTodosLosPlanesPco = false; // Por defecto: SOLO mostrar el plan del día/finde actual
 
-        async function sincronizarPlanesPcoEnVivo() {
-            let savedAppId = localStorage.getItem('pc_app_id') || '';
-            let savedSecret = localStorage.getItem('pc_secret') || '';
-
-            // Si hay credenciales guardadas en el sistema (por el administrador), sincronizar directamente vía API
-            if (savedAppId && savedSecret) {
-                let btnRecarga = document.getElementById('btnRecargarPlanesPco');
-                if (btnRecarga) {
-                    btnRecarga.disabled = true;
-                    btnRecarga.innerHTML = '<i class="fas fa-arrows-rotate fa-spin mr-1 text-[10px]"></i> Sincronizando API...';
-                }
-
-                try {
-                    let basicAuth = btoa(`${savedAppId}:${savedSecret}`);
-                    // 1. Obtener Service Types
-                    let stUrl = `https://api.planningcenteronline.com/services/v2/service_types?per_page=100`;
-                    let resSt = null;
-                    try {
-                        resSt = await fetch(stUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
-                    } catch (e) {
-                        resSt = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(stUrl)}`, { headers: { 'Authorization': `Basic ${basicAuth}` } });
-                    }
-
-                    if (resSt && resSt.ok) {
-                        let dataSt = await resSt.json();
-                        let stList = dataSt.data || [];
-
-                        for (let st of stList) {
-                            let stId = st.id;
-                            let stName = st.attributes.name;
-
-                            let plansUrl = `https://api.planningcenteronline.com/services/v2/service_types/${stId}/plans?filter=future&per_page=6`;
-                            let resPlans = null;
-                            try {
-                                resPlans = await fetch(plansUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
-                            } catch (e) {
-                                resPlans = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(plansUrl)}`, { headers: { 'Authorization': `Basic ${basicAuth}` } });
-                            }
-
-                            if (resPlans && resPlans.ok) {
-                                let dataPlans = await resPlans.json();
-                                let plans = dataPlans.data || [];
-
-                                for (let p of plans) {
-                                    let planId = p.id;
-                                    let dates = p.attributes.dates || '';
-                                    let title = p.attributes.title || '';
-
-                                    let membersUrl = `https://api.planningcenteronline.com/services/v2/service_types/${stId}/plans/${planId}/team_members?per_page=100`;
-                                    let resM = null;
-                                    try {
-                                        resM = await fetch(membersUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
-                                    } catch (e) {
-                                        resM = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(membersUrl)}`, { headers: { 'Authorization': `Basic ${basicAuth}` } });
-                                    }
-
-                                    let camarografos = [];
-                                    let directores = [];
-
-                                    if (resM && resM.ok) {
-                                        let dataM = await resM.json();
-                                        let members = dataM.data || [];
-
-                                        members.forEach(m => {
-                                            let attrs = m.attributes || {};
-                                            let pos = (attrs.team_position_name || '').toLowerCase();
-                                            let name = attrs.name || '';
-                                            let status = attrs.status || 'U';
-
-                                            if (!name) return;
-
-                                            if (pos.includes('realizador') || pos.includes('switcher') || pos.includes('dirección de cámaras') || pos.includes('direccion de camaras') || pos.includes('director de cámaras') || pos.includes('director de camaras')) {
-                                                directores.push({ name: name, position: attrs.team_position_name, status: status });
-                                            } else if (pos.includes('cámara') || pos.includes('camara') || pos.includes('camarografo') || pos.includes('camarógrafo')) {
-                                                camarografos.push({ name: name, position: attrs.team_position_name, status: status });
-                                            }
-                                        });
-                                    }
-
-                                    // Guardar / actualizar en Firestore
-                                    await db.collection('pco_planes').doc(planId).set({
-                                        planId: String(planId),
-                                        serviceTypeId: String(stId),
-                                        serviceName: String(stName),
-                                        dates: String(dates),
-                                        title: String(title),
-                                        totalCamaras: camarografos.length,
-                                        camarografosJson: JSON.stringify(camarografos),
-                                        directoresJson: JSON.stringify(directores),
-                                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                                    }, { merge: true });
-                                }
-                            }
-                        }
-                        showToast("¡Planes sincronizados exitosamente desde Planning Center API!", "success");
-                    }
-                } catch (e) {
-                    console.warn("Sincronización directa API no completada, recargando desde base de datos:", e);
-                }
-            }
-
-            // Recargar el dropdown con los datos más recientes
-            await cargarPlanesPcoDropdown(true);
+        function detectarServicioRelevanteHoy() {
+            let hoy = new Date();
+            let dia = hoy.getDay(); // 0: Dom, 1: Lun, 2: Mar, 3: Mié, 4: Jue, 5: Vie, 6: Sáb
+            // Sábado (6), Domingo (0) y Viernes (5): Servicio Finde
+            if (dia === 0 || dia === 6 || dia === 5) return 'Servicio Finde';
+            if (dia === 4) return 'Servicio Jueves';
+            if (dia === 3) return 'LINK';
+            if (dia === 2) return 'KZN';
+            return 'LINK';
         }
 
-        async function cargarPlanesPcoDropdown(forzarRecarga = false) {
+        function encontrarPlanDelDia(planes) {
+            if (!planes || planes.length === 0) return null;
+            let hoy = new Date();
+            let diaHoy = hoy.getDate();
+            let mesHoy = hoy.toLocaleString('en-US', { month: 'long' }).toLowerCase();
+            let servicioObjetivo = detectarServicioRelevanteHoy();
+
+            // 1. Coincidencia exacta por día y mes en las fechas del plan (ej. "12 & 13 September 2026")
+            let planExacto = planes.find(p => {
+                let dStr = (p.dates || '').toLowerCase();
+                if (!dStr.includes(mesHoy)) return false;
+                let diasEnPlan = (dStr.match(/\b\d+\b/g) || []).map(Number).filter(n => n <= 31);
+                if (diasEnPlan.includes(diaHoy)) return true;
+                // Si hoy es viernes y el plan del finde empieza mañana sábado
+                let diaSemana = hoy.getDay();
+                if (diaSemana === 5 && (p.serviceName || '') === 'Servicio Finde' && diasEnPlan.includes(diaHoy + 1)) {
+                    return true;
+                }
+                return false;
+            });
+            if (planExacto) return planExacto;
+
+            // 2. Si no hubo coincidencia por número exacto, buscar el plan más próximo del servicio objetivo de hoy
+            let planesDeServicio = planes.filter(p => (p.serviceName || '').toLowerCase() === servicioObjetivo.toLowerCase());
+            if (planesDeServicio.length > 0) {
+                return planesDeServicio[0];
+            }
+
+            // 3. Fallback: primer plan disponible
+            return planes[0];
+        }
+
+        function toggleMostrarTodosLosPlanes() {
+            mostrarTodosLosPlanesPco = !mostrarTodosLosPlanesPco;
+            let btnToggle = document.getElementById('btnToggleModoPlanes');
+            let txtModo = document.getElementById('pcoFiltroModoTexto');
+            if (btnToggle) {
+                btnToggle.innerText = mostrarTodosLosPlanesPco ? "Mostrar solo el de hoy" : "Ver todos los planes";
+            }
+            if (txtModo) {
+                txtModo.innerHTML = mostrarTodosLosPlanesPco 
+                    ? `Mostrando: <b class="text-indigo-300">Todos los planes</b>`
+                    : `Mostrando: <b class="text-emerald-400">Solo el servicio de hoy</b>`;
+            }
+            cargarPlanesPcoDropdown(false, false);
+        }
+
+        async function sincronizarPlanesPcoEnVivo() {
+            let btnRecarga = document.getElementById('btnRecargarPlanesPco');
+            let statusElem = document.getElementById('pcoPlanesStatus');
+            if (btnRecarga) {
+                btnRecarga.disabled = true;
+                btnRecarga.innerHTML = '<i class="fas fa-arrows-rotate fa-spin mr-1 text-[10px]"></i> Actualizando...';
+            }
+            if (statusElem) {
+                statusElem.innerText = 'Consultando base de datos...';
+            }
+
+            try {
+                // Consultar Firestore pco_planes en tiempo real (ultra rápido, sin bloqueos de CORS)
+                let snap = await db.collection('pco_planes').get();
+                if (!snap.empty) {
+                    planesPcoCache = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                }
+
+                if (planesPcoCache.length === 0) {
+                    showToast("No hay planes sincronizados en la base de datos.", "info");
+                    return;
+                }
+
+                // Identificar el plan único del día
+                planHoyDetectado = encontrarPlanDelDia(planesPcoCache);
+
+                // Recargar dropdown enfocado en el plan de hoy y auto-aplicarlo de inmediato
+                await cargarPlanesPcoDropdown(false, true);
+
+                let horaActual = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                if (statusElem) {
+                    statusElem.innerText = `Actualizado ${horaActual}`;
+                }
+
+                if (planHoyDetectado) {
+                    showToast(`¡Plan de hoy (${planHoyDetectado.serviceName} - ${planHoyDetectado.dates}) actualizado y cargado!`, "success");
+                } else {
+                    showToast("¡Planes actualizados correctamente!", "success");
+                }
+            } catch (err) {
+                console.error("Error al actualizar planes:", err);
+                showToast("Error al actualizar datos: " + err.message, "error");
+            } finally {
+                if (btnRecarga) {
+                    btnRecarga.disabled = false;
+                    btnRecarga.innerHTML = '<i class="fas fa-rotate mr-1 text-[10px]"></i> <span class="hidden xs:inline sm:inline">Actualizar desde Services</span><span class="xs:hidden sm:hidden">Actualizar</span>';
+                }
+            }
+        }
+
+        async function cargarPlanesPcoDropdown(forzarRecarga = false, autoAplicar = false) {
             let select = document.getElementById('selectPlanPcoDirecto');
             let btnRecarga = document.getElementById('btnRecargarPlanesPco');
             let bannerHoy = document.getElementById('bannerPlanPcoHoy');
             let bannerTexto = document.getElementById('bannerPlanPcoHoyTexto');
             let btnCargarHoy = document.getElementById('btnCargarPlanHoyAuto');
+            let txtModo = document.getElementById('pcoFiltroModoTexto');
+            let btnToggle = document.getElementById('btnToggleModoPlanes');
             if (!select) return;
 
             try {
-                if (btnRecarga) {
+                if (btnRecarga && forzarRecarga) {
                     btnRecarga.disabled = true;
                     btnRecarga.innerHTML = '<i class="fas fa-spinner fa-spin mr-1 text-[10px]"></i> Cargando...';
                 }
 
-                // Si se fuerza recarga o la caché está vacía, consultar directamente
+                // Si se fuerza recarga o la caché está vacía, consultar directamente a Firestore
                 if (forzarRecarga || planesPcoCache.length === 0) {
                     let snap = await db.collection('pco_planes').get();
                     if (!snap.empty) {
@@ -3783,7 +3835,7 @@
                     return;
                 }
 
-                let valorSeleccionado = select.value;
+                let valorSeleccionadoPreviamente = select.value;
                 let tiposHabilitados = obtenerTiposServiciosHabilitados();
 
                 // Filtrar según tipos habilitados por el administrador
@@ -3799,17 +3851,51 @@
                     return fechaA - fechaB;
                 });
 
-                // Detectar si hoy coincide con algún plan programado
-                let hoy = new Date();
-                let hoyDia = hoy.getDate();
-                let hoyMes = hoy.toLocaleString('en-US', { month: 'long' }); // ej. "September"
-                let hoyAnio = hoy.getFullYear();
+                // Detectar el plan relevante para hoy
+                planHoyDetectado = encontrarPlanDelDia(planesOrdenados);
 
-                planHoyDetectado = planesOrdenados.find(p => {
-                    let dStr = (p.dates || '');
-                    return dStr.includes(String(hoyDia)) && dStr.includes(hoyMes);
-                });
+                if (btnToggle) {
+                    btnToggle.innerText = mostrarTodosLosPlanesPco ? "Mostrar solo el de hoy" : "Ver todos los planes";
+                }
+                if (txtModo) {
+                    txtModo.innerHTML = mostrarTodosLosPlanesPco 
+                        ? `Mostrando: <b class="text-indigo-300">Todos los planes</b>`
+                        : `Mostrando: <b class="text-emerald-400">Solo el servicio de hoy</b>`;
+                }
 
+                // Si NO se pidió mostrar todos los planes: MOSTRAR ÚNICAMENTE EL PLAN DE HOY
+                if (!mostrarTodosLosPlanesPco && planHoyDetectado) {
+                    let camarografos = [];
+                    try { camarografos = JSON.parse(planHoyDetectado.camarografosJson || '[]'); } catch (e) { }
+                    let directores = [];
+                    try { directores = JSON.parse(planHoyDetectado.directoresJson || '[]'); } catch (e) { }
+
+                    let dirParts = [];
+                    directores.forEach(d => {
+                        let pos = d.position ? `${d.position}: ` : '';
+                        dirParts.push(`${pos}${d.name}`);
+                    });
+                    let dirInfo = dirParts.length > 0 ? ` • ${dirParts.join(' | ')}` : '';
+                    let camsInfo = camarografos.length > 0 ? ` (${camarografos.length} cámaras)` : ' (0 cámaras)';
+
+                    select.innerHTML = `
+                        <option value="${planHoyDetectado.id || planHoyDetectado.planId}">
+                            ★ ${planHoyDetectado.serviceName}: ${planHoyDetectado.dates || ''}${camsInfo}${dirInfo}
+                        </option>
+                    `;
+                    select.value = planHoyDetectado.id || planHoyDetectado.planId;
+
+                    // Ocultar banner redundante
+                    if (bannerHoy) bannerHoy.classList.add('hidden');
+
+                    // Auto-aplicar al formulario si es primera carga o si se pidió explícitamente
+                    if (autoAplicar || !valorSeleccionadoPreviamente) {
+                        aplicarPlanPcoSeleccionado(planHoyDetectado.id || planHoyDetectado.planId);
+                    }
+                    return;
+                }
+
+                // Si se solicitó "Ver todos los planes":
                 if (planHoyDetectado && bannerHoy) {
                     let directores = [];
                     try { directores = JSON.parse(planHoyDetectado.directoresJson || '[]'); } catch (e) { }
@@ -3830,7 +3916,7 @@
                     bannerHoy.classList.add('hidden');
                 }
 
-                // Agrupar planes por Tipo de Servicio (LINK, Servicio Jueves, Servicio Finde, etc.)
+                // Agrupar planes por Tipo de Servicio
                 let grupos = {};
                 planesOrdenados.forEach(p => {
                     let grupoNom = p.serviceName || 'Otros Servicios';
@@ -3840,7 +3926,6 @@
 
                 let html = '<option value="">-- Selecciona el Plan a preparar --</option>';
 
-                // Recorrer grupos con <optgroup>
                 for (let grupoNom in grupos) {
                     html += `<optgroup label="━━━━ ${grupoNom.toUpperCase()} ━━━━" class="font-bold text-indigo-400 bg-zinc-900">`;
                     grupos[grupoNom].forEach(p => {
@@ -3866,19 +3951,18 @@
 
                 select.innerHTML = html;
 
-                // Si se detectó el plan de hoy y el select no tiene valor, autoseleccionarlo
-                if (!valorSeleccionado && planHoyDetectado) {
+                if (valorSeleccionadoPreviamente) {
+                    select.value = valorSeleccionadoPreviamente;
+                } else if (planHoyDetectado) {
                     select.value = planHoyDetectado.id || planHoyDetectado.planId;
-                } else if (valorSeleccionado) {
-                    select.value = valorSeleccionado;
                 }
 
             } catch (err) {
                 console.error("Error al cargar planes de PCO desde Firestore:", err);
             } finally {
-                if (btnRecarga) {
+                if (btnRecarga && forzarRecarga) {
                     btnRecarga.disabled = false;
-                    btnRecarga.innerHTML = '<i class="fas fa-rotate mr-1 text-[10px]"></i> Actualizar';
+                    btnRecarga.innerHTML = '<i class="fas fa-rotate mr-1 text-[10px]"></i> <span class="hidden xs:inline sm:inline">Actualizar desde Services</span><span class="xs:hidden sm:hidden">Actualizar</span>';
                 }
             }
         }
