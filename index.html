@@ -1632,7 +1632,7 @@
                 let debeCambiarPin = payload.debeCambiarPin !== false;
 
                 if (!nuevoNombre) throw new Error("Nombre de usuario requerido.");
-                if (!nuevoPin || nuevoPin.length < 4) throw new Error("El PIN debe tener al menos 4 caracteres.");
+                if (!nuevoPin || nuevoPin.length < 6) throw new Error("El PIN debe tener al menos 6 caracteres.");
 
                 let hashedPin = await hashPin(nuevoPin);
 
@@ -1666,7 +1666,7 @@
                 let esPrimerCambio = payload.esPrimerCambio === true;
 
                 if (!targetUsuario) throw new Error("Usuario no identificado.");
-                if (!nuevoPin || nuevoPin.length < 4) throw new Error("El nuevo PIN debe tener al menos 4 caracteres o dígitos.");
+                if (!nuevoPin || nuevoPin.length < 6) throw new Error("El nuevo PIN debe tener al menos 6 caracteres o dígitos.");
 
                 let hashedNuevo = await hashPin(nuevoPin);
                 let snap = await db.collection('usuarios').where('nombre', '==', targetUsuario).get();
@@ -2933,8 +2933,8 @@
                 showToast("Ingresa un PIN para el usuario.", "error");
                 return;
             }
-            if (pin.length < 4) {
-                showToast("El PIN debe contener al menos 4 caracteres o números.", "error");
+            if (pin.length < 6) {
+                showToast("El PIN debe contener al menos 6 caracteres o números.", "error");
                 return;
             }
 
@@ -2986,8 +2986,8 @@
                 document.getElementById('primerNuevoPin')?.focus();
                 return;
             }
-            if (p1.length < 4) {
-                if (errBox && errTxt) { errTxt.innerText = "El PIN debe tener al menos 4 caracteres o dígitos."; errBox.classList.remove('hidden'); }
+            if (p1.length < 6) {
+                if (errBox && errTxt) { errTxt.innerText = "El PIN debe tener al menos 6 caracteres o dígitos."; errBox.classList.remove('hidden'); }
                 document.getElementById('primerNuevoPin')?.focus();
                 return;
             }
@@ -3072,8 +3072,8 @@
                 document.getElementById('cambiarPinNuevoInput')?.focus();
                 return;
             }
-            if (pNuevo.length < 4) {
-                if (errBox && errTxt) { errTxt.innerText = "El nuevo PIN debe tener al menos 4 caracteres."; errBox.classList.remove('hidden'); }
+            if (pNuevo.length < 6) {
+                if (errBox && errTxt) { errTxt.innerText = "El nuevo PIN debe tener al menos 6 caracteres."; errBox.classList.remove('hidden'); }
                 document.getElementById('cambiarPinNuevoInput')?.focus();
                 return;
             }
@@ -3931,7 +3931,13 @@
             let mensaje = `Plan "${plan.serviceName}" cargado${lideresResumen}: ${asistentesHoy.length} camarógrafos listos.`;
             showToast(mensaje, "success");
         }
+        // Attach to window just in case
+        window.abrirModalCambiarPinActual = abrirModalCambiarPinActual;
+        window.cerrarModalCambiarPinActual = cerrarModalCambiarPinActual;
+        window.ejecutarCambioPinActual = ejecutarCambioPinActual;
+        window.abrirModalPrimerCambioPin = abrirModalPrimerCambioPin;
+        window.guardarPrimerPinPersonal = guardarPrimerPinPersonal;
+
     </script>
 </body>
-
 </html>
