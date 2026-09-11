@@ -851,6 +851,11 @@
                     </a>.
                 </p>
 
+                <div class="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-2.5 text-[11px] text-zinc-300 leading-relaxed flex items-start space-x-2">
+                    <i class="fas fa-circle-info text-indigo-400 mt-0.5 flex-shrink-0"></i>
+                    <span><b>Consejo rápido:</b> Si tu navegador bloquea la conexión por seguridad (CORS), usa la pestaña de al lado <b>"Pegar Plan / Nombres"</b> para cargar tu servicio al instante sin API Tokens.</span>
+                </div>
+
                 <div>
                     <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Application ID</label>
                     <input type="text" id="pcAppId" placeholder="Ej: ca01a8d20c361f..."
@@ -3554,8 +3559,32 @@
 
             } catch (err) {
                 console.error("Error en sincronización PC:", err);
-                msg.className = 'p-3 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';
-                msg.innerText = `Error: ${err.message}`;
+                let errStr = String(err.message || err);
+                if (errStr.includes('Load failed') || errStr.includes('Failed to fetch') || errStr.includes('NetworkError') || errStr.includes('CORS')) {
+                    msg.className = 'p-3.5 rounded-xl text-xs bg-amber-500/10 border border-amber-500/30 text-amber-200 space-y-2.5';
+                    msg.innerHTML = `
+                        <div class="font-bold flex items-center text-amber-300">
+                            <i class="fas fa-shield-halved mr-1.5"></i> Restricción de Seguridad del Navegador (CORS)
+                        </div>
+                        <p class="text-[11px] text-zinc-300 leading-relaxed">
+                            La API oficial de Planning Center <b>bloquea las peticiones directas desde páginas web del navegador</b> para proteger las claves maestras.
+                        </p>
+                        <div class="bg-black/40 p-2.5 rounded-xl text-[11px] space-y-1.5 border border-white/[0.08]">
+                            <p class="font-semibold text-white flex items-center">
+                                <i class="fas fa-circle-check text-emerald-400 mr-1.5"></i> Solución rápida recomendada:
+                            </p>
+                            <p class="text-zinc-300 leading-relaxed">
+                                Usa la pestaña de arriba <b>"Pegar Plan / Nombres"</b>. Copias el texto de tu plan en Services y lo pegas ahí; se cargará de inmediato sin depender de la API ni de bloqueos del navegador.
+                            </p>
+                        </div>
+                        <button type="button" onclick="switchPcTab('paste')" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-semibold py-2 px-3 rounded-xl text-xs transition flex items-center justify-center space-x-1.5 shadow-md">
+                            <i class="fas fa-clipboard-list mr-1"></i> Ir a "Pegar Plan / Nombres"
+                        </button>
+                    `;
+                } else {
+                    msg.className = 'p-3 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';
+                    msg.innerText = `Error: ${err.message}`;
+                }
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalBtn;
