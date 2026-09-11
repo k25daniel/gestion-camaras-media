@@ -807,9 +807,57 @@
 
     function guardarServicio() {
       if (userRole === 'public') return;
+
+      let fechaVal = (document.getElementById('regFecha').value || '').trim();
+      if (!fechaVal) {
+        alert("Por favor selecciona la fecha del servicio.");
+        document.getElementById('regFecha').focus();
+        return;
+      }
+
+      let dirVal = (document.getElementById('regDirector').value || '').trim();
+      if (!dirVal || dirVal === 'Sin Director') {
+        alert("Debes seleccionar un Director/Realizador para el servicio.");
+        document.getElementById('regDirector').focus();
+        return;
+      }
+
+      let camarasActivasCount = 0;
+      for (let i = 1; i <= 6; i++) {
+        if (document.getElementById(`chkActiva${i}`).checked) {
+          camarasActivasCount++;
+          let asig = (document.getElementById(`regCam${i}_asig`).value || '').trim();
+          if (!asig) {
+            alert(`Cámara ${i}: Debes asignar un camarógrafo o marcarla como [Cámara Fija].`);
+            document.getElementById(`regCam${i}_asig`).focus();
+            return;
+          }
+          let fa = (document.getElementById(`regCam${i}_fa`).value || '').trim();
+          let ka = (document.getElementById(`regCam${i}_ka`).value || '').trim();
+          let fb = (document.getElementById(`regCam${i}_fb`).value || '').trim();
+          let kb = (document.getElementById(`regCam${i}_kb`).value || '').trim();
+
+          if (!fa || !ka) {
+            alert(`Cámara ${i}: Debes ingresar F y Kelvin en Preset A.`);
+            document.getElementById(!fa ? `regCam${i}_fa` : `regCam${i}_ka`).focus();
+            return;
+          }
+          if (!fb || !kb) {
+            alert(`Cámara ${i}: Debes ingresar F y Kelvin en Preset B.`);
+            document.getElementById(!fb ? `regCam${i}_fb` : `regCam${i}_kb`).focus();
+            return;
+          }
+        }
+      }
+
+      if (camarasActivasCount === 0) {
+        alert("Debes activar al menos una cámara para el servicio.");
+        return;
+      }
+
       let payload = {
-        director: document.getElementById('regDirector').value,
-        fecha: document.getElementById('regFecha').value,
+        director: dirVal,
+        fecha: fechaVal,
       };
 
       for(let i=1; i<=6; i++) {
@@ -822,10 +870,10 @@
 
           payload[`cam${i}`] = {
             asig: nombreCam,
-            f_a: document.getElementById(`regCam${i}_fa`).value,
-            k_a: document.getElementById(`regCam${i}_ka`).value,
-            f_b: document.getElementById(`regCam${i}_fb`).value,
-            k_b: document.getElementById(`regCam${i}_kb`).value,
+            f_a: document.getElementById(`regCam${i}_fa`).value.trim(),
+            k_a: document.getElementById(`regCam${i}_ka`).value.trim(),
+            f_b: document.getElementById(`regCam${i}_fb`).value.trim(),
+            k_b: document.getElementById(`regCam${i}_kb`).value.trim(),
             esCapacitacion: esCap,
             capacitador: objAsistente ? objAsistente.capacitador : ''
           };

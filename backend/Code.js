@@ -1,8 +1,9 @@
 // ==========================================
-// CONFIGURACIÓN DE PINES MAESTROS (Fallback)
+// CONFIGURACIÓN DE PINES MAESTROS
 // ==========================================
-const MASTER_DIRECTOR_PIN = "2017";
-const MASTER_ADMIN_PIN    = "1997";
+function getMasterAdminPin() {
+  return PropertiesService.getScriptProperties().getProperty('MASTER_ADMIN_PIN') || '';
+}
 
 // Registra una fila en la hoja de Auditoría
 function logAuditoria(usuario, rol, accion, detalle) {
@@ -75,8 +76,9 @@ function authenticateUser(nombre, pin) {
     }
   }
 
-  // Si no está en Usuarios pero es el Admin Maestro
-  if (cleanNombre === "Administrador General" && cleanPin === MASTER_ADMIN_PIN) {
+  // Si no está en Usuarios pero es el Admin Maestro configurado en propiedades
+  var masterPin = getMasterAdminPin();
+  if (masterPin && cleanNombre === "Administrador General" && cleanPin === masterPin) {
     return {
       success: true,
       usuario: "Administrador General",
@@ -304,9 +306,8 @@ function initSheetsIfNeeded(ss) {
   if (!userSheet) {
     userSheet = ss.insertSheet('Usuarios');
     userSheet.appendRow(['Nombre', 'PIN', 'Rol', 'Activo']);
-    // Usuarios iniciales de ejemplo
-    userSheet.appendRow(['Administrador General', '1997', 'admin', true]);
-    userSheet.appendRow(['Director de Turno', '2017', 'director', true]);
+    // Usuario administrador inicial (el PIN se establece mediante el sistema)
+    userSheet.appendRow(['Administrador General', '', 'admin', true]);
   }
 
   // 4. Auditoría
@@ -415,6 +416,38 @@ function deleteMiembro(usuario, pin, idMiembro) {
 
 function saveServicio(usuario, pin, data, servicioId) {
   if (!verifyAuthToken(usuario, pin, 'director')) throw new Error('Se requiere rol de Director o Administrador.');
+  
+  if (!data || !data.fecha || !String(data.fecha).trim()) {
+    throw new Error('Se requiere la fecha del servicio.');
+  }
+  var realVal = String(data.realizador || '').trim();
+  var switVal = String(data.switcher || '').trim();
+  var dirVal = String(data.director || '').trim();
+  if (!realVal && !switVal && (!dirVal || dirVal === 'Sin Director')) {
+    throw new Error('Se requiere asignar al menos un Realizador o Switcher.');
+  }
+
+  var tieneCamarasAsignadas = false;
+  for (var i = 1; i <= 6; i++) {
+    var cam = data['cam' + i];
+    if (cam && cam.asig && String(cam.asig).trim()) {
+      tieneCamarasAsignadas = true;
+      var fa = String(cam.f_a || '').trim();
+      var ka = String(cam.k_a || '').trim();
+      var fb = String(cam.f_b || '').trim();
+      var kb = String(cam.k_b || '').trim();
+      if (!fa || !ka) {
+        throw new Error('La Cámara ' + i + ' debe tener completos los valores de F y Kelvin en Preset A.');
+      }
+      if (!fb || !kb) {
+        throw new Error('La Cámara ' + i + ' debe tener completos los valores de F y Kelvin en Preset B.');
+      }
+    }
+  }
+  if (!tieneCamarasAsignadas) {
+    throw new Error('Debes registrar al menos una cámara activa con camarógrafo y presets F y Kelvin completos.');
+  }
+
   var auth = authenticateUser(usuario, pin);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var srvSheet = ss.getSheetByName('Servicios');

@@ -277,6 +277,11 @@
                     <span id="headerUserName" class="block text-[11px] sm:text-xs font-semibold text-white leading-tight max-w-[100px] sm:max-w-[150px] truncate">Usuario</span>
                     <span id="headerUserRole" class="block text-[9px] sm:text-[10px] font-mono text-zinc-400 capitalize">Director</span>
                 </div>
+                <button onclick="abrirModalCambiarPinActual()" id="btnCambiarPinHeader" title="Cambiar mi Contraseña / PIN"
+                    class="bg-white/[0.04] hover:bg-indigo-500/15 active:scale-95 border border-white/[0.08] hover:border-indigo-500/30 text-zinc-300 hover:text-indigo-300 px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all duration-200">
+                    <i class="fas fa-key text-[11px] text-indigo-400"></i>
+                    <span class="tracking-wide hidden sm:inline">Cambiar PIN</span>
+                </button>
                 <button onclick="cerrarSesion()" id="btnAdminState" title="Cerrar Sesión"
                     class="group relative bg-white/[0.04] hover:bg-rose-500/10 active:scale-95 border border-white/[0.08] hover:border-rose-500/30 text-zinc-300 hover:text-rose-400 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all duration-200">
                     <span id="roleIndicatorDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 group-hover:bg-rose-400 transition-colors"></span>
@@ -548,10 +553,13 @@
                 <!-- PASO 3: Asignación y Presets -->
                 <div class="space-y-3.5">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pt-2">
-                        <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center space-x-1.5">
-                            <span class="w-4 h-4 rounded-full bg-white/10 text-white flex items-center justify-center text-[10px] font-mono">3</span>
-                            <span>Asignación y Parámetros (Presets)</span>
-                        </h3>
+                        <div>
+                            <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider flex items-center space-x-1.5">
+                                <span class="w-4 h-4 rounded-full bg-white/10 text-white flex items-center justify-center text-[10px] font-mono">3</span>
+                                <span>Asignación y Parámetros (Presets)</span>
+                            </h3>
+                            <p class="text-[11px] text-zinc-400 mt-0.5"><span class="text-rose-400 font-bold">*</span> F y Kelvin deben estar llenos en todas las cámaras activas</p>
+                        </div>
                         <button type="button" onclick="sugerirRotacion()"
                             class="w-full sm:w-auto bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95 text-emerald-300 hover:text-white px-3.5 py-2 rounded-xl text-xs font-semibold transition border border-emerald-500/20 flex items-center justify-center">
                             <i class="fas fa-wand-magic-sparkles mr-1.5 text-emerald-400"></i> Sugerir Rotación Inteligente
@@ -717,8 +725,8 @@
                         </select>
                     </div>
                     <div class="sm:col-span-3">
-                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">PIN de Acceso</label>
-                        <input type="password" id="nuevoUsuarioPin" placeholder="••••" maxlength="10"
+                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">PIN Provisional</label>
+                        <input type="password" id="nuevoUsuarioPin" placeholder="••••" maxlength="20"
                             class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
                     </div>
                     <div class="sm:col-span-2">
@@ -735,6 +743,12 @@
                             <i class="fas fa-key mr-1.5"></i> Asignar PIN
                         </button>
                     </div>
+                </div>
+                <div class="flex items-center space-x-2 pt-1">
+                    <label class="flex items-center space-x-2 cursor-pointer text-xs text-zinc-300">
+                        <input type="checkbox" id="nuevoUsuarioTemporal" checked class="w-4 h-4 rounded text-indigo-600 bg-[#161822] border-white/[0.2] focus:ring-indigo-500">
+                        <span><strong class="text-amber-400"><i class="fas fa-shield-halved mr-1"></i>Clave de 1 solo uso:</strong> Se obligará al usuario a crear su propio PIN personal al ingresar por primera vez (tú no sabrás su clave).</span>
+                    </label>
                 </div>
             </div>
 
@@ -899,6 +913,108 @@
                 </button>
             </div>
         </div>
+    <!-- ==================== MODAL OBLIGATORIO: PRIMER CAMBIO DE PIN (CLAVE DE 1 USO) ==================== -->
+    <div id="modalPrimerCambioPin" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
+        <div class="surface-card w-full max-w-md p-5 sm:p-6 space-y-4 border border-amber-500/30 rounded-2xl shadow-2xl animate-scale-up">
+            <div class="flex items-center space-x-3 pb-3 border-b border-white/[0.08]">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 text-lg flex-shrink-0">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm sm:text-base font-bold text-white tracking-tight">Crea tu PIN Personal</h3>
+                    <p class="text-[11px] text-zinc-400">Contraseña temporal de un solo uso detectada</p>
+                </div>
+            </div>
+
+            <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs text-amber-200/90 space-y-1">
+                <p class="font-semibold flex items-center"><i class="fas fa-lock mr-1.5 text-amber-400"></i> Por tu seguridad y privacidad:</p>
+                <p class="text-[11px] text-zinc-300 leading-relaxed">
+                    Has ingresado con una contraseña provisional de 1 solo uso. Para continuar a la aplicación, crea tu propio código/PIN personal definitivo. <strong>El Administrador no conocerá tu clave.</strong>
+                </p>
+            </div>
+
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Nuevo PIN / Contraseña</label>
+                    <input type="password" id="primerNuevoPin" placeholder="Mínimo 4 caracteres o dígitos" maxlength="30"
+                        class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Confirmar Nuevo PIN</label>
+                    <input type="password" id="primerNuevoPinConfirmar" placeholder="Repite tu nuevo PIN" maxlength="30"
+                        class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
+                </div>
+
+                <div id="primerPinError" class="hidden text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl p-2.5 flex items-center">
+                    <i class="fas fa-circle-exclamation mr-1.5 text-rose-400"></i>
+                    <span id="primerPinErrorTexto"></span>
+                </div>
+            </div>
+
+            <button type="button" onclick="guardarPrimerPinPersonal()" id="btnGuardarPrimerPin"
+                class="w-full bg-brand-600 hover:bg-brand-500 active:scale-[0.99] text-white font-semibold py-3 rounded-xl shadow-lg shadow-brand-500/20 transition-all text-xs sm:text-sm tracking-wide flex items-center justify-center space-x-2">
+                <i class="fas fa-check"></i>
+                <span>Guardar mi PIN Personal y Entrar</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL AUTOSERVICIO: CAMBIAR PIN ACTUAL ==================== -->
+    <div id="modalCambiarPinActual" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="surface-card w-full max-w-md p-5 sm:p-6 space-y-4 border border-white/[0.1] rounded-2xl shadow-2xl animate-scale-up">
+            <div class="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-sm flex-shrink-0">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm sm:text-base font-bold text-white tracking-tight">Cambiar mi Contraseña / PIN</h3>
+                        <p id="cambiarPinSubtitulo" class="text-[11px] text-zinc-400">Actualiza tu código personal de acceso</p>
+                    </div>
+                </div>
+                <button onclick="cerrarModalCambiarPinActual()" class="text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-white/[0.05] transition">
+                    <i class="fas fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3">
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">PIN Actual</label>
+                    <input type="password" id="cambiarPinActualInput" placeholder="Ingresa tu PIN actual" maxlength="30"
+                        class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Nuevo PIN / Contraseña</label>
+                    <input type="password" id="cambiarPinNuevoInput" placeholder="Mínimo 4 caracteres o dígitos" maxlength="30"
+                        class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Confirmar Nuevo PIN</label>
+                    <input type="password" id="cambiarPinConfirmarInput" placeholder="Repite tu nuevo PIN" maxlength="30"
+                        class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
+                </div>
+
+                <div id="cambiarPinError" class="hidden text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl p-2.5 flex items-center">
+                    <i class="fas fa-circle-exclamation mr-1.5 text-rose-400"></i>
+                    <span id="cambiarPinErrorTexto"></span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-2">
+                <button type="button" onclick="cerrarModalCambiarPinActual()"
+                    class="px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/[0.05] transition">
+                    Cancelar
+                </button>
+                <button type="button" onclick="ejecutarCambioPinActual()" id="btnEjecutarCambioPin"
+                    class="bg-brand-600 hover:bg-brand-500 active:scale-[0.99] text-white font-semibold px-4 py-2 rounded-xl shadow-md transition text-xs flex items-center space-x-1.5">
+                    <i class="fas fa-check"></i>
+                    <span>Actualizar PIN</span>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- TOAST NOTIFICATION CONTAINER -->
@@ -1009,12 +1125,15 @@
             let servicios = [];
             snapServicios.forEach(doc => {
                 let d = doc.data();
+                let rawDirector = (d.director && d.director !== 'Sin Director') ? d.director : '';
+                let rawRealizador = (d.realizador && d.realizador !== 'Sin Director') ? d.realizador : '';
+                let rawSwitcher = (d.switcher && d.switcher !== 'Sin Director') ? d.switcher : '';
                 servicios.push({
                     id: doc.id,
-                    director: d.director || 'Sin Director',
-                    realizador: d.realizador || (d.director || ''),
-                    switcher: d.switcher || '',
-                    registradoPor: d.registradoPor || d.director || '',
+                    director: rawDirector || rawRealizador || rawSwitcher || 'Sin Director',
+                    realizador: rawRealizador || rawDirector,
+                    switcher: rawSwitcher,
+                    registradoPor: d.registradoPor || rawDirector || rawRealizador || '',
                     fecha: d.fecha || '',
                     cam1: d.cam1 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
                     cam2: d.cam2 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
@@ -1034,7 +1153,8 @@
                     docId: doc.id,
                     nombre: d.nombre,
                     rol: d.rol || 'director',
-                    activo: d.activo !== false
+                    activo: d.activo !== false,
+                    debeCambiarPin: d.debeCambiarPin === true
                 });
             });
 
@@ -1046,6 +1166,17 @@
             };
         }
 
+        // ========================= CRIPTOGRAFÍA Y SEGURIDAD =========================
+        async function hashPin(pin) {
+            let clean = String(pin || '').trim();
+            if (!clean) return '';
+            const encoder = new TextEncoder();
+            const data = encoder.encode(clean + "_media_salt_2026");
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
         async function authenticateUserFirestore(nombre, pin) {
             let cleanNombre = String(nombre || '').trim();
             let cleanPin = String(pin || '').trim();
@@ -1054,33 +1185,64 @@
                 return { success: false, error: "Usuario y PIN requeridos" };
             }
 
-            // Administrador de respaldo de emergencia inicial
-            if (cleanNombre === "Administrador General" && cleanPin === "1997") {
-                return {
-                    success: true,
-                    usuario: "Administrador General",
-                    rol: "admin"
-                };
-            }
+            let enteredHash = await hashPin(cleanPin);
 
             let snap = await db.collection('usuarios').where('nombre', '==', cleanNombre).get();
             if (snap.empty) {
+                // Semilla segura inicial si Administrador General aún no ha sido creado en Firestore
+                const SEED_ADMIN_HASH = "11f176ccb9c754d57c3161ed2f143a69887e8b0c45f513e1a4868d43a32e5bb7";
+                if (cleanNombre === "Administrador General" && enteredHash === SEED_ADMIN_HASH) {
+                    try {
+                        await db.collection('usuarios').add({
+                            nombre: "Administrador General",
+                            pin: SEED_ADMIN_HASH,
+                            rol: "admin",
+                            activo: true,
+                            debeCambiarPin: false,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    } catch (e) {}
+                    return {
+                        success: true,
+                        usuario: "Administrador General",
+                        rol: "admin",
+                        debeCambiarPin: false
+                    };
+                }
                 return { success: false, error: "Usuario no encontrado." };
             }
 
+            let userDocRef = snap.docs[0].ref;
             let userDoc = snap.docs[0].data();
             if (userDoc.activo === false) {
                 return { success: false, error: "Usuario inactivo." };
             }
 
-            if (String(userDoc.pin || '').trim() !== cleanPin) {
+            let storedPin = String(userDoc.pin || '').trim();
+            let esValido = false;
+
+            if (storedPin === enteredHash) {
+                esValido = true;
+            } else if (storedPin === cleanPin) {
+                // Migración automática transparente a SHA-256
+                esValido = true;
+                try {
+                    await userDocRef.update({
+                        pin: enteredHash,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } catch (e) {}
+            }
+
+            if (!esValido) {
                 return { success: false, error: "PIN incorrecto para " + cleanNombre };
             }
 
             return {
                 success: true,
                 usuario: userDoc.nombre,
-                rol: userDoc.rol || 'director'
+                rol: userDoc.rol || 'director',
+                debeCambiarPin: userDoc.debeCambiarPin === true
             };
         }
 
@@ -1210,6 +1372,11 @@
                     let data = await getDatabaseDataFirestore();
                     desbloquearInterfaz(data);
                     showToast(`¡Bienvenido/a, ${res.usuario}!`, 'success');
+
+                    // Si tiene asignada una clave provisional de 1 solo uso, forzar cambio de PIN
+                    if (res.debeCambiarPin) {
+                        abrirModalPrimerCambioPin(res.usuario);
+                    }
                 } else {
                     logAuditoriaFirestore(usuario || "Desconocido", "Desconocido", "Intento Fallido", "PIN inválido");
                     errBox.innerText = res.error || "Credenciales incorrectas.";
@@ -1285,6 +1452,9 @@
                             adminPinCache = sess.pin;
                             let data = await getDatabaseDataFirestore();
                             desbloquearInterfaz(data);
+                            if (res.debeCambiarPin) {
+                                abrirModalPrimerCambioPin(res.usuario);
+                            }
                             return;
                         } else {
                             localStorage.removeItem('media_session');
@@ -1318,6 +1488,41 @@
             if (action === 'saveServicio') {
                 let data = payload.data;
                 let servicioId = payload.servicioId;
+
+                // Validaciones de seguridad en capa de datos / Firestore
+                if (!data || !data.fecha || !String(data.fecha).trim()) {
+                    throw new Error("La fecha del servicio es obligatoria.");
+                }
+
+                let realVal = String(data.realizador || '').trim();
+                let switVal = String(data.switcher || '').trim();
+                let dirVal = String(data.director || '').trim();
+                if (!realVal && !switVal && (!dirVal || dirVal === 'Sin Director')) {
+                    throw new Error("Debes asignar al menos un Realizador o Switcher.");
+                }
+
+                let totalCamarasAsignadas = 0;
+                for (let i = 1; i <= 6; i++) {
+                    let cam = data[`cam${i}`];
+                    if (cam && cam.asig && String(cam.asig).trim()) {
+                        totalCamarasAsignadas++;
+                        let fa = String(cam.f_a || '').trim();
+                        let ka = String(cam.k_a || '').trim();
+                        let fb = String(cam.f_b || '').trim();
+                        let kb = String(cam.k_b || '').trim();
+
+                        if (!fa || !ka) {
+                            throw new Error(`Cámara ${i}: Los valores de F y Kelvin en Preset A son obligatorios.`);
+                        }
+                        if (!fb || !kb) {
+                            throw new Error(`Cámara ${i}: Los valores de F y Kelvin en Preset B son obligatorios.`);
+                        }
+                    }
+                }
+
+                if (totalCamarasAsignadas === 0) {
+                    throw new Error("Debes registrar al menos una cámara activa con camarógrafo asignado y presets completos.");
+                }
 
                 if (servicioId) {
                     // Editar servicio existente
@@ -1424,28 +1629,85 @@
                 let nuevoNombre = String(payload.nuevoNombre || '').trim();
                 let nuevoPin = String(payload.nuevoPin || '').trim();
                 let nuevoRol = String(payload.nuevoRol || 'director').trim().toLowerCase();
+                let debeCambiarPin = payload.debeCambiarPin !== false;
+
+                if (!nuevoNombre) throw new Error("Nombre de usuario requerido.");
+                if (!nuevoPin || nuevoPin.length < 4) throw new Error("El PIN debe tener al menos 4 caracteres.");
+
+                let hashedPin = await hashPin(nuevoPin);
 
                 let snap = await db.collection('usuarios').where('nombre', '==', nuevoNombre).get();
                 if (!snap.empty) {
                     // Actualizar existente
                     await snap.docs[0].ref.update({
-                        pin: nuevoPin,
+                        pin: hashedPin,
                         rol: nuevoRol,
                         activo: true,
+                        debeCambiarPin: debeCambiarPin,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    logAuditoriaFirestore(usuario, 'admin', 'Actualizar Usuario', `Modificó credenciales de: ${nuevoNombre} (Rol: ${nuevoRol})`);
+                    logAuditoriaFirestore(usuario, 'admin', 'Actualizar Usuario', `Asignó nuevo PIN ${debeCambiarPin ? 'temporal (1 uso)' : 'definitivo'} a: ${nuevoNombre}`);
                 } else {
                     // Crear nuevo
                     await db.collection('usuarios').add({
                         nombre: nuevoNombre,
-                        pin: nuevoPin,
+                        pin: hashedPin,
                         rol: nuevoRol,
                         activo: true,
+                        debeCambiarPin: debeCambiarPin,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    logAuditoriaFirestore(usuario, 'admin', 'Crear Usuario', `Creó usuario: ${nuevoNombre} (Rol: ${nuevoRol})`);
+                    logAuditoriaFirestore(usuario, 'admin', 'Crear Usuario', `Creó usuario con PIN ${debeCambiarPin ? 'temporal (1 uso)' : 'definitivo'}: ${nuevoNombre}`);
                 }
+            } else if (action === 'cambiarMiPin') {
+                let targetUsuario = String(payload.targetUsuario || (currentUser ? currentUser.nombre : '')).trim();
+                let pinActual = String(payload.pinActual || '').trim();
+                let nuevoPin = String(payload.nuevoPin || '').trim();
+                let esPrimerCambio = payload.esPrimerCambio === true;
+
+                if (!targetUsuario) throw new Error("Usuario no identificado.");
+                if (!nuevoPin || nuevoPin.length < 4) throw new Error("El nuevo PIN debe tener al menos 4 caracteres o dígitos.");
+
+                let hashedNuevo = await hashPin(nuevoPin);
+                let snap = await db.collection('usuarios').where('nombre', '==', targetUsuario).get();
+
+                if (snap.empty) {
+                    // Si es Administrador General y no estaba en la colección aún
+                    if (targetUsuario === "Administrador General") {
+                        await db.collection('usuarios').add({
+                            nombre: "Administrador General",
+                            pin: hashedNuevo,
+                            rol: "admin",
+                            activo: true,
+                            debeCambiarPin: false,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        logAuditoriaFirestore(targetUsuario, 'admin', 'Cambiar PIN', 'Configuró PIN de Administrador General en base de datos');
+                        return await getDatabaseDataFirestore();
+                    }
+                    throw new Error("Usuario no encontrado en la base de datos.");
+                }
+
+                let userDoc = snap.docs[0].data();
+                let userRef = snap.docs[0].ref;
+
+                // Si no es el primer cambio obligatorio (es cambio voluntario), verificar PIN actual
+                if (!esPrimerCambio) {
+                    if (!pinActual) throw new Error("Debes ingresar tu PIN actual para validar tu identidad.");
+                    let hashedActual = await hashPin(pinActual);
+                    let pinAlmacenado = String(userDoc.pin || '').trim();
+                    if (pinAlmacenado !== hashedActual && pinAlmacenado !== pinActual) {
+                        throw new Error("El PIN actual ingresado es incorrecto.");
+                    }
+                }
+
+                await userRef.update({
+                    pin: hashedNuevo,
+                    debeCambiarPin: false,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                logAuditoriaFirestore(targetUsuario, userDoc.rol || userRole, 'Cambiar PIN', esPrimerCambio ? 'Configuró PIN personal por primera vez (clave de 1 uso completada)' : 'Actualizó su contraseña/PIN personal');
             } else if (action === 'deleteUsuario') {
                 if (userRole !== 'admin') throw new Error("Se requiere rol de Administrador.");
                 let targetNombre = String(payload.targetNombre || '').trim();
@@ -1492,7 +1754,7 @@
                     </div>
 
                     <div class="relative">
-                        <select id="regCam${i}_asig" class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white outline-none cursor-pointer">
+                        <select id="regCam${i}_asig" class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white outline-none cursor-pointer transition">
                             <option value="">-- Sin Asignar --</option>
                             <option value="[Cámara Fija]">📷 [Cámara Fija / Estática]</option>
                         </select>
@@ -1501,24 +1763,24 @@
                     <div class="grid grid-cols-2 gap-2 pt-1">
                         <!-- PRESET A -->
                         <div class="bg-black/30 p-2.5 rounded-xl border border-white/[0.04] space-y-1.5">
-                            <span class="block text-[10px] font-mono font-bold text-zinc-400">PRESET A</span>
+                            <span class="block text-[10px] font-mono font-bold text-zinc-400">PRESET A <span class="text-rose-400 font-bold">*</span></span>
                             <div class="flex space-x-1">
-                                <input type="text" id="regCam${i}_fa" placeholder="F" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500">
-                                <input type="text" id="regCam${i}_ka" placeholder="Kelvin" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500">
+                                <input type="text" id="regCam${i}_fa" placeholder="F *" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
+                                <input type="text" id="regCam${i}_ka" placeholder="Kelvin *" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
                             </div>
                         </div>
 
                         <!-- PRESET B -->
                         <div class="bg-black/30 p-2.5 rounded-xl border border-white/[0.04] space-y-1.5">
                             <div class="flex justify-between items-center">
-                                <span class="block text-[10px] font-mono font-bold text-zinc-400">PRESET B</span>
+                                <span class="block text-[10px] font-mono font-bold text-zinc-400">PRESET B <span class="text-rose-400 font-bold">*</span></span>
                                 <button type="button" onclick="copiarPresetA(${i})" class="text-[9px] bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 hover:text-white px-1.5 py-0.5 rounded border border-indigo-500/20 transition" title="Copiar valores de Preset A">
                                     <i class="fas fa-copy mr-0.5"></i> Copiar A
                                 </button>
                             </div>
                             <div class="flex space-x-1">
-                                <input type="text" id="regCam${i}_fb" placeholder="F" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500">
-                                <input type="text" id="regCam${i}_kb" placeholder="Kelvin" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500">
+                                <input type="text" id="regCam${i}_fb" placeholder="F *" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
+                                <input type="text" id="regCam${i}_kb" placeholder="Kelvin *" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
                             </div>
                         </div>
                     </div>
@@ -1531,8 +1793,12 @@
         function copiarPresetA(num) {
             let fa = document.getElementById(`regCam${num}_fa`).value;
             let ka = document.getElementById(`regCam${num}_ka`).value;
-            document.getElementById(`regCam${num}_fb`).value = fa;
-            document.getElementById(`regCam${num}_kb`).value = ka;
+            let fb = document.getElementById(`regCam${num}_fb`);
+            let kb = document.getElementById(`regCam${num}_kb`);
+            fb.value = fa;
+            kb.value = ka;
+            fb.classList.remove('input-val-error', '!border-rose-500', '!ring-rose-500/50', '!ring-1');
+            kb.classList.remove('input-val-error', '!border-rose-500', '!ring-rose-500/50', '!ring-1');
             showToast(`Preset A copiado a Preset B en Cámara ${num}`);
         }
 
@@ -1543,7 +1809,10 @@
                 return;
             }
 
-            let ultimoServicio = historial[historial.length - 1];
+            // Seleccionar el último servicio que tenga al menos una cámara asignada con datos
+            let ultimoServicio = [...historial].reverse().find(s => {
+                return [1, 2, 3, 4, 5, 6].some(i => s[`cam${i}`] && s[`cam${i}`].asig);
+            }) || historial[historial.length - 1];
             let selRealizador = document.getElementById('regRealizador');
             let selSwitcher = document.getElementById('regSwitcher');
 
@@ -1682,8 +1951,8 @@
                     let puedeEditar = (userRole === 'admin' || (userRole === 'director' && soyElDirectorACargo));
                     let fechaFormateada = formatearFechaLimpia(s.fecha);
 
-                    let tieneRealizador = !!s.realizador;
-                    let tieneSwitcher = !!s.switcher;
+                    let tieneRealizador = !!s.realizador && s.realizador !== 'Sin Director';
+                    let tieneSwitcher = !!s.switcher && s.switcher !== 'Sin Director';
                     let llenadoPor = s.registradoPor || s.director || '';
 
                     let lideresHtml = '';
@@ -1719,10 +1988,11 @@
                             </div>
                         `;
                     } else {
+                        let nombreDir = (s.director && s.director !== 'Sin Director') ? s.director : 'Sin Realizador/Switcher asignado';
                         lideresHtml = `
                             <div>
-                                <h3 class="font-bold text-zinc-400 text-xs sm:text-sm tracking-tight">
-                                    ${s.director || 'Sin asignar'}
+                                <h3 class="font-bold ${nombreDir === 'Sin Realizador/Switcher asignado' ? 'text-amber-400/80 italic' : 'text-zinc-400'} text-xs sm:text-sm tracking-tight">
+                                    ${nombreDir === 'Sin Realizador/Switcher asignado' ? '<i class="fas fa-triangle-exclamation mr-1"></i>' : ''}${nombreDir}
                                 </h3>
                             </div>
                         `;
@@ -2242,23 +2512,116 @@
 
         async function guardarServicio() {
             if (userRole === 'public') return;
-            
+
+            // Limpiar errores visuales previos
+            document.querySelectorAll('.input-val-error').forEach(el => {
+                el.classList.remove('input-val-error', '!border-rose-500', '!ring-rose-500/50', '!ring-1');
+            });
+
+            function marcarError(element, mensaje) {
+                if (element) {
+                    element.classList.add('input-val-error', '!border-rose-500', '!ring-rose-500/50', '!ring-1');
+                    try {
+                        element.focus();
+                        if (typeof element.scrollIntoView === 'function') {
+                            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    } catch (e) {}
+                    let limpiar = () => {
+                        element.classList.remove('input-val-error', '!border-rose-500', '!ring-rose-500/50', '!ring-1');
+                        element.removeEventListener('input', limpiar);
+                        element.removeEventListener('change', limpiar);
+                    };
+                    element.addEventListener('input', limpiar);
+                    element.addEventListener('change', limpiar);
+                }
+                showToast(mensaje, "error");
+            }
+
+            // 1. Validar Fecha
+            let fechaInput = document.getElementById('regFecha');
+            let fechaVal = fechaInput ? fechaInput.value.trim() : '';
+            if (!fechaVal) {
+                marcarError(fechaInput, "Por favor, selecciona la fecha del servicio.");
+                return;
+            }
+
+            // 2. Validar Liderazgo: Realizador o Switcher (al menos uno debe estar asignado)
+            let selRealizador = document.getElementById('regRealizador');
+            let selSwitcher = document.getElementById('regSwitcher');
+            let realizadorVal = selRealizador ? selRealizador.value.trim() : '';
+            let switcherVal = selSwitcher ? selSwitcher.value.trim() : '';
+
+            if (!realizadorVal && !switcherVal) {
+                marcarError(selRealizador, "Debes asignar al menos un Realizador o Switcher.");
+                return;
+            }
+
+            // 3. Validar Cámaras Activas
+            let indicesActivos = [];
+            for (let i = 1; i <= 6; i++) {
+                let chk = document.getElementById(`chkActiva${i}`);
+                if (chk && chk.checked) {
+                    indicesActivos.push(i);
+                }
+            }
+
+            if (indicesActivos.length === 0) {
+                showToast("Debes marcar al menos una cámara activa para el servicio.", "error");
+                return;
+            }
+
+            // 4. Validar Asignación y Valores de F / Kelvin en cada Cámara Activa
+            for (let i of indicesActivos) {
+                let asigInput = document.getElementById(`regCam${i}_asig`);
+                let asigVal = asigInput ? asigInput.value.trim() : '';
+                if (!asigVal) {
+                    marcarError(asigInput, `Cámara ${i}: Debes asignar un camarógrafo o seleccionar [Cámara Fija].`);
+                    return;
+                }
+
+                let faInput = document.getElementById(`regCam${i}_fa`);
+                let kaInput = document.getElementById(`regCam${i}_ka`);
+                let fbInput = document.getElementById(`regCam${i}_fb`);
+                let kbInput = document.getElementById(`regCam${i}_kb`);
+
+                let faVal = faInput ? faInput.value.trim() : '';
+                let kaVal = kaInput ? kaInput.value.trim() : '';
+                let fbVal = fbInput ? fbInput.value.trim() : '';
+                let kbVal = kbInput ? kbInput.value.trim() : '';
+
+                if (!faVal) {
+                    marcarError(faInput, `Cámara ${i}: Debes ingresar el valor de F en Preset A.`);
+                    return;
+                }
+                if (!kaVal) {
+                    marcarError(kaInput, `Cámara ${i}: Debes ingresar el valor de Kelvin en Preset A.`);
+                    return;
+                }
+                if (!fbVal) {
+                    marcarError(fbInput, `Cámara ${i}: Debes ingresar el valor de F en Preset B (puedes usar "Copiar A").`);
+                    return;
+                }
+                if (!kbVal) {
+                    marcarError(kbInput, `Cámara ${i}: Debes ingresar el valor de Kelvin en Preset B (puedes usar "Copiar A").`);
+                    return;
+                }
+            }
+
             const btnGuardar = document.getElementById('btnGuardar');
             const originalBtnContent = btnGuardar.innerHTML;
             btnGuardar.disabled = true;
             btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Guardando...';
 
-            let realizadorVal = (document.getElementById('regRealizador') ? document.getElementById('regRealizador').value : '').trim();
-            let switcherVal = (document.getElementById('regSwitcher') ? document.getElementById('regSwitcher').value : '').trim();
             let llenadoPorVal = (document.getElementById('regLlenadoPor') ? document.getElementById('regLlenadoPor').value : '').trim();
-            if (!llenadoPorVal) llenadoPorVal = currentUser ? currentUser.nombre : '';
+            if (!llenadoPorVal) llenadoPorVal = currentUser ? currentUser.nombre : (realizadorVal || switcherVal);
 
             let payloadData = {
                 realizador: realizadorVal,
                 switcher: switcherVal,
                 director: realizadorVal || switcherVal || 'Sin Director',
                 registradoPor: llenadoPorVal,
-                fecha: document.getElementById('regFecha').value,
+                fecha: fechaVal,
             };
 
             for (let i = 1; i <= 6; i++) {
@@ -2270,10 +2633,10 @@
 
                     payloadData[`cam${i}`] = {
                         asig: nombreCam,
-                        f_a: document.getElementById(`regCam${i}_fa`).value,
-                        k_a: document.getElementById(`regCam${i}_ka`).value,
-                        f_b: document.getElementById(`regCam${i}_fb`).value,
-                        k_b: document.getElementById(`regCam${i}_kb`).value,
+                        f_a: document.getElementById(`regCam${i}_fa`).value.trim(),
+                        k_a: document.getElementById(`regCam${i}_ka`).value.trim(),
+                        f_b: document.getElementById(`regCam${i}_fb`).value.trim(),
+                        k_b: document.getElementById(`regCam${i}_kb`).value.trim(),
                         esCapacitacion: mObj ? mObj.enCapacitacion : false,
                         capacitador: objAsistente ? objAsistente.capacitador : ''
                     };
@@ -2523,18 +2886,22 @@
                     '<span class="px-2 py-0.5 rounded-full text-[10px] bg-purple-500/10 text-purple-300 border border-purple-500/20 font-mono">Administrador</span>' : 
                     '<span class="px-2 py-0.5 rounded-full text-[10px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 font-mono">Director</span>';
                 
+                let estadoPinBadge = u.debeCambiarPin ? 
+                    '<span class="text-[9px] bg-amber-500/15 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded-full font-medium ml-1 flex-shrink-0" title="Deberá cambiarla al entrar"><i class="fas fa-clock mr-1"></i>Clave Provisional (1 uso)</span>' : 
+                    '<span class="text-[9px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded-full font-medium ml-1 flex-shrink-0" title="PIN definitivo creado por el usuario"><i class="fas fa-shield-halved mr-1"></i>PIN Personal Activo ✓</span>';
+
                 let esYo = (currentUser && currentUser.nombre.toLowerCase() === u.nombre.toLowerCase());
 
                 html += `
-                <div class="bg-[#161822] border border-white/[0.06] p-3.5 rounded-2xl flex items-center justify-between hover:border-white/[0.12] transition">
-                    <div class="space-y-1 truncate pr-2">
+                <div class="bg-[#161822] border border-white/[0.06] p-3.5 rounded-2xl flex items-center justify-between hover:border-white/[0.12] transition gap-2">
+                    <div class="space-y-1 truncate pr-2 min-w-0">
                         <div class="flex items-center space-x-2">
                             <span class="font-semibold text-white text-xs sm:text-sm truncate">${u.nombre}</span>
                             ${esYo ? '<span class="text-[9px] bg-emerald-500/10 text-emerald-300 px-1.5 py-0.2 rounded font-mono">Tú</span>' : ''}
                         </div>
-                        <div>${badge}</div>
+                        <div class="flex items-center flex-wrap gap-1.5">${badge} ${estadoPinBadge}</div>
                     </div>
-                    <div>
+                    <div class="flex-shrink-0">
                         ${!esYo ? `
                             <button onclick="eliminarUsuarioSistema('${u.nombre.replace(/'/g, "\\'")}')" class="text-zinc-400 hover:text-rose-400 p-1.5 text-xs rounded-lg transition" title="Eliminar acceso">
                                 <i class="fas fa-trash-can"></i>
@@ -2556,6 +2923,7 @@
             let nombre = selectDir ? selectDir.value.trim() : '';
             let pin = document.getElementById('nuevoUsuarioPin').value.trim();
             let rol = document.getElementById('nuevoUsuarioRol').value;
+            let esTemporal = document.getElementById('nuevoUsuarioTemporal') ? document.getElementById('nuevoUsuarioTemporal').checked : true;
 
             if (!nombre) {
                 showToast("Selecciona un Miembro de la lista.", "error");
@@ -2563,6 +2931,10 @@
             }
             if (!pin) {
                 showToast("Ingresa un PIN para el usuario.", "error");
+                return;
+            }
+            if (pin.length < 4) {
+                showToast("El PIN debe contener al menos 4 caracteres o números.", "error");
                 return;
             }
 
@@ -2573,15 +2945,179 @@
                     pin: adminPinCache,
                     nuevoNombre: nombre,
                     nuevoPin: pin,
-                    nuevoRol: rol
+                    nuevoRol: rol,
+                    debeCambiarPin: esTemporal
                 });
                 document.getElementById('nuevoUsuarioPin').value = '';
                 if (selectDir) selectDir.value = '';
                 renderApp(newData);
                 cargarUsuariosLogin(); // Actualizar lista desplegable del login
-                showToast(`¡PIN asignado a ${nombre} exitosamente!`, "success");
+                showToast(`¡PIN provisional asignado a ${nombre}! (Deberá cambiarlo al entrar)`, "success");
             } catch (err) {
                 showToast(`Error: ${err.message}`, "error");
+            }
+        }
+
+        // ========================= GESTIÓN DE CAMBIO DE PIN (AUTOSERVICIO & PRIMER USO) =========================
+        function abrirModalPrimerCambioPin(nombre) {
+            let modal = document.getElementById('modalPrimerCambioPin');
+            if (!modal) return;
+            document.getElementById('primerNuevoPin').value = '';
+            document.getElementById('primerNuevoPinConfirmar').value = '';
+            let errBox = document.getElementById('primerPinError');
+            if (errBox) errBox.classList.add('hidden');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('primerNuevoPin')?.focus();
+            }, 150);
+        }
+
+        async function guardarPrimerPinPersonal() {
+            let p1 = (document.getElementById('primerNuevoPin')?.value || '').trim();
+            let p2 = (document.getElementById('primerNuevoPinConfirmar')?.value || '').trim();
+            let errBox = document.getElementById('primerPinError');
+            let errTxt = document.getElementById('primerPinErrorTexto');
+            let btn = document.getElementById('btnGuardarPrimerPin');
+
+            if (errBox) errBox.classList.add('hidden');
+
+            if (!p1) {
+                if (errBox && errTxt) { errTxt.innerText = "Ingresa tu nuevo PIN personal."; errBox.classList.remove('hidden'); }
+                document.getElementById('primerNuevoPin')?.focus();
+                return;
+            }
+            if (p1.length < 4) {
+                if (errBox && errTxt) { errTxt.innerText = "El PIN debe tener al menos 4 caracteres o dígitos."; errBox.classList.remove('hidden'); }
+                document.getElementById('primerNuevoPin')?.focus();
+                return;
+            }
+            if (p1 !== p2) {
+                if (errBox && errTxt) { errTxt.innerText = "Los campos de PIN no coinciden."; errBox.classList.remove('hidden'); }
+                document.getElementById('primerNuevoPinConfirmar')?.focus();
+                return;
+            }
+
+            let origBtn = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Guardando PIN...';
+
+            try {
+                let targetUsuario = currentUser ? currentUser.nombre : '';
+                await apiPost({
+                    action: 'cambiarMiPin',
+                    targetUsuario: targetUsuario,
+                    nuevoPin: p1,
+                    esPrimerCambio: true
+                });
+
+                if (currentUser) currentUser.pin = p1;
+                adminPinCache = p1;
+                localStorage.setItem('media_session', JSON.stringify(currentUser));
+
+                document.getElementById('modalPrimerCambioPin').classList.add('hidden');
+                showToast("¡Tu nuevo PIN personal ha sido configurado con éxito!", "success");
+            } catch (err) {
+                if (errBox && errTxt) {
+                    errTxt.innerText = "Error: " + err.message;
+                    errBox.classList.remove('hidden');
+                } else {
+                    showToast("Error: " + err.message, "error");
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origBtn;
+            }
+        }
+
+        function abrirModalCambiarPinActual() {
+            if (!currentUser) return;
+            let modal = document.getElementById('modalCambiarPinActual');
+            if (!modal) return;
+            document.getElementById('cambiarPinActualInput').value = '';
+            document.getElementById('cambiarPinNuevoInput').value = '';
+            document.getElementById('cambiarPinConfirmarInput').value = '';
+            let errBox = document.getElementById('cambiarPinError');
+            if (errBox) errBox.classList.add('hidden');
+            let sub = document.getElementById('cambiarPinSubtitulo');
+            if (sub) sub.innerText = `Usuario activo: ${currentUser.nombre} (${currentUser.rol === 'admin' ? 'Administrador' : 'Director'})`;
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('cambiarPinActualInput')?.focus();
+            }, 150);
+        }
+
+        function cerrarModalCambiarPinActual() {
+            let modal = document.getElementById('modalCambiarPinActual');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        async function ejecutarCambioPinActual() {
+            let pActual = (document.getElementById('cambiarPinActualInput')?.value || '').trim();
+            let pNuevo = (document.getElementById('cambiarPinNuevoInput')?.value || '').trim();
+            let pConf = (document.getElementById('cambiarPinConfirmarInput')?.value || '').trim();
+
+            let errBox = document.getElementById('cambiarPinError');
+            let errTxt = document.getElementById('cambiarPinErrorTexto');
+            let btn = document.getElementById('btnEjecutarCambioPin');
+
+            if (errBox) errBox.classList.add('hidden');
+
+            if (!pActual) {
+                if (errBox && errTxt) { errTxt.innerText = "Ingresa tu PIN actual."; errBox.classList.remove('hidden'); }
+                document.getElementById('cambiarPinActualInput')?.focus();
+                return;
+            }
+            if (!pNuevo) {
+                if (errBox && errTxt) { errTxt.innerText = "Ingresa el nuevo PIN deseado."; errBox.classList.remove('hidden'); }
+                document.getElementById('cambiarPinNuevoInput')?.focus();
+                return;
+            }
+            if (pNuevo.length < 4) {
+                if (errBox && errTxt) { errTxt.innerText = "El nuevo PIN debe tener al menos 4 caracteres."; errBox.classList.remove('hidden'); }
+                document.getElementById('cambiarPinNuevoInput')?.focus();
+                return;
+            }
+            if (pNuevo !== pConf) {
+                if (errBox && errTxt) { errTxt.innerText = "La confirmación no coincide con el nuevo PIN."; errBox.classList.remove('hidden'); }
+                document.getElementById('cambiarPinConfirmarInput')?.focus();
+                return;
+            }
+            if (pActual === pNuevo) {
+                if (errBox && errTxt) { errTxt.innerText = "El nuevo PIN debe ser diferente al actual."; errBox.classList.remove('hidden'); }
+                document.getElementById('cambiarPinNuevoInput')?.focus();
+                return;
+            }
+
+            let origBtn = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Actualizando...';
+
+            try {
+                let targetUsuario = currentUser ? currentUser.nombre : '';
+                await apiPost({
+                    action: 'cambiarMiPin',
+                    targetUsuario: targetUsuario,
+                    pinActual: pActual,
+                    nuevoPin: pNuevo,
+                    esPrimerCambio: false
+                });
+
+                if (currentUser) currentUser.pin = pNuevo;
+                adminPinCache = pNuevo;
+                localStorage.setItem('media_session', JSON.stringify(currentUser));
+
+                cerrarModalCambiarPinActual();
+                showToast("¡Contraseña / PIN actualizado con éxito!", "success");
+            } catch (err) {
+                if (errBox && errTxt) {
+                    errTxt.innerText = err.message;
+                    errBox.classList.remove('hidden');
+                } else {
+                    showToast(err.message, "error");
+                }
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origBtn;
             }
         }
 
