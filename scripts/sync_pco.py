@@ -142,10 +142,9 @@ def sync_miembros():
 def sync_pco():
     print("=== Iniciando sincronización Planning Center Services -> Firestore ===")
 
-    # 1. Sincronizar Miembros
-    sync_miembros()
-
-    # 2. Sincronizar Planes y Programaciones
+    # 1. Sincronizar Planes y Programaciones (directores, switchers, camarógrafos asignados)
+    # NOTA: sync_miembros() está desactivado para evitar importar voluntarios de otros departamentos
+    # o crear registros duplicados tipo slug en Firestore.
     print("\n--- Sincronizando Planes y Asignaciones ---")
     service_types_data = pco_get("https://api.planningcenteronline.com/services/v2/service_types?per_page=100")
     if not service_types_data or "data" not in service_types_data:

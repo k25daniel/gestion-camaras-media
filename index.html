@@ -697,6 +697,10 @@
                             class="bg-indigo-500/15 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center shadow-sm">
                             <i class="fas fa-rotate mr-1 text-[10px]"></i> Recargar
                         </button>
+                        <button type="button" id="btnDepurarDirectorio" onclick="depurarMiembrosDuplicados()" title="Eliminar registros duplicados y personas que no pertenecen a Pas Media"
+                            class="bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 border border-rose-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center shadow-sm">
+                            <i class="fas fa-broom mr-1 text-[10px]"></i> Depurar Duplicados
+                        </button>
                         <button onclick="abrirModalPlanningCenter()" 
                             class="bg-[#1e1b4b] hover:bg-[#312e81] text-indigo-200 border border-indigo-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center shadow-sm">
                             <i class="fas fa-cloud-arrow-down mr-1.5 text-indigo-400"></i> Sincronizar Planning Center
@@ -2069,6 +2073,7 @@
             let btnAuditoria = document.getElementById('tab-auditoria-btn');
 
             let btnImportarHeader = document.getElementById('btnImportarPlanHeader');
+            let btnDepurar = document.getElementById('btnDepurarDirectorio');
             if (userRole === 'admin') {
                 btnPlanear.classList.remove('hidden');
                 btnStats.classList.remove('hidden');
@@ -2076,6 +2081,7 @@
                 if (btnUsuarios) btnUsuarios.classList.remove('hidden');
                 btnAuditoria.classList.remove('hidden');
                 if (btnImportarHeader) btnImportarHeader.classList.remove('hidden');
+                if (btnDepurar) btnDepurar.classList.remove('hidden');
             } else if (userRole === 'director') {
                 btnPlanear.classList.remove('hidden');
                 btnStats.classList.remove('hidden');
@@ -2083,6 +2089,7 @@
                 if (btnUsuarios) btnUsuarios.classList.add('hidden');
                 btnAuditoria.classList.remove('hidden');
                 if (btnImportarHeader) btnImportarHeader.classList.add('hidden');
+                if (btnDepurar) btnDepurar.classList.add('hidden');
                 if (!document.getElementById('sec-equipo').classList.contains('hidden') || 
                     !document.getElementById('sec-usuarios').classList.contains('hidden')) {
                     switchTab('dashboard');
@@ -2094,6 +2101,7 @@
                 if (btnUsuarios) btnUsuarios.classList.add('hidden');
                 btnAuditoria.classList.add('hidden');
                 if (btnImportarHeader) btnImportarHeader.classList.add('hidden');
+                if (btnDepurar) btnDepurar.classList.add('hidden');
                 if (!document.getElementById('sec-dashboard').classList.contains('hidden') === false) switchTab('dashboard');
             }
 
@@ -3476,6 +3484,106 @@
             }
         }
 
+        async function depurarMiembrosDuplicados() {
+            if (userRole !== 'admin') {
+                showToast("Se requiere PIN de Administrador.", "error");
+                return;
+            }
+
+            if (!confirm("¿Deseas depurar los registros duplicados y personas que no pertenecen a Pas Media? Se mantendrán 100% intactos los miembros del equipo con todos sus roles.")) {
+                return;
+            }
+
+            let btn = document.getElementById('btnDepurarDirectorio');
+            let originalContent = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Depurando...';
+            }
+
+            try {
+                showToast("Analizando miembros en la base de datos...", "info");
+                let snap = await db.collection('miembros').get();
+                let batch = db.batch();
+                let eliminados = 0;
+                let operacionesBatch = 0;
+
+                let mapaNombres = new Map();
+                let docsAEliminar = [];
+
+                snap.forEach(doc => {
+                    let d = doc.data();
+                    let docId = doc.id;
+                    let nombreNorm = (d.id || `${d.nombre || ''} ${d.apellidos || ''}`).trim().toLowerCase();
+                    let esSlug = docId.includes('_');
+
+                    if (!mapaNombres.has(nombreNorm)) {
+                        mapaNombres.set(nombreNorm, []);
+                    }
+                    mapaNombres.get(nombreNorm).push({ docId, esSlug, data: d, ref: doc.ref });
+                });
+
+                // Si hay duplicados con el mismo nombre, conservar el mejor y eliminar duplicados
+                mapaNombres.forEach((lista) => {
+                    if (lista.length > 1) {
+                        lista.sort((a, b) => {
+                            let puntajeA = (a.esSlug ? 0 : 10) + (a.data.esDirector ? 5 : 0) + (a.data.esCapacitador ? 5 : 0) + (a.data.enCapacitacion ? 5 : 0);
+                            let puntajeB = (b.esSlug ? 0 : 10) + (b.data.esDirector ? 5 : 0) + (b.data.esCapacitador ? 5 : 0) + (b.data.enCapacitacion ? 5 : 0);
+                            return puntajeB - puntajeA;
+                        });
+                        for (let i = 1; i < lista.length; i++) {
+                            docsAEliminar.push(lista[i].ref);
+                        }
+                    }
+                });
+
+                // Además, eliminar cualquier docId con slug ('_') que no tenga roles asignados
+                snap.forEach(doc => {
+                    let d = doc.data();
+                    if (doc.id.includes('_') && !d.esDirector && !d.esCapacitador && !d.enCapacitacion) {
+                        if (!docsAEliminar.some(r => r.id === doc.id)) {
+                            docsAEliminar.push(doc.ref);
+                        }
+                    }
+                });
+
+                for (let ref of docsAEliminar) {
+                    batch.delete(ref);
+                    operacionesBatch++;
+                    eliminados++;
+                    if (operacionesBatch >= 450) {
+                        await batch.commit();
+                        batch = db.batch();
+                        operacionesBatch = 0;
+                    }
+                }
+
+                if (operacionesBatch > 0) {
+                    await batch.commit();
+                }
+
+                logAuditoriaFirestore(
+                    currentUser ? currentUser.nombre : 'Admin',
+                    'admin',
+                    'Depuración de Directorio',
+                    `Depuró ${eliminados} registros duplicados y no pertenecientes.`
+                );
+
+                let freshData = await getDatabaseDataFirestore();
+                renderApp(freshData);
+                showToast(`¡Depuración completada! Se eliminaron ${eliminados} registros sobrantes. Directorio actual: ${freshData.miembros.length} miembros.`, "success");
+
+            } catch (err) {
+                console.error("Error al depurar directorio:", err);
+                showToast("Error al depurar: " + err.message, "error");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                }
+            }
+        }
+
         function cerrarModalPlanningCenter() {
             document.getElementById('modalPlanningCenter').classList.add('hidden');
         }
@@ -3787,21 +3895,18 @@
 
                 msg.innerText = `Se encontraron ${todasLasPersonas.length} personas y ${todosLosPlanes.length} planes. Guardando en base de datos...`;
 
-                // 1. Guardar o actualizar miembros en Firestore
+                // 1. Vincular planningCenterId en miembros ya existentes en Firestore (sin insertar miembros ajenos a cámaras)
                 let snapMiembros = await db.collection('miembros').get();
-                let nombresExistentes = new Set();
+                let actualizados = 0;
                 let mapDocs = new Map();
                 snapMiembros.forEach(doc => {
                     let d = doc.data();
                     let mId = (d.id || `${d.nombre || ''} ${d.apellidos || ''}`).trim().toLowerCase();
                     if (mId) {
-                        nombresExistentes.add(mId);
                         mapDocs.set(mId, doc.id);
                     }
                 });
 
-                let agregados = 0;
-                let actualizados = 0;
                 for (let p of todasLasPersonas) {
                     let firstName = String(p.nombre || '').trim();
                     let lastName = String(p.apellidos || '').trim();
@@ -3810,30 +3915,13 @@
 
                     if (!fullName) continue;
 
-                    if (!nombresExistentes.has(compareKey)) {
-                        await db.collection('miembros').add({
-                            id: fullName,
-                            nombre: firstName || fullName,
-                            apellidos: lastName,
-                            esDirector: false,
-                            esCapacitador: false,
-                            esCamarografo: true,
-                            enCapacitacion: false,
+                    let existingDocId = mapDocs.get(compareKey);
+                    if (existingDocId) {
+                        await db.collection('miembros').doc(existingDocId).update({
                             planningCenterId: p.id,
-                            equiposPco: p.equipos || [],
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            equiposPco: p.equipos || []
                         });
-                        nombresExistentes.add(compareKey);
-                        agregados++;
-                    } else {
-                        let existingDocId = mapDocs.get(compareKey);
-                        if (existingDocId) {
-                            await db.collection('miembros').doc(existingDocId).update({
-                                planningCenterId: p.id,
-                                equiposPco: p.equipos || []
-                            });
-                            actualizados++;
-                        }
+                        actualizados++;
                     }
                 }
 
@@ -4381,6 +4469,7 @@
         window.guardarPrimerPinPersonal = guardarPrimerPinPersonal;
         window.guardarNuevoUsuario = guardarNuevoUsuario;
         window.eliminarUsuarioSistema = eliminarUsuarioSistema;
+        window.depurarMiembrosDuplicados = depurarMiembrosDuplicados;
 
     </script>
 </body>
