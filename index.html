@@ -101,6 +101,32 @@
             border-color: var(--border-hover);
         }
 
+        /* Instagram Aesthetic & Animations */
+        .ig-gradient-border {
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        }
+        .ig-gradient-bg {
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        }
+        .ig-heart-active {
+            color: #ed4956 !important;
+            animation: heartPop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes heartPop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.38); }
+            100% { transform: scale(1); }
+        }
+        .ig-heart-pop {
+            animation: bigHeartFade 0.75s ease-out forwards;
+        }
+        @keyframes bigHeartFade {
+            0% { opacity: 0; transform: scale(0.3); }
+            40% { opacity: 0.95; transform: scale(1.2); }
+            70% { opacity: 0.95; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.9); }
+        }
+
         /* Tabs Segmented Control */
         .tab-btn {
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -257,15 +283,17 @@
     <!-- TOP HEADER (Oculto hasta autenticarse) -->
     <header id="mainAppHeader" class="hidden glass-nav sticky top-0 z-40 transition-all safe-top">
         <div class="max-w-5xl mx-auto px-3.5 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-            <!-- Brand -->
+            <!-- Brand Estilo Instagram -->
             <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
-                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-sm shadow-indigo-500/10 flex-shrink-0">
-                    <i class="fas fa-video text-xs sm:text-sm"></i>
+                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl ig-gradient-border p-[1.5px] flex items-center justify-center flex-shrink-0 shadow-md shadow-rose-500/10">
+                    <div class="w-full h-full rounded-[10px] bg-[#090a0f] flex items-center justify-center text-white">
+                        <i class="fas fa-camera text-xs sm:text-sm"></i>
+                    </div>
                 </div>
                 <div class="truncate">
                     <div class="flex items-center space-x-1.5 sm:space-x-2">
-                        <h1 class="text-xs sm:text-base font-bold text-white tracking-tight truncate">Gestión de Cámaras</h1>
-                        <span class="text-[9px] sm:text-[10px] tracking-widest uppercase font-mono px-1 py-0.2 sm:px-1.5 sm:py-0.5 rounded bg-white/[0.06] text-zinc-400 border border-white/[0.05] flex-shrink-0">Media</span>
+                        <span class="text-base sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-500 bg-clip-text text-transparent">Pas Media</span>
+                        <span class="text-[9px] sm:text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-white/[0.08] text-zinc-300 border border-white/[0.08] flex-shrink-0">Cámaras</span>
                     </div>
                     <p class="text-[10px] sm:text-[11px] text-zinc-400 font-medium leading-none mt-0.5 hidden xs:block sm:block truncate">Control y Asignación de Servicios</p>
                 </div>
@@ -280,7 +308,7 @@
                 <button onclick="abrirModalCambiarPinActual()" id="btnCambiarPinHeader" title="Cambiar mi Contraseña / PIN"
                     class="bg-white/[0.04] hover:bg-indigo-500/15 active:scale-95 border border-white/[0.08] hover:border-indigo-500/30 text-zinc-300 hover:text-indigo-300 px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all duration-200">
                     <i class="fas fa-key text-[11px] text-indigo-400"></i>
-                    <span class="tracking-wide hidden sm:inline">Cambiar PIN</span>
+                    <span class="tracking-wide hidden sm:inline">PIN</span>
                 </button>
                 <button onclick="cerrarSesion()" id="btnAdminState" title="Cerrar Sesión"
                     class="group relative bg-white/[0.04] hover:bg-rose-500/10 active:scale-95 border border-white/[0.08] hover:border-rose-500/30 text-zinc-300 hover:text-rose-400 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all duration-200">
@@ -335,10 +363,118 @@
 
         <!-- ========================= SECCIÓN: DASHBOARD ========================= -->
         <section id="sec-dashboard" class="space-y-4 animate-fade-in">
-            <div class="flex items-center justify-between pb-1 border-b border-white/[0.06]">
+            <!-- ========================= HISTORIAS DE INSTAGRAM (STORIES BAR) ========================= -->
+            <div class="bg-[#111319] border border-white/[0.07] rounded-2xl p-3 sm:p-4 shadow-sm">
+                <div class="flex items-center justify-between mb-2 px-1">
+                    <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-mono flex items-center gap-1.5">
+                        <i class="fas fa-circle-notch text-rose-500 animate-spin text-[10px]"></i> Historias / Filtros Rápidos
+                    </span>
+                    <span class="text-[10px] text-zinc-500">Toca para ir directo</span>
+                </div>
+                <div class="flex items-center space-x-3 sm:space-x-4 overflow-x-auto no-scrollbar py-1 px-0.5">
+                    <!-- Story: Planear (+) -->
+                    <button type="button" onclick="switchTab('registro')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Crear / Planear nuevo servicio">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] border-2 border-dashed border-indigo-400/60 group-hover:border-indigo-400 flex items-center justify-center transition group-hover:scale-105 active:scale-95">
+                            <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-indigo-400 text-base sm:text-lg group-hover:bg-indigo-600 group-hover:text-white transition">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                        </div>
+                        <span class="text-[10px] sm:text-[11px] font-semibold text-zinc-300 group-hover:text-white truncate max-w-[62px]">Planear</span>
+                    </button>
+
+                    <!-- Story: Hoy (★) -->
+                    <button type="button" onclick="filtrarOIrAServicio('hoy')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Ver servicio de hoy">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] ig-gradient-border flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
+                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
+                                <div class="w-full h-full rounded-full bg-gradient-to-br from-amber-500/30 to-rose-600/30 flex items-center justify-center text-amber-300 text-sm sm:text-base font-bold">
+                                    ★
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] sm:text-[11px] font-bold text-amber-300 group-hover:text-amber-200 truncate max-w-[62px]">★ Hoy</span>
+                    </button>
+
+                    <!-- Story: Domingo 9am -->
+                    <button type="button" onclick="filtrarOIrAServicio('9:00')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Servicio Domingo 9:00 AM">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] ig-gradient-border flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
+                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
+                                <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-rose-400 text-[10px] sm:text-xs font-bold">
+                                    9 AM
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] sm:text-[11px] font-medium text-zinc-300 group-hover:text-white truncate max-w-[62px]">Dom 9am</span>
+                    </button>
+
+                    <!-- Story: Domingo 11am -->
+                    <button type="button" onclick="filtrarOIrAServicio('11:00')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Servicio Domingo 11:00 AM">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] ig-gradient-border flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
+                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
+                                <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-fuchsia-400 text-[10px] sm:text-xs font-bold">
+                                    11 AM
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] sm:text-[11px] font-medium text-zinc-300 group-hover:text-white truncate max-w-[62px]">Dom 11am</span>
+                    </button>
+
+                    <!-- Story: Jueves -->
+                    <button type="button" onclick="filtrarOIrAServicio('jueves')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Servicios de Jueves">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] ig-gradient-border flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
+                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
+                                <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-indigo-400 text-[10px] sm:text-xs font-bold">
+                                    JUE
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] sm:text-[11px] font-medium text-zinc-300 group-hover:text-white truncate max-w-[62px]">Jueves</span>
+                    </button>
+
+                    <!-- Story: LINK Jóvenes -->
+                    <button type="button" onclick="filtrarOIrAServicio('link')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Servicios LINK Jóvenes">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] ig-gradient-border flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
+                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
+                                <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-emerald-400 text-[10px] sm:text-xs font-bold">
+                                    LINK
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] sm:text-[11px] font-medium text-zinc-300 group-hover:text-white truncate max-w-[62px]">LINK</span>
+                    </button>
+
+                    <!-- Story: KZN Corazón -->
+                    <button type="button" onclick="filtrarOIrAServicio('corazon')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Servicios Corazón Niños">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] ig-gradient-border flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
+                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
+                                <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-amber-400 text-[10px] sm:text-xs font-bold">
+                                    KZN
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] sm:text-[11px] font-medium text-zinc-300 group-hover:text-white truncate max-w-[62px]">Corazón</span>
+                    </button>
+
+                    <!-- Story: Todos -->
+                    <button type="button" onclick="filtrarOIrAServicio('todos')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Ver todos los servicios">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] bg-zinc-700/60 flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
+                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
+                                <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-zinc-400 text-xs font-semibold">
+                                    <i class="fas fa-list"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] sm:text-[11px] font-medium text-zinc-400 group-hover:text-white truncate max-w-[62px]">Todos</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Header de Feed -->
+            <div class="flex items-center justify-between pb-1 border-b border-white/[0.06] pt-1">
                 <div class="flex items-center space-x-2">
-                    <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-                    <h2 class="text-sm sm:text-base font-bold text-white tracking-tight">Historial de Servicios</h2>
+                    <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                    <h2 class="text-sm sm:text-base font-bold text-white tracking-tight flex items-center gap-1.5">
+                        <i class="fas fa-film text-xs text-rose-400"></i> Feed de Servicios
+                    </h2>
                 </div>
                 <button onclick="cargarDatos()" title="Recargar datos" class="text-xs text-zinc-400 hover:text-white flex items-center space-x-1 px-2.5 py-1 rounded-lg hover:bg-white/[0.05] transition">
                     <i class="fas fa-rotate-right text-[11px]"></i>
@@ -346,8 +482,8 @@
                 </button>
             </div>
 
-            <!-- Contenedor dinámico de servicios -->
-            <div id="listaServicios" class="space-y-3.5"></div>
+            <!-- Contenedor dinámico de servicios (Posts estilo Instagram) -->
+            <div id="listaServicios" class="space-y-5"></div>
         </section>
 
         <!-- ========================= SECCIÓN: PLANEAR SERVICIO ========================= -->
@@ -824,6 +960,49 @@
         </section>
 
     </main>
+
+    <!-- ========================= BARRA DE NAVEGACIÓN INFERIOR ESTILO INSTAGRAM ========================= -->
+    <nav id="igBottomNav" class="hidden fixed bottom-0 inset-x-0 bg-[#090a0f]/95 backdrop-blur-xl border-t border-white/[0.08] z-40 safe-bottom shadow-2xl transition-all duration-300">
+        <div class="max-w-md mx-auto px-4 h-16 flex items-center justify-around">
+            <!-- Inicio (Feed de Servicios) -->
+            <button id="igNav-dashboard" onclick="switchTab('dashboard')" class="flex flex-col items-center justify-center w-12 h-12 text-white transition active:scale-90" title="Feed de Servicios">
+                <i class="fas fa-house text-lg"></i>
+                <span class="text-[9px] font-medium tracking-tight mt-0.5">Inicio</span>
+            </button>
+
+            <!-- Métricas / Estadísticas -->
+            <button id="igNav-estadisticas" onclick="switchTab('estadisticas')" class="flex flex-col items-center justify-center w-12 h-12 text-zinc-400 hover:text-white transition active:scale-90" title="Estadísticas">
+                <i class="far fa-chart-bar text-lg"></i>
+                <span class="text-[9px] font-medium tracking-tight mt-0.5">Métricas</span>
+            </button>
+
+            <!-- Botón Central Destacado (+) Planear -->
+            <button onclick="switchTab('registro')" class="relative -top-2 flex flex-col items-center justify-center transition active:scale-90 group" title="Planear Nuevo Servicio">
+                <div class="w-12 h-12 rounded-full p-[2px] ig-gradient-border shadow-lg shadow-rose-600/30 flex items-center justify-center">
+                    <div class="w-full h-full rounded-full bg-[#090a0f] flex items-center justify-center text-white group-hover:bg-gradient-to-tr group-hover:from-amber-500 group-hover:to-rose-600 transition">
+                        <i class="fas fa-plus text-base font-black"></i>
+                    </div>
+                </div>
+                <span class="text-[9px] font-semibold text-zinc-300 tracking-tight mt-0.5">Planear</span>
+            </button>
+
+            <!-- Equipo (Directorio) -->
+            <button id="igNav-equipo" onclick="switchTab('equipo')" class="flex flex-col items-center justify-center w-12 h-12 text-zinc-400 hover:text-white transition active:scale-90" title="Equipo y Voluntarios">
+                <i class="far fa-user text-lg"></i>
+                <span class="text-[9px] font-medium tracking-tight mt-0.5">Equipo</span>
+            </button>
+
+            <!-- Perfil / PIN -->
+            <button onclick="abrirModalCambiarPinActual()" class="flex flex-col items-center justify-center w-12 h-12 text-zinc-400 hover:text-white transition active:scale-90" title="Mi Cuenta / PIN">
+                <div class="w-6 h-6 rounded-full p-[1.5px] ig-gradient-border flex items-center justify-center">
+                    <div id="igNavUserAvatar" class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-[10px] font-bold text-white">
+                        U
+                    </div>
+                </div>
+                <span class="text-[9px] font-medium tracking-tight mt-0.5">Perfil</span>
+            </button>
+        </div>
+    </nav>
 
     <!-- FOOTER MINIMALISTA -->
     <footer class="border-t border-white/[0.05] py-4 text-center text-xs text-zinc-500 font-mono">
@@ -1517,11 +1696,22 @@
         function desbloquearInterfaz(datos) {
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('mainAppHeader').classList.remove('hidden');
-            document.getElementById('mainAppContainer').classList.remove('hidden');
+            let mainCont = document.getElementById('mainAppContainer');
+            mainCont.classList.remove('hidden');
+            mainCont.classList.add('pb-24'); // Espacio para que la barra inferior de Instagram no tape contenido
 
-            // Actualizar datos del usuario en Header
-            document.getElementById('headerUserName').innerText = currentUser.nombre;
-            document.getElementById('headerUserRole').innerText = currentUser.rol.toUpperCase();
+            let igNav = document.getElementById('igBottomNav');
+            if (igNav) igNav.classList.remove('hidden');
+
+            // Actualizar datos del usuario en Header y Barra Inferior de Instagram
+            if (currentUser) {
+                document.getElementById('headerUserName').innerText = currentUser.nombre;
+                document.getElementById('headerUserRole').innerText = currentUser.rol.toUpperCase();
+                let igAv = document.getElementById('igNavUserAvatar');
+                if (igAv && currentUser.nombre) {
+                    igAv.innerText = currentUser.nombre.charAt(0).toUpperCase();
+                }
+            }
 
             // Renderizar la app con los datos recibidos
             if (datos) {
@@ -1548,9 +1738,11 @@
                 document.getElementById('loginPinInput').value = '';
                 document.getElementById('loginErrorMsg').classList.add('hidden');
 
-                // Bloquear nuevamente la pantalla
+                // Bloquear nuevamente la pantalla y ocultar barras de Instagram
                 document.getElementById('mainAppHeader').classList.add('hidden');
                 document.getElementById('mainAppContainer').classList.add('hidden');
+                let igNav = document.getElementById('igBottomNav');
+                if (igNav) igNav.classList.add('hidden');
                 document.getElementById('loginScreen').classList.remove('hidden');
 
                 showToast("Sesión cerrada correctamente.");
@@ -2107,204 +2299,223 @@
                 if (!document.getElementById('sec-dashboard').classList.contains('hidden') === false) switchTab('dashboard');
             }
 
-            // Render Dashboard con tarjetas minimalistas
+            // Render Dashboard con tarjetas estilo POST DE INSTAGRAM
             let htmlServicios = '';
+            let guardadosArr = JSON.parse(localStorage.getItem('media_guardados') || '[]');
+
             if (data.servicios.length === 0) {
                 htmlServicios = `
-                    <div class="surface-card p-12 text-center text-zinc-500 text-xs">
-                        <i class="fas fa-folder-open text-2xl mb-2 text-zinc-600 block"></i>
-                        No hay servicios registrados aún.
+                    <div class="surface-card p-12 text-center text-zinc-500 text-xs rounded-2xl">
+                        <i class="fas fa-camera-retro text-3xl mb-2 text-zinc-600 block"></i>
+                        No hay servicios registrados aún en el feed.
                     </div>`;
             } else {
                 data.servicios.forEach((s) => {
-                    // Cualquier director o administrador puede modificar cualquier servicio
                     let puedeEditar = (userRole === 'admin' || userRole === 'director');
                     let fechaFormateada = formatearFechaLimpia(s.fecha);
 
-                    let tieneRealizador = !!s.realizador && s.realizador !== 'Sin Director';
-                    let tieneSwitcher = !!s.switcher && s.switcher !== 'Sin Director';
+                    let likesArr = Array.isArray(s.likes) ? s.likes : [];
+                    let yaDioLike = currentUser && likesArr.includes(currentUser.nombre);
+                    let estaGuardado = guardadosArr.includes(s.id);
+
+                    let realizadorNombre = s.realizador && s.realizador !== 'Sin Director' ? s.realizador : (s.registradoPor || s.director || 'Pas Media');
+                    let handleRealizador = realizadorNombre.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+                    let inicialRealizador = realizadorNombre.charAt(0).toUpperCase();
+
                     let llenadoPor = s.registradoPor || s.director || '';
-
-                    let lideresHtml = '';
-                    if (tieneRealizador && tieneSwitcher) {
-                        let esRealizadorCreador = llenadoPor && s.realizador.toLowerCase() === llenadoPor.toLowerCase();
-                        let esSwitcherCreador = llenadoPor && s.switcher.toLowerCase() === llenadoPor.toLowerCase();
-
-                        let badgeRealizador = esRealizadorCreador ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded font-semibold ml-1.5" title="Llenó los blancos en el app"><i class="fas fa-check-circle mr-0.5"></i>Llenó app</span>' : '';
-                        let badgeSwitcher = esSwitcherCreador ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded font-semibold ml-1.5" title="Llenó los blancos en el app"><i class="fas fa-check-circle mr-0.5"></i>Llenó app</span>' : '';
-
-                        lideresHtml = `
-                            <div class="space-y-0.5">
-                                <div class="text-xs sm:text-sm font-bold text-white flex items-center flex-wrap">
-                                    <span class="text-indigo-300 font-mono text-[11px] mr-1">Realizador:</span> ${s.realizador} ${badgeRealizador}
-                                </div>
-                                <div class="text-[11px] text-zinc-300 flex items-center flex-wrap">
-                                    <span class="text-indigo-400/80 font-mono text-[10px] mr-1">Switcher:</span> ${s.switcher} ${badgeSwitcher}
-                                </div>
-                            </div>
-                        `;
-                    } else if (tieneRealizador || tieneSwitcher) {
-                        let nombreUnico = s.realizador || s.switcher;
-                        let rolUnico = tieneRealizador ? 'Realizador' : 'Switcher';
-                        let badgeUnico = (llenadoPor && nombreUnico.toLowerCase() === llenadoPor.toLowerCase()) ? 
-                            '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded font-semibold ml-1.5" title="Llenó los blancos en el app"><i class="fas fa-check-circle mr-0.5"></i>Llenó app</span>' : '';
-
-                        lideresHtml = `
-                            <div>
-                                <h3 class="font-bold text-white text-xs sm:text-sm tracking-tight flex items-center flex-wrap">
-                                    <span class="text-indigo-300 font-mono text-[11px] mr-1">${rolUnico}:</span> ${nombreUnico} ${badgeUnico}
-                                </h3>
-                                <span class="text-[10px] text-amber-400/80 italic">(${tieneRealizador ? 'Switcher sin asignar' : 'Realizador sin asignar'})</span>
-                            </div>
-                        `;
-                    } else {
-                        let nombreDir = (s.director && s.director !== 'Sin Director') ? s.director : 'Sin Realizador/Switcher asignado';
-                        lideresHtml = `
-                            <div>
-                                <h3 class="font-bold ${nombreDir === 'Sin Realizador/Switcher asignado' ? 'text-amber-400/80 italic' : 'text-zinc-400'} text-xs sm:text-sm tracking-tight">
-                                    ${nombreDir === 'Sin Realizador/Switcher asignado' ? '<i class="fas fa-triangle-exclamation mr-1"></i>' : ''}${nombreDir}
-                                </h3>
-                            </div>
-                        `;
-                    }
+                    let esCreador = llenadoPor && realizadorNombre.toLowerCase() === llenadoPor.toLowerCase();
+                    let badgeCreador = esCreador ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.2 rounded font-semibold ml-1"><i class="fas fa-check-circle mr-0.5"></i>Llenó</span>' : '';
 
                     htmlServicios += `
-                    <div class="surface-card p-4 sm:p-5 space-y-3.5 relative overflow-hidden group">
-                        <!-- Top Bar: Realizador, Switcher, Fecha & Acciones -->
-                        <div class="flex justify-between items-start border-b border-white/[0.06] pb-3">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 text-xs flex-shrink-0">
-                                    <i class="fas fa-user-tie"></i>
+                    <article id="servicioPost_${s.id}" class="surface-card bg-[#111319] border border-white/[0.08] rounded-2xl overflow-hidden shadow-xl transition-all duration-300 hover:border-white/[0.18]">
+                        <!-- POST HEADER (Estilo Instagram) -->
+                        <div class="p-3 sm:p-4 flex items-center justify-between border-b border-white/[0.05]">
+                            <div class="flex items-center space-x-3 min-w-0">
+                                <!-- Avatar con Instagram Story Ring -->
+                                <div class="w-10 h-10 rounded-full p-[2px] ig-gradient-border flex-shrink-0 flex items-center justify-center shadow-sm">
+                                    <div class="w-full h-full rounded-full bg-[#111319] p-[1.5px]">
+                                        <div class="w-full h-full rounded-full bg-gradient-to-br from-indigo-500/30 to-purple-600/30 flex items-center justify-center text-white font-bold text-xs uppercase">
+                                            ${inicialRealizador}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    ${lideresHtml}
-                                    <p class="text-[11px] text-zinc-400 capitalize mt-0.5 flex items-center">
-                                        <i class="fas fa-calendar-day mr-1 text-[10px] text-zinc-500"></i> ${fechaFormateada}
+                                <div class="min-w-0">
+                                    <div class="flex items-center space-x-1.5 flex-wrap">
+                                        <span class="font-bold text-white text-xs sm:text-sm tracking-tight truncate">@${handleRealizador}</span>
+                                        <i class="fas fa-certificate text-sky-400 text-[10px]" title="Director Verificado"></i>
+                                        ${badgeCreador}
+                                    </div>
+                                    <p class="text-[10px] sm:text-[11px] text-zinc-400 truncate flex items-center gap-1 mt-0.5">
+                                        <i class="fas fa-location-dot text-rose-500 text-[9px]"></i> Auditorio Pas · <span class="capitalize text-zinc-300 font-medium">${fechaFormateada}</span>
                                     </p>
                                 </div>
                             </div>
                             
-                            ${puedeEditar ? `
-                                <div class="flex items-center space-x-1 flex-shrink-0 ml-2">
-                                    <button onclick="cargarEdicionServicio('${s.id}')" title="Editar" class="text-zinc-400 hover:text-indigo-400 p-2 text-xs rounded-lg hover:bg-white/[0.05] transition">
+                            <!-- Acciones del Post (3-dots / Editar / Eliminar / Compartir) -->
+                            <div class="flex items-center space-x-1 flex-shrink-0">
+                                ${puedeEditar ? `
+                                    <button onclick="cargarEdicionServicio('${s.id}')" title="Editar Servicio" class="text-zinc-400 hover:text-indigo-400 p-2 text-xs rounded-lg hover:bg-white/[0.05] transition">
                                         <i class="fas fa-pen-to-square"></i>
                                     </button>
-                                    <button onclick="eliminarServicio('${s.id}')" title="Eliminar" class="text-zinc-400 hover:text-rose-400 p-2 text-xs rounded-lg hover:bg-white/[0.05] transition">
+                                    <button onclick="eliminarServicio('${s.id}')" title="Eliminar Servicio" class="text-zinc-400 hover:text-rose-400 p-2 text-xs rounded-lg hover:bg-white/[0.05] transition">
                                         <i class="fas fa-trash-can"></i>
                                     </button>
-                                </div>
-                            ` : ''}
+                                ` : ''}
+                                <button onclick="compartirServicioWhatsApp('${s.id}')" title="Compartir en WhatsApp" class="text-zinc-400 hover:text-emerald-400 p-2 text-xs rounded-lg hover:bg-white/[0.05] transition">
+                                    <i class="fa-brands fa-whatsapp text-sm"></i>
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Grid de Cámaras Asignadas -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                            ${[1, 2, 3, 4, 5, 6].map(i => {
-                                let cam = s[`cam${i}`];
-                                if (!cam || !cam.asig) return '';
-                                let tagCapDashboard = cam.esCapacitacion ? '<span class="text-[9px] bg-amber-500/10 text-amber-300 border border-amber-500/20 px-1.5 py-0.5 rounded-full font-medium ml-1">Capacitación</span>' : '';
-                                let infoCapacitador = cam.capacitador ? `<div class="text-[10px] text-zinc-400 mt-0.5"><i class="fas fa-graduation-cap mr-1 text-zinc-500"></i>Capacitador: ${cam.capacitador}</div>` : '';
-                                return `
-                                <div class="bg-[#161822]/80 p-3 rounded-xl border border-white/[0.05] space-y-2 hover:border-white/[0.1] transition-colors">
-                                    <div class="flex justify-between items-center border-b border-white/[0.04] pb-1.5">
-                                        <div class="flex items-center space-x-1.5">
-                                            <span class="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-wider">CAM ${i}</span>
-                                            ${cam.iso ? `<span class="text-[9px] font-mono bg-indigo-500/15 text-indigo-300 border border-indigo-500/25 px-1.5 py-0.5 rounded font-semibold">ISO ${cam.iso}</span>` : ''}
-                                        </div>
-                                        <span class="text-xs font-semibold text-white truncate max-w-[130px]">${cam.asig} ${tagCapDashboard}</span>
-                                    </div>
-                                    ${infoCapacitador}
-                                    <div class="flex justify-between text-[10px] font-mono text-zinc-400 pt-0.5">
-                                        <div><span class="text-zinc-500">PreA:</span> ${cam.f_a || '-'} / ${cam.k_a ? cam.k_a + 'K' : '-'}</div>
-                                        <div><span class="text-zinc-500">PreB:</span> ${cam.f_b || '-'} / ${cam.k_b ? cam.k_b + 'K' : '-'}</div>
-                                    </div>
-                                </div>
-                                `;
-                            }).join('')}
+                        <!-- SUB-BARRA: Switcher y Tipo de Servicio -->
+                        ${(s.switcher || s.tipoServicio) ? `
+                        <div class="px-4 py-1.5 bg-black/25 border-b border-white/[0.04] flex items-center justify-between text-[11px] font-mono flex-wrap gap-2">
+                            <div class="flex items-center space-x-2 text-zinc-400">
+                                ${s.switcher ? `<span><span class="text-purple-400 font-semibold">🎛️ Switcher:</span> ${s.switcher}</span>` : ''}
+                            </div>
+                            ${s.tipoServicio ? `<span class="px-2 py-0.5 rounded-full bg-white/[0.06] text-zinc-300 text-[10px] border border-white/[0.06]">${s.tipoServicio}</span>` : ''}
                         </div>
+                        ` : ''}
 
-                        <!-- Hilo Social de Comentarios / Observaciones -->
-                        <div class="pt-3 border-t border-white/[0.06] space-y-2.5">
-                            <div class="flex items-center justify-between">
-                                <span class="font-bold text-zinc-300 flex items-center gap-1.5 text-xs">
-                                    <i class="fas fa-comments text-indigo-400"></i> Comentarios y Observaciones
-                                    <span class="text-[10px] font-semibold bg-white/[0.06] text-zinc-300 px-2 py-0.5 rounded-full border border-white/[0.06]">
-                                        ${(Array.isArray(s.comentariosLista) ? s.comentariosLista.length : 0) + (s.comentarios && s.comentarios.trim() ? 1 : 0)}
-                                    </span>
-                                </span>
+                        <!-- POST MEDIA: CONSOLA DE CÁMARAS (Doble tap para me gusta) -->
+                        <div class="p-3 sm:p-4 bg-black/30 border-b border-white/[0.05] relative select-none" ondblclick="triggerDoubleTapLike('${s.id}')" title="Doble toque para dar Me Gusta ❤️">
+                            <!-- Overlay corazón doble tap -->
+                            <div id="heartOverlay_${s.id}" class="hidden pointer-events-none absolute inset-0 flex items-center justify-center z-20">
+                                <i class="fas fa-heart text-rose-500 text-6xl drop-shadow-[0_0_25px_rgba(244,63,94,0.7)]"></i>
                             </div>
 
-                            ${s.comentarios && s.comentarios.trim() ? `
-                            <!-- Nota inicial de planeamiento -->
-                            <div class="bg-indigo-500/10 border border-indigo-500/20 p-2.5 rounded-xl text-xs space-y-1">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-semibold text-indigo-300 text-[11px] flex items-center">
-                                        <i class="fas fa-note-sticky mr-1.5 text-indigo-400"></i> Nota de Planeamiento
-                                    </span>
-                                    <span class="text-[10px] text-zinc-400 font-mono">${s.registradoPor || 'Director'}</span>
-                                </div>
-                                <p class="text-zinc-200 text-xs leading-relaxed whitespace-pre-line">${s.comentarios}</p>
-                            </div>
-                            ` : ''}
-
-                            <!-- Lista de comentarios dinámicos -->
-                            ${(Array.isArray(s.comentariosLista) && s.comentariosLista.length > 0) ? `
-                            <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
-                                ${s.comentariosLista.map(c => {
-                                    let esMio = currentUser && c.autor && (c.autor.toLowerCase() === currentUser.nombre.toLowerCase());
-                                    let puedeEliminarCom = (userRole === 'admin' || esMio);
-                                    let inicialAutor = c.autor ? c.autor.charAt(0).toUpperCase() : 'U';
-                                    let badgeColor = c.rol === 'admin' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
-                                    let rolLabel = c.rol === 'admin' ? 'Admin' : 'Director';
-
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                                ${[1, 2, 3, 4, 5, 6].map(i => {
+                                    let cam = s[`cam${i}`];
+                                    if (!cam || !cam.asig) return '';
+                                    let tagCapDashboard = cam.esCapacitacion ? '<span class="text-[9px] bg-amber-500/15 text-amber-300 border border-amber-500/25 px-1.5 py-0.5 rounded-full font-medium ml-1">Capacitación</span>' : '';
+                                    let infoCapacitador = cam.capacitador ? `<div class="text-[10px] text-zinc-400 mt-0.5"><i class="fas fa-graduation-cap mr-1 text-zinc-500"></i>Capacitador: ${cam.capacitador}</div>` : '';
                                     return `
-                                    <div class="flex items-start space-x-2.5 text-xs group/com">
-                                        <div class="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500/30 to-purple-600/30 border border-indigo-500/30 flex items-center justify-center text-[10px] font-bold text-indigo-200 flex-shrink-0 mt-0.5">
-                                            ${inicialAutor}
-                                        </div>
-                                        <div class="flex-1 min-w-0 bg-[#161822] border border-white/[0.06] rounded-xl p-2.5 space-y-1">
-                                            <div class="flex justify-between items-center">
-                                                <div class="flex items-center space-x-1.5 flex-wrap">
-                                                    <span class="font-semibold text-white text-[11px]">${c.autor || 'Anónimo'}</span>
-                                                    <span class="text-[9px] px-1.5 py-0.2 rounded-full border ${badgeColor}">${rolLabel}</span>
-                                                    <span class="text-[10px] text-zinc-500 font-mono">${c.fechaHora || ''}</span>
-                                                </div>
-                                                ${puedeEliminarCom ? `
-                                                    <button onclick="eliminarComentarioServicio('${s.id}', '${c.id}')" title="Eliminar comentario" class="text-zinc-500 hover:text-rose-400 p-1 rounded transition">
-                                                        <i class="fas fa-trash-can text-[10px]"></i>
-                                                    </button>
-                                                ` : ''}
+                                    <div class="bg-[#161822]/90 p-3 rounded-xl border border-white/[0.06] space-y-2 hover:border-indigo-500/30 transition-all shadow-sm">
+                                        <div class="flex justify-between items-center border-b border-white/[0.04] pb-1.5">
+                                            <div class="flex items-center space-x-1.5">
+                                                <span class="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-wider">CAM ${i}</span>
+                                                ${cam.iso ? `<span class="text-[9px] font-mono bg-indigo-500/15 text-indigo-300 border border-indigo-500/25 px-1.5 py-0.5 rounded font-semibold">ISO ${cam.iso}</span>` : ''}
                                             </div>
-                                            <p class="text-zinc-300 text-xs leading-relaxed break-words whitespace-pre-line">${c.texto}</p>
+                                            <span class="text-xs font-semibold text-white truncate max-w-[130px]">${cam.asig} ${tagCapDashboard}</span>
+                                        </div>
+                                        ${infoCapacitador}
+                                        <div class="flex justify-between text-[10px] font-mono text-zinc-400 pt-0.5">
+                                            <div><span class="text-zinc-500">PreA:</span> ${cam.f_a || '-'} / ${cam.k_a ? cam.k_a + 'K' : '-'}</div>
+                                            <div><span class="text-zinc-500">PreB:</span> ${cam.f_b || '-'} / ${cam.k_b ? cam.k_b + 'K' : '-'}</div>
                                         </div>
                                     </div>
                                     `;
                                 }).join('')}
                             </div>
-                            ` : (!s.comentarios || !s.comentarios.trim()) ? `
-                                <p class="text-[11px] text-zinc-500 italic">No hay comentarios aún en este servicio. ¡Sé el primero en comentar!</p>
+                        </div>
+
+                        <!-- BARRA DE ACCIONES DE INSTAGRAM (❤️ 💬 📤 🔖) -->
+                        <div class="p-3 sm:px-4 sm:pt-3 pb-1 flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <!-- Me gusta (Heart) -->
+                                <button id="btnLike_${s.id}" onclick="toggleLikeServicio('${s.id}')" 
+                                    class="text-zinc-300 hover:text-rose-500 transition active:scale-125 focus:outline-none" 
+                                    title="Me gusta">
+                                    ${yaDioLike ? '<i class="fas fa-heart text-rose-500 text-xl ig-heart-active"></i>' : '<i class="far fa-heart text-zinc-300 hover:text-rose-500 text-xl transition"></i>'}
+                                </button>
+                                <!-- Comentar (Bubble) -->
+                                <button onclick="enfocarComentario('${s.id}')" 
+                                    class="text-zinc-300 hover:text-white transition active:scale-125 focus:outline-none" 
+                                    title="Comentar">
+                                    <i class="far fa-comment text-xl"></i>
+                                </button>
+                                <!-- Compartir por WhatsApp (Paper plane) -->
+                                <button onclick="compartirServicioWhatsApp('${s.id}')" 
+                                    class="text-zinc-300 hover:text-emerald-400 transition active:scale-125 focus:outline-none" 
+                                    title="Compartir asignación por WhatsApp">
+                                    <i class="far fa-paper-plane text-xl"></i>
+                                </button>
+                            </div>
+                            <!-- Guardar (Bookmark) -->
+                            <button id="btnBookmark_${s.id}" onclick="toggleGuardarServicio('${s.id}')" 
+                                class="text-zinc-300 hover:text-amber-400 transition active:scale-125 focus:outline-none" 
+                                title="Guardar servicio">
+                                ${estaGuardado ? '<i class="fas fa-bookmark text-amber-400 text-xl"></i>' : '<i class="far fa-bookmark text-zinc-300 hover:text-amber-400 text-xl transition"></i>'}
+                            </button>
+                        </div>
+
+                        <!-- CONTADOR DE LIKES (Le gusta a...) -->
+                        <div class="px-4 py-1">
+                            <p id="likesCount_${s.id}" class="text-xs font-semibold text-white tracking-tight">
+                                ${renderLikesTexto(likesArr)}
+                            </p>
+                        </div>
+
+                        <!-- CAPTION (Director & Nota inicial) -->
+                        <div class="px-4 py-1 text-xs leading-relaxed space-y-0.5">
+                            <div>
+                                <span class="font-bold text-white mr-1.5 cursor-pointer">@${handleRealizador}</span>
+                                <span class="text-zinc-200">${s.comentarios && s.comentarios.trim() ? s.comentarios.trim() : 'Asignación técnica de cámaras del equipo de Media.'}</span>
+                            </div>
+                            <div class="flex items-center space-x-2 text-[10px] text-zinc-500 font-mono pt-0.5">
+                                <span>${fechaFormateada.toUpperCase()}</span>
+                                ${s.registradoPor ? `<span>•</span><span>DIRECTOR: ${s.registradoPor.toUpperCase()}</span>` : ''}
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN DE COMENTARIOS SOCIALES -->
+                        <div class="px-4 pt-1 pb-3 space-y-2">
+                            ${(Array.isArray(s.comentariosLista) && s.comentariosLista.length > 0) ? `
+                            <div class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                                ${s.comentariosLista.map(c => {
+                                    let esMio = currentUser && c.autor && (c.autor.toLowerCase() === currentUser.nombre.toLowerCase());
+                                    let puedeEliminarCom = (userRole === 'admin' || esMio);
+                                    let inicialAutor = c.autor ? c.autor.charAt(0).toUpperCase() : 'U';
+                                    let autorHandle = c.autor ? c.autor.toLowerCase().replace(/[^a-z0-9_]/g, '_') : 'voluntario';
+
+                                    return `
+                                    <div class="flex items-start justify-between text-xs group/com py-0.5">
+                                        <div class="flex items-start space-x-2 min-w-0 pr-2">
+                                            <div class="w-5 h-5 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-[9px] font-bold text-white flex-shrink-0 mt-0.5">
+                                                ${inicialAutor}
+                                            </div>
+                                            <div class="min-w-0 leading-snug">
+                                                <span class="font-bold text-white mr-1.5">@${autorHandle}</span>
+                                                <span class="text-zinc-300 break-words">${c.texto}</span>
+                                                <div class="text-[9px] text-zinc-500 font-mono mt-0.5 flex items-center gap-1.5">
+                                                    <span>${c.fechaHora || ''}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        ${puedeEliminarCom ? `
+                                            <button onclick="eliminarComentarioServicio('${s.id}', '${c.id}')" title="Eliminar comentario" class="opacity-0 group-hover/com:opacity-100 text-zinc-500 hover:text-rose-400 p-1 rounded transition text-[10px] flex-shrink-0">
+                                                <i class="fas fa-trash-can"></i>
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                    `;
+                                }).join('')}
+                            </div>
                             ` : ''}
 
                             ${userRole !== 'public' ? `
-                            <!-- Input para nuevo comentario interactivo -->
-                            <div class="flex items-center space-x-2 pt-1">
-                                <div class="w-7 h-7 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center justify-center text-[11px] font-bold flex-shrink-0">
-                                    ${currentUser && currentUser.nombre ? currentUser.nombre.charAt(0).toUpperCase() : 'U'}
+                            <!-- Input para nuevo comentario interactivo (Estilo Instagram) -->
+                            <div class="flex items-center space-x-2.5 pt-2 border-t border-white/[0.06]">
+                                <div class="w-7 h-7 rounded-full ig-gradient-border p-[1.5px] flex-shrink-0">
+                                    <div class="w-full h-full rounded-full bg-[#111319] flex items-center justify-center text-[10px] font-bold text-white">
+                                        ${currentUser && currentUser.nombre ? currentUser.nombre.charAt(0).toUpperCase() : 'U'}
+                                    </div>
                                 </div>
-                                <div class="flex-1 relative">
+                                <div class="flex-1 relative flex items-center">
                                     <input type="text" id="inputComentario_${s.id}" 
-                                        placeholder="Escribe un comentario u observación..." 
+                                        placeholder="Agrega un comentario..." 
                                         onkeydown="if(event.key==='Enter') agregarComentarioServicio('${s.id}')"
-                                        class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 outline-none transition pr-9">
+                                        class="w-full bg-transparent text-xs text-white placeholder-zinc-500 outline-none pr-16 py-1.5 border-b border-transparent focus:border-zinc-700 transition">
                                     <button id="btnComentar_${s.id}" onclick="agregarComentarioServicio('${s.id}')" 
-                                        title="Publicar comentario"
-                                        class="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center text-[10px] transition shadow-sm">
-                                        <i class="fas fa-paper-plane"></i>
+                                        class="absolute right-0 text-xs font-bold text-sky-400 hover:text-sky-300 active:scale-95 transition">
+                                        Publicar
                                     </button>
                                 </div>
                             </div>
                             ` : ''}
                         </div>
-                    </div>
+                    </article>
                     `;
                 });
             }
@@ -3123,6 +3334,201 @@
             }
         }
 
+        // ========================= INSTAGRAM SOCIAL & INTERACTION FEATURES =========================
+
+        async function toggleLikeServicio(servicioId) {
+            if (!currentUser) {
+                showToast("Inicia sesión con tu PIN para dar Me Gusta ❤️", "info");
+                return;
+            }
+            let usuario = currentUser.nombre;
+            let s = appData.servicios.find(x => String(x.id) === String(servicioId));
+            if (!s) return;
+            if (!Array.isArray(s.likes)) s.likes = [];
+
+            let yaDioLike = s.likes.includes(usuario);
+            if (yaDioLike) {
+                s.likes = s.likes.filter(u => u !== usuario);
+            } else {
+                s.likes.push(usuario);
+            }
+
+            // Actualización visual reactiva instantánea
+            let heartBtn = document.getElementById(`btnLike_${servicioId}`);
+            let heartCount = document.getElementById(`likesCount_${servicioId}`);
+            if (heartBtn) {
+                if (!yaDioLike) {
+                    heartBtn.innerHTML = '<i class="fas fa-heart text-rose-500 text-xl ig-heart-active"></i>';
+                } else {
+                    heartBtn.innerHTML = '<i class="far fa-heart text-zinc-300 hover:text-rose-500 text-xl transition"></i>';
+                }
+            }
+            if (heartCount) {
+                heartCount.innerHTML = renderLikesTexto(s.likes);
+            }
+
+            // Persistencia en Firestore
+            try {
+                let docRef = db.collection('servicios').doc(servicioId);
+                if (!yaDioLike) {
+                    await docRef.update({ likes: firebase.firestore.FieldValue.arrayUnion(usuario) });
+                } else {
+                    await docRef.update({ likes: firebase.firestore.FieldValue.arrayRemove(usuario) });
+                }
+            } catch (e) {
+                console.warn("Error sincronizando like con Firestore:", e);
+            }
+        }
+
+        function renderLikesTexto(likesArr) {
+            if (!Array.isArray(likesArr) || likesArr.length === 0) {
+                return `<span class="text-zinc-500 font-normal">Sé el primero en dar me gusta ❤️</span>`;
+            }
+            if (likesArr.length === 1) {
+                return `Le gusta a <span class="font-bold text-white">${likesArr[0]}</span>`;
+            }
+            return `Le gusta a <span class="font-bold text-white">${likesArr[0]}</span> y a <span class="font-bold text-white">${likesArr.length - 1} más</span>`;
+        }
+
+        function toggleGuardarServicio(servicioId) {
+            let guardados = JSON.parse(localStorage.getItem('media_guardados') || '[]');
+            let idx = guardados.indexOf(servicioId);
+            let btn = document.getElementById(`btnBookmark_${servicioId}`);
+            if (idx === -1) {
+                guardados.push(servicioId);
+                if (btn) btn.innerHTML = '<i class="fas fa-bookmark text-amber-400 text-xl ig-heart-active"></i>';
+                showToast("¡Servicio guardado en tus favoritos! 🔖", "success");
+            } else {
+                guardados.splice(idx, 1);
+                if (btn) btn.innerHTML = '<i class="far fa-bookmark text-zinc-300 hover:text-amber-400 text-xl transition"></i>';
+                showToast("Servicio removido de favoritos", "info");
+            }
+            localStorage.setItem('media_guardados', JSON.stringify(guardados));
+        }
+
+        function triggerDoubleTapLike(servicioId) {
+            let overlay = document.getElementById(`heartOverlay_${servicioId}`);
+            if (overlay) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('ig-heart-pop');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('ig-heart-pop');
+                }, 800);
+            }
+            let s = appData.servicios.find(x => String(x.id) === String(servicioId));
+            if (s && currentUser && (!Array.isArray(s.likes) || !s.likes.includes(currentUser.nombre))) {
+                toggleLikeServicio(servicioId);
+            }
+        }
+
+        function enfocarComentario(servicioId) {
+            let input = document.getElementById(`inputComentario_${servicioId}`);
+            if (input) {
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => input.focus(), 350);
+            }
+        }
+
+        function compartirServicioWhatsApp(servicioId) {
+            let s = appData.servicios.find(x => String(x.id) === String(servicioId));
+            if (!s) return;
+            let fecha = formatearFechaLimpia(s.fecha);
+            let texto = `📸 *EQUIPO DE CÁMARAS · PAS MEDIA*\n`;
+            texto += `📅 *Fecha:* ${fecha}\n`;
+            if (s.tipoServicio) texto += `⛪ *Servicio:* ${s.tipoServicio}\n`;
+            if (s.realizador) texto += `🎬 *Realizador:* ${s.realizador}\n`;
+            if (s.switcher) texto += `🎛️ *Switcher:* ${s.switcher}\n`;
+            texto += `\n*DISTRIBUCIÓN DE CÁMARAS:*\n`;
+            for (let i = 1; i <= 6; i++) {
+                let cam = s[`cam${i}`];
+                if (cam && cam.asig) {
+                    let isoInfo = cam.iso ? ` (ISO ${cam.iso})` : '';
+                    let capInfo = cam.capacitador ? ` [Capacitador: ${cam.capacitador}]` : '';
+                    let capBadge = cam.esCapacitacion ? ` [Capacitación]` : '';
+                    texto += `• CAM ${i}: *${cam.asig}*${isoInfo}${capBadge}${capInfo}\n`;
+                }
+            }
+            if (s.comentarios && s.comentarios.trim()) {
+                texto += `\n📝 *Observaciones:* ${s.comentarios.trim()}\n`;
+            }
+            texto += `\n🔗 *App Pas Media:* https://gestion-camaras-media.web.app/`;
+
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(texto).then(() => {
+                    showToast("¡Asignación copiada al portapapeles! Abriendo WhatsApp...", "success");
+                }).catch(() => {});
+            }
+
+            let url = `https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`;
+            window.open(url, '_blank');
+        }
+
+        function filtrarOIrAServicio(filtro) {
+            if (!appData || !appData.servicios || appData.servicios.length === 0) return;
+
+            if (filtro === 'hoy') {
+                let now = new Date();
+                let y = now.getFullYear();
+                let m = String(now.getMonth() + 1).padStart(2, '0');
+                let d = String(now.getDate()).padStart(2, '0');
+                let hoyIso = `${y}-${m}-${d}`;
+
+                let target = appData.servicios.find(s => s.fecha && s.fecha.startsWith(hoyIso));
+                if (!target) {
+                    target = appData.servicios[0];
+                    showToast("No hay servicio hoy; mostrando el más próximo del feed.", "info");
+                } else {
+                    showToast("¡Mostrando el servicio de hoy! ★", "success");
+                }
+                resaltarYScrollServicio(target.id);
+                return;
+            }
+
+            if (filtro === 'todos') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                showToast("Mostrando todos los servicios", "info");
+                return;
+            }
+
+            let query = filtro.toLowerCase();
+            let target = appData.servicios.find(s => {
+                let txt = `${s.fecha || ''} ${s.tipoServicio || ''} ${s.realizador || ''}`.toLowerCase();
+                return txt.includes(query);
+            });
+
+            if (target) {
+                resaltarYScrollServicio(target.id);
+            } else {
+                showToast(`No se encontró servicio para "${filtro}"`, "info");
+            }
+        }
+
+        function resaltarYScrollServicio(servicioId) {
+            let elem = document.getElementById(`servicioPost_${servicioId}`);
+            if (elem) {
+                elem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                elem.classList.add('ring-2', 'ring-rose-500', 'shadow-2xl', 'shadow-rose-500/30');
+                setTimeout(() => {
+                    elem.classList.remove('ring-2', 'ring-rose-500', 'shadow-2xl', 'shadow-rose-500/30');
+                }, 2200);
+            }
+        }
+
+        function actualizarIgNavInferior(tab) {
+            let igKeys = ['dashboard', 'estadisticas', 'equipo'];
+            igKeys.forEach(k => {
+                let btn = document.getElementById(`igNav-${k}`);
+                if (btn) {
+                    if (k === tab) {
+                        btn.className = "flex flex-col items-center justify-center w-12 h-12 text-white transition active:scale-90";
+                    } else {
+                        btn.className = "flex flex-col items-center justify-center w-12 h-12 text-zinc-400 hover:text-white transition active:scale-90";
+                    }
+                }
+            });
+        }
+
         async function agregarMiembro() {
             if (userRole !== 'admin') { 
                 showToast("Se requiere PIN de Administrador.", "error"); 
@@ -3551,6 +3957,9 @@
             let targetBtn = document.getElementById(`tab-${tab}-btn`);
             if (targetSec) targetSec.classList.remove('hidden');
             if (targetBtn) targetBtn.classList.add('tab-active');
+
+            // Sincronizar barra inferior de navegación estilo Instagram
+            actualizarIgNavInferior(tab);
 
             if (tab === 'auditoria') {
                 cargarAuditoria();
@@ -4635,6 +5044,14 @@
         window.depurarMiembrosDuplicados = depurarMiembrosDuplicados;
         window.agregarComentarioServicio = agregarComentarioServicio;
         window.eliminarComentarioServicio = eliminarComentarioServicio;
+        window.toggleLikeServicio = toggleLikeServicio;
+        window.toggleGuardarServicio = toggleGuardarServicio;
+        window.triggerDoubleTapLike = triggerDoubleTapLike;
+        window.enfocarComentario = enfocarComentario;
+        window.compartirServicioWhatsApp = compartirServicioWhatsApp;
+        window.filtrarOIrAServicio = filtrarOIrAServicio;
+        window.resaltarYScrollServicio = resaltarYScrollServicio;
+        window.actualizarIgNavInferior = actualizarIgNavInferior;
 
     </script>
 </body>
