@@ -1231,6 +1231,8 @@
                     switcher: rawSwitcher,
                     registradoPor: d.registradoPor || rawDirector || rawRealizador || '',
                     fecha: d.fecha || '',
+                    comentarios: d.comentarios || '',
+                    comentariosLista: Array.isArray(d.comentariosLista) ? d.comentariosLista : [],
                     cam1: d.cam1 || { asig: '', iso: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
                     cam2: d.cam2 || { asig: '', iso: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
                     cam3: d.cam3 || { asig: '', iso: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
@@ -2220,16 +2222,88 @@
                             }).join('')}
                         </div>
 
-                        ${s.comentarios ? `
-                        <!-- Comentarios / Observaciones del Servicio -->
-                        <div class="p-3 rounded-xl bg-black/40 border border-white/[0.06] text-xs text-zinc-300 flex items-start space-x-2.5">
-                            <i class="fas fa-comment-dots text-indigo-400 mt-0.5 text-xs flex-shrink-0"></i>
-                            <div class="space-y-0.5 min-w-0">
-                                <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block font-semibold">Comentarios / Observaciones</span>
-                                <p class="text-zinc-300 leading-relaxed text-[11px] whitespace-pre-line">${s.comentarios}</p>
+                        <!-- Hilo Social de Comentarios / Observaciones -->
+                        <div class="pt-3 border-t border-white/[0.06] space-y-2.5">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-zinc-300 flex items-center gap-1.5 text-xs">
+                                    <i class="fas fa-comments text-indigo-400"></i> Comentarios y Observaciones
+                                    <span class="text-[10px] font-semibold bg-white/[0.06] text-zinc-300 px-2 py-0.5 rounded-full border border-white/[0.06]">
+                                        ${(Array.isArray(s.comentariosLista) ? s.comentariosLista.length : 0) + (s.comentarios && s.comentarios.trim() ? 1 : 0)}
+                                    </span>
+                                </span>
                             </div>
+
+                            ${s.comentarios && s.comentarios.trim() ? `
+                            <!-- Nota inicial de planeamiento -->
+                            <div class="bg-indigo-500/10 border border-indigo-500/20 p-2.5 rounded-xl text-xs space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-semibold text-indigo-300 text-[11px] flex items-center">
+                                        <i class="fas fa-note-sticky mr-1.5 text-indigo-400"></i> Nota de Planeamiento
+                                    </span>
+                                    <span class="text-[10px] text-zinc-400 font-mono">${s.registradoPor || 'Director'}</span>
+                                </div>
+                                <p class="text-zinc-200 text-xs leading-relaxed whitespace-pre-line">${s.comentarios}</p>
+                            </div>
+                            ` : ''}
+
+                            <!-- Lista de comentarios dinámicos -->
+                            ${(Array.isArray(s.comentariosLista) && s.comentariosLista.length > 0) ? `
+                            <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+                                ${s.comentariosLista.map(c => {
+                                    let esMio = currentUser && c.autor && (c.autor.toLowerCase() === currentUser.nombre.toLowerCase());
+                                    let puedeEliminarCom = (userRole === 'admin' || esMio);
+                                    let inicialAutor = c.autor ? c.autor.charAt(0).toUpperCase() : 'U';
+                                    let badgeColor = c.rol === 'admin' ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
+                                    let rolLabel = c.rol === 'admin' ? 'Admin' : 'Director';
+
+                                    return `
+                                    <div class="flex items-start space-x-2.5 text-xs group/com">
+                                        <div class="w-6 h-6 rounded-full bg-gradient-to-br from-indigo-500/30 to-purple-600/30 border border-indigo-500/30 flex items-center justify-center text-[10px] font-bold text-indigo-200 flex-shrink-0 mt-0.5">
+                                            ${inicialAutor}
+                                        </div>
+                                        <div class="flex-1 min-w-0 bg-[#161822] border border-white/[0.06] rounded-xl p-2.5 space-y-1">
+                                            <div class="flex justify-between items-center">
+                                                <div class="flex items-center space-x-1.5 flex-wrap">
+                                                    <span class="font-semibold text-white text-[11px]">${c.autor || 'Anónimo'}</span>
+                                                    <span class="text-[9px] px-1.5 py-0.2 rounded-full border ${badgeColor}">${rolLabel}</span>
+                                                    <span class="text-[10px] text-zinc-500 font-mono">${c.fechaHora || ''}</span>
+                                                </div>
+                                                ${puedeEliminarCom ? `
+                                                    <button onclick="eliminarComentarioServicio('${s.id}', '${c.id}')" title="Eliminar comentario" class="text-zinc-500 hover:text-rose-400 p-1 rounded transition">
+                                                        <i class="fas fa-trash-can text-[10px]"></i>
+                                                    </button>
+                                                ` : ''}
+                                            </div>
+                                            <p class="text-zinc-300 text-xs leading-relaxed break-words whitespace-pre-line">${c.texto}</p>
+                                        </div>
+                                    </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                            ` : (!s.comentarios || !s.comentarios.trim()) ? `
+                                <p class="text-[11px] text-zinc-500 italic">No hay comentarios aún en este servicio. ¡Sé el primero en comentar!</p>
+                            ` : ''}
+
+                            ${userRole !== 'public' ? `
+                            <!-- Input para nuevo comentario interactivo -->
+                            <div class="flex items-center space-x-2 pt-1">
+                                <div class="w-7 h-7 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center justify-center text-[11px] font-bold flex-shrink-0">
+                                    ${currentUser && currentUser.nombre ? currentUser.nombre.charAt(0).toUpperCase() : 'U'}
+                                </div>
+                                <div class="flex-1 relative">
+                                    <input type="text" id="inputComentario_${s.id}" 
+                                        placeholder="Escribe un comentario u observación..." 
+                                        onkeydown="if(event.key==='Enter') agregarComentarioServicio('${s.id}')"
+                                        class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 outline-none transition pr-9">
+                                    <button id="btnComentar_${s.id}" onclick="agregarComentarioServicio('${s.id}')" 
+                                        title="Publicar comentario"
+                                        class="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white flex items-center justify-center text-[10px] transition shadow-sm">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            ` : ''}
                         </div>
-                        ` : ''}
                     </div>
                     `;
                 });
@@ -2957,6 +3031,95 @@
                 } catch (err) { 
                     showToast(`Error al eliminar: ${err.message}`, "error"); 
                 }
+            }
+        }
+
+        async function agregarComentarioServicio(servicioId) {
+            if (userRole === 'public') {
+                showToast("Debes iniciar sesión con tu PIN para comentar.", "info");
+                return;
+            }
+            let inputElem = document.getElementById(`inputComentario_${servicioId}`);
+            let texto = inputElem ? inputElem.value.trim() : '';
+            if (!texto) return;
+
+            let btnElem = document.getElementById(`btnComentar_${servicioId}`);
+            if (btnElem) btnElem.disabled = true;
+
+            let now = new Date();
+            let fechaStr = now.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+            let horaStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            let fechaHora = `${fechaStr}, ${horaStr}`;
+
+            let nuevoComentario = {
+                id: 'com_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+                autor: currentUser ? currentUser.nombre : 'Director',
+                rol: userRole,
+                texto: texto,
+                fechaHora: fechaHora,
+                timestamp: Date.now()
+            };
+
+            try {
+                let docRef = db.collection('servicios').doc(servicioId);
+                await docRef.update({
+                    comentariosLista: firebase.firestore.FieldValue.arrayUnion(nuevoComentario)
+                });
+
+                logAuditoriaFirestore(
+                    currentUser ? currentUser.nombre : 'Director',
+                    userRole,
+                    'Comentario Servicio',
+                    `Comentó en servicio (${nuevoComentario.autor}): "${texto.substring(0, 60)}${texto.length > 60 ? '...' : ''}"`
+                );
+
+                if (inputElem) inputElem.value = '';
+                showToast("¡Comentario publicado!", "success");
+                let freshData = await getDatabaseDataFirestore();
+                renderApp(freshData);
+            } catch (err) {
+                console.error("Error al agregar comentario:", err);
+                showToast("Error al publicar comentario: " + err.message, "error");
+            } finally {
+                if (btnElem) btnElem.disabled = false;
+            }
+        }
+
+        async function eliminarComentarioServicio(servicioId, comentarioId) {
+            if (userRole === 'public') return;
+            let s = appData.servicios.find(x => String(x.id) === String(servicioId));
+            if (!s || !s.comentariosLista) return;
+
+            let com = s.comentariosLista.find(c => c.id === comentarioId);
+            if (!com) return;
+
+            let esMio = currentUser && com.autor && com.autor.toLowerCase() === currentUser.nombre.toLowerCase();
+            if (userRole !== 'admin' && !esMio) {
+                showToast("Solo puedes eliminar tus propios comentarios.", "error");
+                return;
+            }
+
+            if (!confirm("¿Deseas eliminar este comentario?")) return;
+
+            try {
+                let docRef = db.collection('servicios').doc(servicioId);
+                await docRef.update({
+                    comentariosLista: firebase.firestore.FieldValue.arrayRemove(com)
+                });
+
+                logAuditoriaFirestore(
+                    currentUser ? currentUser.nombre : 'Director',
+                    userRole,
+                    'Eliminar Comentario',
+                    `Eliminó comentario (${com.autor}: "${com.texto.substring(0, 30)}...")`
+                );
+
+                showToast("Comentario eliminado", "info");
+                let freshData = await getDatabaseDataFirestore();
+                renderApp(freshData);
+            } catch (err) {
+                console.error("Error al eliminar comentario:", err);
+                showToast("Error: " + err.message, "error");
             }
         }
 
@@ -4470,6 +4633,8 @@
         window.guardarNuevoUsuario = guardarNuevoUsuario;
         window.eliminarUsuarioSistema = eliminarUsuarioSistema;
         window.depurarMiembrosDuplicados = depurarMiembrosDuplicados;
+        window.agregarComentarioServicio = agregarComentarioServicio;
+        window.eliminarComentarioServicio = eliminarComentarioServicio;
 
     </script>
 </body>
