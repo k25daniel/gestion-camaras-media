@@ -1,10 +1,19 @@
-name: Sincronización Automática Planning Center a Firestore
+name: Sincronización Planning Center a Firestore
 
 on:
   schedule:
-    # Corre una vez al día a las 3:00 PM UTC-6 (21:00 UTC) de martes a sábado
+    # Corre automáticamente de martes a sábado
     - cron: '0 21 * * 2-6'
-  workflow_dispatch: # Permite ejecutar manualmente con un clic desde la pestaña Actions en GitHub
+  workflow_dispatch:
+    inputs:
+      pco_app_id:
+        description: 'Application ID de Planning Center (opcional si usas GitHub Secrets)'
+        required: false
+        default: ''
+      pco_secret:
+        description: 'Secret de Planning Center (opcional si usas GitHub Secrets)'
+        required: false
+        default: ''
 
 jobs:
   sync:
@@ -21,8 +30,8 @@ jobs:
 
       - name: Ejecutar Sincronizador de Planning Center
         env:
-          PCO_APP_ID: ${{ secrets.PCO_APP_ID }}
-          PCO_SECRET: ${{ secrets.PCO_SECRET }}
+          PCO_APP_ID: ${{ inputs.pco_app_id != '' && inputs.pco_app_id || secrets.PCO_APP_ID }}
+          PCO_SECRET: ${{ inputs.pco_secret != '' && inputs.pco_secret || secrets.PCO_SECRET }}
           FIREBASE_PROJECT_ID: 'gestion-decamaras'
         run: |
           python3 scripts/sync_pco.py

@@ -87,10 +87,12 @@ def sync_miembros():
         return 0
 
     media_keywords = ["media", "camara", "cámara", "link", "jueves", "finde", "kzn", "ayuno"]
+    known_media_team_ids = {"2982202", "3047884", "3075184", "4496712"}
     teams_a_sincronizar = []
     for t in teams_data["data"]:
         nom = (t.get("attributes", {}).get("name") or "").lower()
-        if any(kw in nom for kw in media_keywords):
+        t_id = str(t.get("id"))
+        if t_id in known_media_team_ids or any(kw in nom for kw in media_keywords):
             teams_a_sincronizar.append(t)
 
     if not teams_a_sincronizar:
