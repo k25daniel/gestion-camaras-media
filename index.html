@@ -573,6 +573,23 @@
                         </button>
                     </div>
 
+                    <!-- Datalist para selección rápida de ISO -->
+                    <datalist id="listaIsosDisponibles">
+                        <option value="100">
+                        <option value="200">
+                        <option value="400">
+                        <option value="640">
+                        <option value="800">
+                        <option value="1000">
+                        <option value="1250">
+                        <option value="1600">
+                        <option value="2000">
+                        <option value="2500">
+                        <option value="3200">
+                        <option value="6400">
+                        <option value="12800">
+                    </datalist>
+
                     <!-- Grid generado dinámicamente -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="contenedorCamarasForm"></div>
                 </div>
@@ -666,6 +683,10 @@
                         <span class="text-[11px] text-zinc-500">Haz clic en los tags para activar roles</span>
                     </div>
                     <div class="flex items-center space-x-2">
+                        <button type="button" onclick="recargarMiembrosDesdeFirestore()" title="Actualizar lista de miembros desde la base de datos"
+                            class="bg-indigo-500/15 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/20 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center shadow-sm">
+                            <i class="fas fa-rotate mr-1 text-[10px]"></i> Recargar
+                        </button>
                         <button onclick="abrirModalPlanningCenter()" 
                             class="bg-[#1e1b4b] hover:bg-[#312e81] text-indigo-200 border border-indigo-500/30 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center shadow-sm">
                             <i class="fas fa-cloud-arrow-down mr-1.5 text-indigo-400"></i> Sincronizar Planning Center
@@ -860,7 +881,7 @@
 
                 <div class="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-2.5 text-[11px] text-zinc-300 leading-relaxed flex items-start space-x-2">
                     <i class="fas fa-circle-info text-indigo-400 mt-0.5 flex-shrink-0"></i>
-                    <span><b>Consejo rápido:</b> Si tu navegador bloquea la conexión por seguridad (CORS), usa la pestaña de al lado <b>"Pegar Plan / Nombres"</b> para cargar tu servicio al instante sin API Tokens.</span>
+                    <span>Conéctate con tu Application ID y Secret para descargar los miembros de Services directamente a tu base de datos.</span>
                 </div>
 
                 <div>
@@ -887,6 +908,18 @@
                     <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Team ID específico</label>
                     <input type="text" id="pcTeamId" value="2982202"
                         class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
+                </div>
+
+                <div class="pt-1 border-t border-white/[0.06]">
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Proxy CORS / Cloudflare Worker</label>
+                        <span id="badgeProxyDetectado" class="text-[9px] px-1.5 py-0.5 rounded font-mono bg-zinc-800 text-zinc-400">Detectando...</span>
+                    </div>
+                    <input type="text" id="pcProxyUrl" placeholder="Ej: http://localhost:3000/pco-api o https://tu-worker.workers.dev"
+                        class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
+                    <p class="text-[10px] text-zinc-400 mt-1 leading-relaxed">
+                        ⚡ Al ejecutar <code class="text-indigo-300 font-mono">npm start</code>, se conecta mediante el proxy local sin CORS. En móvil o GitHub Pages puedes usar un Cloudflare Worker gratuito (<code class="text-zinc-300 font-mono">cloudflare-worker.js</code>).
+                    </p>
                 </div>
             </div>
 
@@ -1158,12 +1191,12 @@
                     switcher: rawSwitcher,
                     registradoPor: d.registradoPor || rawDirector || rawRealizador || '',
                     fecha: d.fecha || '',
-                    cam1: d.cam1 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
-                    cam2: d.cam2 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
-                    cam3: d.cam3 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
-                    cam4: d.cam4 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
-                    cam5: d.cam5 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
-                    cam6: d.cam6 || { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' }
+                    cam1: d.cam1 || { asig: '', iso: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
+                    cam2: d.cam2 || { asig: '', iso: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
+                    cam3: d.cam3 || { asig: '', iso: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
+                    cam4: d.cam4 || { asig: '', iso: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
+                    cam5: d.cam5 || { asig: '', iso: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
+                    cam6: d.cam6 || { asig: '', iso: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' }
                 });
             });
 
@@ -1811,6 +1844,18 @@
                             <option value="[Cámara Fija]">📷 [Cámara Fija / Estática]</option>
                         </select>
                     </div>
+
+                    <!-- Configuración de ISO para cada cámara -->
+                    <div class="bg-black/30 p-2.5 rounded-xl border border-white/[0.04] flex items-center justify-between gap-2">
+                        <label for="regCam${i}_iso" class="text-[10px] font-mono font-bold text-zinc-400 flex items-center whitespace-nowrap">
+                            <i class="fas fa-sliders text-indigo-400 mr-1.5 text-[10px]"></i>
+                            <span>ISO CÁMARA</span>
+                        </label>
+                        <div class="relative w-36">
+                            <input type="text" id="regCam${i}_iso" list="listaIsosDisponibles" placeholder="Ej: 800, 1600..."
+                                class="w-full bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
+                        </div>
+                    </div>
                     
                     <div class="grid grid-cols-2 gap-2 pt-1">
                         <!-- PRESET A -->
@@ -1888,7 +1933,7 @@
 
             for (let i = 1; i <= 6; i++) {
                 let cam = ultimoServicio[`cam${i}`];
-                let tieneDatos = (cam && (cam.asig !== '' || cam.f_a !== '' || cam.k_a !== ''));
+                let tieneDatos = (cam && (cam.asig !== '' || cam.f_a !== '' || cam.k_a !== '' || (cam.iso && cam.iso !== '')));
 
                 let chk = document.getElementById(`chkActiva${i}`);
                 chk.checked = tieneDatos;
@@ -1896,6 +1941,8 @@
 
                 if (tieneDatos) {
                     document.getElementById(`regCam${i}_asig`).value = cam.asig || "";
+                    let isoInput = document.getElementById(`regCam${i}_iso`);
+                    if (isoInput) isoInput.value = cam.iso || "";
                     document.getElementById(`regCam${i}_fa`).value = cam.f_a || "";
                     document.getElementById(`regCam${i}_ka`).value = cam.k_a || "";
                     document.getElementById(`regCam${i}_fb`).value = cam.f_b || "";
@@ -1924,6 +1971,8 @@
                     chk.checked = true;
                     toggleVisibilidadCamara(i);
                     document.getElementById(`regCam${i}_asig`).value = "";
+                    let isoInput = document.getElementById(`regCam${i}_iso`);
+                    if (isoInput) isoInput.value = "";
                     document.getElementById(`regCam${i}_fa`).value = "";
                     document.getElementById(`regCam${i}_ka`).value = "";
                     document.getElementById(`regCam${i}_fb`).value = "";
@@ -1941,6 +1990,8 @@
             } else {
                 bloque.classList.add('hidden');
                 document.getElementById(`regCam${num}_asig`).value = "";
+                let isoInput = document.getElementById(`regCam${num}_iso`);
+                if (isoInput) isoInput.value = "";
                 document.getElementById(`regCam${num}_fa`).value = "";
                 document.getElementById(`regCam${num}_ka`).value = "";
                 document.getElementById(`regCam${num}_fb`).value = "";
@@ -2088,8 +2139,11 @@
                                 return `
                                 <div class="bg-[#161822]/80 p-3 rounded-xl border border-white/[0.05] space-y-2 hover:border-white/[0.1] transition-colors">
                                     <div class="flex justify-between items-center border-b border-white/[0.04] pb-1.5">
-                                        <span class="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-wider">CAM ${i}</span>
-                                        <span class="text-xs font-semibold text-white truncate max-w-[140px]">${cam.asig} ${tagCapDashboard}</span>
+                                        <div class="flex items-center space-x-1.5">
+                                            <span class="text-[10px] font-mono font-bold text-indigo-400 uppercase tracking-wider">CAM ${i}</span>
+                                            ${cam.iso ? `<span class="text-[9px] font-mono bg-indigo-500/15 text-indigo-300 border border-indigo-500/25 px-1.5 py-0.5 rounded font-semibold">ISO ${cam.iso}</span>` : ''}
+                                        </div>
+                                        <span class="text-xs font-semibold text-white truncate max-w-[130px]">${cam.asig} ${tagCapDashboard}</span>
                                     </div>
                                     ${infoCapacitador}
                                     <div class="flex justify-between text-[10px] font-mono text-zinc-400 pt-0.5">
@@ -2685,6 +2739,7 @@
 
                     payloadData[`cam${i}`] = {
                         asig: nombreCam,
+                        iso: (document.getElementById(`regCam${i}_iso`)?.value || '').trim(),
                         f_a: document.getElementById(`regCam${i}_fa`).value.trim(),
                         k_a: document.getElementById(`regCam${i}_ka`).value.trim(),
                         f_b: document.getElementById(`regCam${i}_fb`).value.trim(),
@@ -2693,7 +2748,7 @@
                         capacitador: objAsistente ? objAsistente.capacitador : ''
                     };
                 } else {
-                    payloadData[`cam${i}`] = { asig: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' };
+                    payloadData[`cam${i}`] = { asig: '', iso: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' };
                 }
             }
 
@@ -2748,7 +2803,7 @@
 
             for (let i = 1; i <= 6; i++) {
                 let cam = s[`cam${i}`];
-                let tieneDatos = (cam && (cam.asig !== '' || cam.f_a !== '' || cam.k_a !== ''));
+                let tieneDatos = (cam && (cam.asig !== '' || cam.f_a !== '' || cam.k_a !== '' || (cam.iso && cam.iso !== '')));
 
                 let chk = document.getElementById(`chkActiva${i}`);
                 chk.checked = tieneDatos;
@@ -2756,6 +2811,8 @@
 
                 if (tieneDatos) {
                     document.getElementById(`regCam${i}_asig`).value = cam.asig || "";
+                    let isoInput = document.getElementById(`regCam${i}_iso`);
+                    if (isoInput) isoInput.value = cam.iso || "";
                     document.getElementById(`regCam${i}_fa`).value = cam.f_a || "";
                     document.getElementById(`regCam${i}_ka`).value = cam.k_a || "";
                     document.getElementById(`regCam${i}_fb`).value = cam.f_b || "";
@@ -2787,6 +2844,10 @@
                 let chk = document.getElementById(`chkActiva${i}`);
                 chk.checked = true;
                 toggleVisibilidadCamara(i);
+                let asigInput = document.getElementById(`regCam${i}_asig`);
+                if (asigInput) asigInput.value = "";
+                let isoInput = document.getElementById(`regCam${i}_iso`);
+                if (isoInput) isoInput.value = "";
                 document.getElementById(`regCam${i}_fa`).value = "";
                 document.getElementById(`regCam${i}_ka`).value = "";
                 document.getElementById(`regCam${i}_fb`).value = "";
@@ -3288,10 +3349,32 @@
             let savedAppId = localStorage.getItem('pc_app_id') || '';
             let savedSecret = localStorage.getItem('pc_secret') || '';
             let savedTeamId = localStorage.getItem('pc_team_id') || '2982202';
+            let savedProxy = localStorage.getItem('pc_proxy_url') || '';
+
+            let isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (!savedProxy && isLocalhost) {
+                savedProxy = `${window.location.origin}/pco-api`;
+            }
 
             document.getElementById('pcAppId').value = savedAppId;
             document.getElementById('pcSecret').value = savedSecret;
             document.getElementById('pcTeamId').value = savedTeamId;
+            let proxyInput = document.getElementById('pcProxyUrl');
+            if (proxyInput) proxyInput.value = savedProxy;
+
+            let badge = document.getElementById('badgeProxyDetectado');
+            if (badge) {
+                if (savedProxy && (savedProxy.includes('localhost') || savedProxy.includes('127.0.0.1'))) {
+                    badge.innerText = '⚡ Proxy Local Activo';
+                    badge.className = 'text-[9px] px-1.5 py-0.5 rounded font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                } else if (savedProxy) {
+                    badge.innerText = '☁️ Worker Activo';
+                    badge.className = 'text-[9px] px-1.5 py-0.5 rounded font-mono bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
+                } else {
+                    badge.innerText = 'Directo (Sin Proxy)';
+                    badge.className = 'text-[9px] px-1.5 py-0.5 rounded font-mono bg-zinc-800 text-zinc-400';
+                }
+            }
 
             let msg = document.getElementById('pcStatusMsg');
             msg.className = 'hidden';
@@ -3299,6 +3382,18 @@
 
             switchPcTab('api');
             document.getElementById('modalPlanningCenter').classList.remove('hidden');
+        }
+
+        async function recargarMiembrosDesdeFirestore() {
+            try {
+                showToast("Consultando miembros actualizados en la base de datos...", "info");
+                let freshData = await getDatabaseDataFirestore();
+                renderApp(freshData);
+                showToast(`¡${freshData.miembros.length} miembros sincronizados en el directorio!`, "success");
+            } catch (err) {
+                console.error("Error al recargar miembros:", err);
+                showToast("Error al recargar miembros: " + err.message, "error");
+            }
         }
 
         function cerrarModalPlanningCenter() {
@@ -3474,6 +3569,7 @@
             let secret = document.getElementById('pcSecret').value.trim();
             let scope = document.getElementById('pcSyncScope').value;
             let teamIdInput = document.getElementById('pcTeamId').value.trim() || '2982202';
+            let proxyUrl = (document.getElementById('pcProxyUrl')?.value || '').trim();
             let msg = document.getElementById('pcStatusMsg');
             let btn = document.getElementById('btnEjecutarSyncPC');
 
@@ -3488,6 +3584,7 @@
             localStorage.setItem('pc_app_id', appId);
             localStorage.setItem('pc_secret', secret);
             localStorage.setItem('pc_team_id', teamIdInput);
+            if (proxyUrl) localStorage.setItem('pc_proxy_url', proxyUrl);
 
             let originalBtn = btn.innerHTML;
             btn.disabled = true;
@@ -3497,33 +3594,56 @@
             msg.innerText = 'Conectando con Planning Center Services...';
             msg.classList.remove('hidden');
 
+            function resolverUrlPco(apiPath) {
+                let cleanPath = apiPath.startsWith('/') ? apiPath : '/' + apiPath;
+                let isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                let effectiveProxy = proxyUrl || (isLocalhost ? `${window.location.origin}/pco-api` : '');
+
+                if (effectiveProxy) {
+                    let base = effectiveProxy.replace(/\/+$/, '');
+                    if (base.endsWith('/pco-api')) {
+                        return `${base}${cleanPath}`;
+                    } else if (base.includes('?url=')) {
+                        return `${base}${encodeURIComponent('https://api.planningcenteronline.com' + cleanPath)}`;
+                    } else {
+                        return `${base}${cleanPath}`;
+                    }
+                }
+                return `https://api.planningcenteronline.com${cleanPath}`;
+            }
+
+            let basicAuth = btoa(`${appId}:${secret}`);
+
+            async function fetchPcoApi(apiPath) {
+                let target = resolverUrlPco(apiPath);
+                let res = await fetch(target, {
+                    headers: {
+                        'Authorization': `Basic ${basicAuth}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                if (!res.ok) {
+                    let errTxt = '';
+                    try { errTxt = await res.text(); } catch(e) {}
+                    throw new Error(`HTTP ${res.status}: ${errTxt || res.statusText}`);
+                }
+                return await res.json();
+            }
+
             try {
-                let basicAuth = btoa(`${appId}:${secret}`);
-                
                 // Si el usuario seleccionó sincronizar todos los equipos de Media
                 let teamsToFetch = [];
                 if (scope === 'all_teams') {
                     // Obtener todos los equipos de Services
-                    let teamsUrl = `https://api.planningcenteronline.com/services/v2/teams?per_page=100`;
-                    let resTeams = null;
-                    try {
-                        resTeams = await fetch(teamsUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
-                    } catch (e) {
-                        let proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(teamsUrl)}`;
-                        resTeams = await fetch(proxyUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
-                    }
-
-                    if (resTeams && resTeams.ok) {
-                        let dataTeams = await resTeams.json();
-                        let allTeams = dataTeams.data || [];
-                        // Filtrar equipos que contengan "PAS Media" o "Media"
-                        let mediaTeams = allTeams.filter(t => {
-                            let nom = ((t.attributes && t.attributes.name) || '').toLowerCase();
-                            return nom.includes('media') || nom.includes('camara') || nom.includes('link') || nom.includes('jueves') || nom.includes('finde') || nom.includes('kzn');
-                        });
-                        if (mediaTeams.length > 0) {
-                            teamsToFetch = mediaTeams.map(t => t.id);
-                        }
+                    let dataTeams = await fetchPcoApi('/services/v2/teams?per_page=100');
+                    let allTeams = dataTeams.data || [];
+                    // Filtrar equipos que contengan "PAS Media" o "Media"
+                    let mediaTeams = allTeams.filter(t => {
+                        let nom = ((t.attributes && t.attributes.name) || '').toLowerCase();
+                        return nom.includes('media') || nom.includes('camara') || nom.includes('cámara') || nom.includes('link') || nom.includes('jueves') || nom.includes('finde') || nom.includes('kzn') || nom.includes('ayuno');
+                    });
+                    if (mediaTeams.length > 0) {
+                        teamsToFetch = mediaTeams.map(t => t.id);
                     }
                 }
 
@@ -3536,20 +3656,9 @@
 
                 let todasLasPersonas = [];
                 for (let tId of teamsToFetch) {
-                    let targetUrl = `https://api.planningcenteronline.com/services/v2/teams/${tId}/people?per_page=100`;
-                    let res = null;
-                    try {
-                        res = await fetch(targetUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
-                    } catch (e) {
-                        let proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-                        res = await fetch(proxyUrl, { headers: { 'Authorization': `Basic ${basicAuth}` } });
-                    }
-
-                    if (res && res.ok) {
-                        let data = await res.json();
-                        if (data.data) {
-                            todasLasPersonas = todasLasPersonas.concat(data.data);
-                        }
+                    let data = await fetchPcoApi(`/services/v2/teams/${tId}/people?per_page=100`);
+                    if (data && data.data) {
+                        todasLasPersonas = todasLasPersonas.concat(data.data);
                     }
                 }
 
@@ -3557,7 +3666,7 @@
                     throw new Error('No se encontraron personas en los equipos seleccionados. Revisa tus credenciales o Team ID.');
                 }
 
-                msg.innerText = `Se encontraron ${todasLasPersonas.length} registros. Guardando en Firebase...`;
+                msg.innerText = `Se encontraron ${todasLasPersonas.length} registros. Guardando en Firestore...`;
 
                 // Guardar en Firestore evitando duplicados
                 let snapMiembros = await db.collection('miembros').get();
@@ -3613,19 +3722,34 @@
                             <i class="fas fa-shield-halved mr-1.5"></i> Restricción de Seguridad del Navegador (CORS)
                         </div>
                         <p class="text-[11px] text-zinc-300 leading-relaxed">
-                            La API oficial de Planning Center <b>bloquea las peticiones directas desde páginas web del navegador</b> para proteger las claves maestras.
+                            Planning Center no permite peticiones HTTP directas desde páginas web del navegador. Elige una de estas soluciones directas:
                         </p>
-                        <div class="bg-black/40 p-2.5 rounded-xl text-[11px] space-y-1.5 border border-white/[0.08]">
-                            <p class="font-semibold text-white flex items-center">
-                                <i class="fas fa-circle-check text-emerald-400 mr-1.5"></i> Solución rápida recomendada:
-                            </p>
-                            <p class="text-zinc-300 leading-relaxed">
-                                Usa la pestaña de arriba <b>"Pegar Plan / Nombres"</b>. Copias el texto de tu plan en Services y lo pegas ahí; se cargará de inmediato sin depender de la API ni de bloqueos del navegador.
-                            </p>
+                        <div class="space-y-2 pt-1 text-[11px]">
+                            <div class="bg-black/40 p-2.5 rounded-xl border border-white/[0.08] space-y-1">
+                                <p class="font-semibold text-emerald-400 flex items-center">
+                                    <i class="fas fa-bolt mr-1.5"></i> Opción 1: Servidor Local (Recomendado en tu PC)
+                                </p>
+                                <p class="text-zinc-300 leading-relaxed">
+                                    Ejecuta <code class="text-indigo-300 font-mono font-bold">npm start</code> en la terminal y abre <b class="text-white">http://localhost:3000</b>. El proxy local integrado enrutará las peticiones al instante sin ningún bloqueo CORS.
+                                </p>
+                            </div>
+                            <div class="bg-black/40 p-2.5 rounded-xl border border-white/[0.08] space-y-1">
+                                <p class="font-semibold text-indigo-300 flex items-center">
+                                    <i class="fas fa-terminal mr-1.5"></i> Opción 2: Sincronizador Directo por Terminal
+                                </p>
+                                <p class="text-zinc-300 leading-relaxed">
+                                    Ejecuta <code class="text-indigo-300 font-mono font-bold">npm run sync:pco</code> en tu terminal. Sincronizará miembros y planes directo a Firebase sin navegador.
+                                </p>
+                            </div>
+                            <div class="bg-black/40 p-2.5 rounded-xl border border-white/[0.08] space-y-1">
+                                <p class="font-semibold text-sky-300 flex items-center">
+                                    <i class="fas fa-cloud mr-1.5"></i> Opción 3: Cloudflare Worker (Móvil / Web pública)
+                                </p>
+                                <p class="text-zinc-300 leading-relaxed">
+                                    Despliega el archivo <code class="text-indigo-300 font-mono">cloudflare-worker.js</code> en tu cuenta gratuita de Cloudflare y pega tu URL de Worker en el campo Proxy arriba.
+                                </p>
+                            </div>
                         </div>
-                        <button type="button" onclick="switchPcTab('paste')" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-semibold py-2 px-3 rounded-xl text-xs transition flex items-center justify-center space-x-1.5 shadow-md">
-                            <i class="fas fa-clipboard-list mr-1"></i> Ir a "Pegar Plan / Nombres"
-                        </button>
                     `;
                 } else {
                     msg.className = 'p-3 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';

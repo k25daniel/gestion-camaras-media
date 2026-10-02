@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "Sistema de gestión de cámaras y servicios para el equipo de Media",
   "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
     "sync:pco": "python3 scripts/sync_pco.py"
   }
 }
