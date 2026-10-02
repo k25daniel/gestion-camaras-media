@@ -7,12 +7,14 @@
     <meta name="theme-color" content="#090a0f">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Media Cámaras">
+    <meta name="apple-mobile-web-app-title" content="PASmedia">
     <meta name="format-detection" content="telephone=no">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Gestión de Cámaras · Media</title>
+    <link rel="icon" type="image/png" href="logo-pasmedia.png">
+    <link rel="apple-touch-icon" href="logo-pasmedia.png">
+    <title>PASmedia · Cámaras</title>
     
     <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -237,12 +239,12 @@
         <div class="absolute -bottom-32 -right-32 w-80 h-80 bg-purple-600/10 rounded-full blur-[100px] pointer-events-none"></div>
 
         <div class="surface-card p-6 sm:p-8 max-w-sm w-full space-y-6 text-center shadow-2xl border border-white/[0.1] relative">
-            <div class="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-lg shadow-indigo-500/10">
-                <i class="fas fa-video text-xl"></i>
+            <div class="w-20 h-20 mx-auto rounded-2xl overflow-hidden border border-white/10 shadow-xl shadow-purple-500/10 bg-black/40 p-1 flex items-center justify-center">
+                <img src="logo-pasmedia.png" alt="PASmedia" class="w-full h-full object-cover rounded-xl">
             </div>
             
             <div class="space-y-1">
-                <h2 class="text-xl font-bold text-white tracking-tight">Gestión de Cámaras</h2>
+                <h2 class="text-xl font-bold text-white tracking-tight">PASmedia Cámaras</h2>
                 <p class="text-xs text-zinc-400">Selecciona tu usuario e ingresa tu PIN para acceder al sistema.</p>
             </div>
 
@@ -278,7 +280,7 @@
             </div>
 
             <div class="pt-2 border-t border-white/[0.06] text-center">
-                <span class="text-[10px] text-zinc-500 font-mono tracking-wider">MEDIA TEAM · ACCESO SEGURO</span>
+                <span class="text-[10px] text-zinc-500 font-mono tracking-wider">PASMEDIA TEAM · ACCESO SEGURO</span>
             </div>
         </div>
     </div>
@@ -286,16 +288,14 @@
     <!-- TOP HEADER (Oculto hasta autenticarse) -->
     <header id="mainAppHeader" class="hidden glass-nav sticky top-0 z-40 transition-all safe-top">
         <div class="max-w-5xl mx-auto px-3.5 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-            <!-- Brand Estilo Instagram -->
+            <!-- Brand Estilo Instagram con Logo Oficial PASmedia -->
             <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
-                <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl ig-gradient-border p-[1.5px] flex items-center justify-center flex-shrink-0 shadow-md shadow-rose-500/10">
-                    <div class="w-full h-full rounded-[10px] bg-[#090a0f] flex items-center justify-center text-white">
-                        <i class="fas fa-camera text-xs sm:text-sm"></i>
-                    </div>
+                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl ig-gradient-border p-[1.5px] flex items-center justify-center flex-shrink-0 shadow-md shadow-rose-500/10">
+                    <img src="logo-pasmedia.png" alt="PASmedia" class="w-full h-full rounded-[9px] object-cover">
                 </div>
                 <div class="truncate">
                     <div class="flex items-center space-x-1.5 sm:space-x-2">
-                        <span class="text-base sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-500 bg-clip-text text-transparent">Pas Media</span>
+                        <span class="text-base sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-500 bg-clip-text text-transparent">PASmedia</span>
                         <span class="text-[9px] sm:text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-white/[0.08] text-zinc-300 border border-white/[0.08] flex-shrink-0">Cámaras</span>
                     </div>
                     <p class="text-[10px] sm:text-[11px] text-zinc-400 font-medium leading-none mt-0.5 hidden xs:block sm:block truncate">Control y Asignación de Servicios</p>
