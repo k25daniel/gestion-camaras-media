@@ -308,10 +308,10 @@
                     <span id="headerUserName" class="block text-[11px] sm:text-xs font-semibold text-white leading-tight max-w-[100px] sm:max-w-[150px] truncate">Usuario</span>
                     <span id="headerUserRole" class="block text-[9px] sm:text-[10px] font-mono text-zinc-400 capitalize">Director</span>
                 </div>
-                <button onclick="abrirModalCambiarPinActual()" id="btnCambiarPinHeader" title="Cambiar mi Contraseña / PIN"
+                <button onclick="abrirModalPerfilUsuario()" id="btnPerfilHeader" title="Mi Perfil, Likes y PIN"
                     class="bg-white/[0.04] hover:bg-indigo-500/15 active:scale-95 border border-white/[0.08] hover:border-indigo-500/30 text-zinc-300 hover:text-indigo-300 px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all duration-200">
-                    <i class="fas fa-key text-[11px] text-indigo-400"></i>
-                    <span class="tracking-wide hidden sm:inline">PIN</span>
+                    <i class="far fa-user text-[11px] text-indigo-400"></i>
+                    <span class="tracking-wide hidden sm:inline">Perfil</span>
                 </button>
                 <button onclick="cerrarSesion()" id="btnAdminState" title="Cerrar Sesión"
                     class="group relative bg-white/[0.04] hover:bg-rose-500/10 active:scale-95 border border-white/[0.08] hover:border-rose-500/30 text-zinc-300 hover:text-rose-400 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all duration-200">
@@ -890,8 +890,8 @@
                 <span class="text-[9px] font-medium tracking-tight mt-0.5">Equipo</span>
             </button>
 
-            <!-- Perfil / PIN -->
-            <button onclick="abrirModalCambiarPinActual()" class="flex flex-col items-center justify-center w-12 h-12 text-zinc-400 hover:text-white transition active:scale-90" title="Mi Cuenta / PIN">
+            <!-- Perfil / Actividad / PIN -->
+            <button id="igNav-perfil" onclick="abrirModalPerfilUsuario()" class="flex flex-col items-center justify-center w-12 h-12 text-zinc-400 hover:text-white transition active:scale-90" title="Mi Perfil">
                 <div class="w-6 h-6 rounded-full p-[1.5px] ig-gradient-border flex items-center justify-center">
                     <div id="igNavUserAvatar" class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-[10px] font-bold text-white">
                         U
@@ -1123,59 +1123,129 @@
         </div>
     </div>
 
-    <!-- ==================== MODAL AUTOSERVICIO: CAMBIAR PIN ACTUAL ==================== -->
-    <div id="modalCambiarPinActual" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="surface-card w-full max-w-md p-5 sm:p-6 space-y-4 border border-white/[0.1] rounded-2xl shadow-2xl animate-scale-up">
-            <div class="flex items-center justify-between pb-3 border-b border-white/[0.08]">
-                <div class="flex items-center space-x-2.5">
-                    <div class="w-8 h-8 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-sm flex-shrink-0">
-                        <i class="fas fa-key"></i>
+    <!-- ==================== MODAL DE PERFIL: NOTIFICACIONES, LIKES, COMENTARIOS Y PIN ==================== -->
+    <div id="modalPerfilUsuario" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 hidden flex items-center justify-center p-3 sm:p-4">
+        <div id="modalCambiarPinActual" class="surface-card w-full max-w-lg bg-[#111319] border border-white/[0.1] rounded-2xl sm:rounded-3xl shadow-2xl animate-scale-up overflow-hidden max-h-[92vh] flex flex-col">
+            <!-- HEADER DEL PERFIL (Estilo Instagram) -->
+            <div class="p-4 sm:p-5 border-b border-white/[0.08] relative bg-gradient-to-b from-white/[0.04] to-transparent">
+                <button type="button" onclick="cerrarModalPerfilUsuario()" class="absolute top-4 right-4 text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/[0.05] transition">
+                    <i class="fas fa-xmark text-base"></i>
+                </button>
+                <div class="flex items-center space-x-3.5 sm:space-x-4">
+                    <!-- Avatar con Instagram Gradient Ring -->
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2.5px] ig-gradient-border flex-shrink-0 flex items-center justify-center shadow-lg shadow-rose-600/20">
+                        <div class="w-full h-full rounded-full bg-[#111319] p-[2px]">
+                            <div id="perfilModalAvatar" class="w-full h-full rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xl uppercase">
+                                U
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-sm sm:text-base font-bold text-white tracking-tight">Cambiar mi Contraseña / PIN</h3>
-                        <p id="cambiarPinSubtitulo" class="text-[11px] text-zinc-400">Actualiza tu código personal de acceso</p>
+                    <!-- Info de Usuario -->
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center space-x-2">
+                            <h3 id="perfilModalNombre" class="text-base sm:text-lg font-bold text-white tracking-tight truncate">Usuario</h3>
+                            <span id="perfilModalRolBadge" class="text-[9px] uppercase font-mono px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Director</span>
+                        </div>
+                        <p id="perfilModalHandle" class="text-xs text-zinc-400 font-mono">@usuario</p>
+                        <p class="text-[11px] text-zinc-500 mt-0.5">Equipo de Media · Auditorio Pas</p>
                     </div>
                 </div>
-                <button onclick="cerrarModalCambiarPinActual()" class="text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-white/[0.05] transition">
-                    <i class="fas fa-xmark text-sm"></i>
+
+                <!-- Barra de Estadísticas (Servicios, Likes, Comentarios) -->
+                <div class="grid grid-cols-3 gap-2 mt-4 pt-3.5 border-t border-white/[0.06] text-center">
+                    <div class="bg-black/30 rounded-xl py-2 px-1 border border-white/[0.04]">
+                        <span id="perfilStatServicios" class="block text-base sm:text-lg font-extrabold text-white">0</span>
+                        <span class="text-[10px] text-zinc-400 font-medium">Servicios</span>
+                    </div>
+                    <div class="bg-black/30 rounded-xl py-2 px-1 border border-white/[0.04]">
+                        <span id="perfilStatLikes" class="block text-base sm:text-lg font-extrabold text-rose-400">0</span>
+                        <span class="text-[10px] text-zinc-400 font-medium">❤️ Likes</span>
+                    </div>
+                    <div class="bg-black/30 rounded-xl py-2 px-1 border border-white/[0.04]">
+                        <span id="perfilStatComentarios" class="block text-base sm:text-lg font-extrabold text-indigo-400">0</span>
+                        <span class="text-[10px] text-zinc-400 font-medium">💬 Comentarios</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABS DE NAVEGACIÓN DENTRO DEL PERFIL -->
+            <div class="flex border-b border-white/[0.08] px-3 bg-black/20 text-xs font-semibold">
+                <button type="button" id="btnPerfilTabLikes" onclick="cambiarTabPerfil('likes')" class="flex-1 py-3 text-center border-b-2 border-rose-500 text-rose-400 flex items-center justify-center space-x-1.5 transition">
+                    <i class="fas fa-heart text-xs"></i>
+                    <span>Me Gusta</span>
+                    <span id="badgeCountLikesPerfil" class="ml-1 px-1.5 py-0.2 text-[10px] rounded-full bg-rose-500/20 text-rose-300 font-mono">0</span>
+                </button>
+                <button type="button" id="btnPerfilTabComentarios" onclick="cambiarTabPerfil('comentarios')" class="flex-1 py-3 text-center border-b-2 border-transparent text-zinc-400 hover:text-white flex items-center justify-center space-x-1.5 transition">
+                    <i class="fas fa-comment text-xs"></i>
+                    <span>Comentarios</span>
+                    <span id="badgeCountComentariosPerfil" class="ml-1 px-1.5 py-0.2 text-[10px] rounded-full bg-indigo-500/20 text-indigo-300 font-mono">0</span>
+                </button>
+                <button type="button" id="btnPerfilTabPin" onclick="cambiarTabPerfil('pin')" class="flex-1 py-3 text-center border-b-2 border-transparent text-zinc-400 hover:text-white flex items-center justify-center space-x-1.5 transition">
+                    <i class="fas fa-key text-xs"></i>
+                    <span>Mi PIN</span>
                 </button>
             </div>
 
-            <div class="space-y-3">
-                <div class="space-y-1">
-                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">PIN Actual</label>
-                    <input type="password" id="cambiarPinActualInput" placeholder="Ingresa tu PIN actual" maxlength="30"
-                        class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
+            <!-- CONTENIDO SCROLLABLE DE LOS PANELES -->
+            <div class="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4">
+                <!-- TAB 1: ME GUSTA RECIBIDOS -->
+                <div id="perfilPanelLikes" class="space-y-3">
+                    <div class="flex items-center justify-between text-xs text-zinc-400 mb-1">
+                        <span>Personas que dieron me gusta a tus servicios:</span>
+                    </div>
+                    <div id="perfilListaLikes" class="space-y-2">
+                        <!-- Generado dinámicamente -->
+                    </div>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Nuevo PIN / Contraseña</label>
-                    <input type="password" id="cambiarPinNuevoInput" placeholder="Mínimo 6 caracteres o dígitos" maxlength="30"
-                        class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
+                <!-- TAB 2: COMENTARIOS RECIBIDOS -->
+                <div id="perfilPanelComentarios" class="hidden space-y-3">
+                    <div class="flex items-center justify-between text-xs text-zinc-400 mb-1">
+                        <span>Comentarios en tus servicios:</span>
+                    </div>
+                    <div id="perfilListaComentarios" class="space-y-2.5">
+                        <!-- Generado dinámicamente -->
+                    </div>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Confirmar Nuevo PIN</label>
-                    <input type="password" id="cambiarPinConfirmarInput" placeholder="Repite tu nuevo PIN" maxlength="30"
-                        class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
-                </div>
+                <!-- TAB 3: CAMBIAR PIN / CONTRASEÑA -->
+                <div id="perfilPanelPin" class="hidden space-y-3.5">
+                    <div class="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3 text-xs text-indigo-200 flex items-start space-x-2">
+                        <i class="fas fa-shield-halved text-indigo-400 text-sm mt-0.5 flex-shrink-0"></i>
+                        <span>Puedes actualizar tu PIN personal de acceso en cualquier momento (mínimo 6 dígitos).</span>
+                    </div>
 
-                <div id="cambiarPinError" class="hidden text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl p-2.5 flex items-center">
-                    <i class="fas fa-circle-exclamation mr-1.5 text-rose-400"></i>
-                    <span id="cambiarPinErrorTexto"></span>
-                </div>
-            </div>
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">PIN Actual</label>
+                        <input type="password" id="cambiarPinActualInput" placeholder="Ingresa tu PIN actual" maxlength="30" inputmode="numeric" pattern="[0-9]*"
+                            class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
+                    </div>
 
-            <div class="flex items-center justify-end space-x-2 pt-2">
-                <button type="button" onclick="cerrarModalCambiarPinActual()"
-                    class="px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-white/[0.05] transition">
-                    Cancelar
-                </button>
-                <button type="button" onclick="ejecutarCambioPinActual()" id="btnEjecutarCambioPin"
-                    class="bg-brand-600 hover:bg-brand-500 active:scale-[0.99] text-white font-semibold px-4 py-2 rounded-xl shadow-md transition text-xs flex items-center space-x-1.5">
-                    <i class="fas fa-check"></i>
-                    <span>Actualizar PIN</span>
-                </button>
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Nuevo PIN / Contraseña</label>
+                        <input type="password" id="cambiarPinNuevoInput" placeholder="Mínimo 6 caracteres o dígitos" maxlength="30" inputmode="numeric" pattern="[0-9]*"
+                            class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Confirmar Nuevo PIN</label>
+                        <input type="password" id="cambiarPinConfirmarInput" placeholder="Repite tu nuevo PIN" maxlength="30" inputmode="numeric" pattern="[0-9]*"
+                            class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-2.5 text-sm text-white font-mono text-center outline-none transition tracking-widest">
+                    </div>
+
+                    <div id="cambiarPinError" class="hidden text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-xl p-2.5 flex items-center">
+                        <i class="fas fa-circle-exclamation mr-1.5 text-rose-400 flex-shrink-0"></i>
+                        <span id="cambiarPinErrorTexto"></span>
+                    </div>
+
+                    <div class="pt-2 flex justify-end">
+                        <button type="button" onclick="ejecutarCambioPinActual()" id="btnEjecutarCambioPin"
+                            class="w-full sm:w-auto bg-brand-600 hover:bg-brand-500 active:scale-[0.99] text-white font-semibold px-5 py-2.5 rounded-xl shadow-md transition text-xs flex items-center justify-center space-x-1.5">
+                            <i class="fas fa-check"></i>
+                            <span>Actualizar PIN</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1310,6 +1380,7 @@
                     fecha: d.fecha || '',
                     comentarios: d.comentarios || '',
                     comentariosLista: Array.isArray(d.comentariosLista) ? d.comentariosLista : [],
+                    likes: Array.isArray(d.likes) ? d.likes : [],
                     cam1: d.cam1 || { asig: '', iso: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
                     cam2: d.cam2 || { asig: '', iso: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
                     cam3: d.cam3 || { asig: '', iso: '', f_a: '', k_a: '', f_b: '', k_b: '', esCapacitacion: false, capacitador: '' },
@@ -2188,11 +2259,12 @@
                 btnStats.classList.remove('hidden');
                 btnEquipo.classList.add('hidden');
                 if (btnUsuarios) btnUsuarios.classList.add('hidden');
-                btnAuditoria.classList.remove('hidden');
+                btnAuditoria.classList.add('hidden');
                 if (btnImportarHeader) btnImportarHeader.classList.add('hidden');
                 if (btnDepurar) btnDepurar.classList.add('hidden');
                 if (!document.getElementById('sec-equipo').classList.contains('hidden') || 
-                    !document.getElementById('sec-usuarios').classList.contains('hidden')) {
+                    !document.getElementById('sec-usuarios').classList.contains('hidden') ||
+                    !document.getElementById('sec-auditoria').classList.contains('hidden')) {
                     switchTab('dashboard');
                 }
             } else {
@@ -3489,7 +3561,7 @@
         }
 
         async function cargarAuditoria() {
-            if ((userRole !== 'admin' && userRole !== 'director') || !currentUser) return;
+            if (userRole !== 'admin' || !currentUser) return;
             let tbody = document.getElementById('tablaAuditoriaCuerpo');
             try {
                 let snap = await db.collection('auditoria')
@@ -3715,33 +3787,257 @@
             }
         }
 
-        function abrirModalCambiarPinActual() {
+        function abrirModalPerfilUsuario(tabInicial = 'likes') {
             if (!currentUser) {
                 let sesionStr = localStorage.getItem('media_session');
                 if (sesionStr) {
                     try { currentUser = JSON.parse(sesionStr); } catch(e){}
                 }
             }
-            let modal = document.getElementById('modalCambiarPinActual');
+            if (!currentUser) {
+                showToast("Inicia sesión para ver tu perfil.", "info");
+                return;
+            }
+
+            let modal = document.getElementById('modalPerfilUsuario');
             if (!modal) return;
-            document.getElementById('cambiarPinActualInput').value = '';
-            document.getElementById('cambiarPinNuevoInput').value = '';
-            document.getElementById('cambiarPinConfirmarInput').value = '';
+
+            let nom = currentUser.nombre || 'Usuario';
+            let nomLower = nom.toLowerCase().trim();
+            let handle = nomLower.replace(/[^a-z0-9_]/g, '_');
+            let inicial = nom.charAt(0).toUpperCase();
+
+            let elAv = document.getElementById('perfilModalAvatar');
+            if (elAv) elAv.innerText = inicial;
+            let elNom = document.getElementById('perfilModalNombre');
+            if (elNom) elNom.innerText = nom;
+            let elHand = document.getElementById('perfilModalHandle');
+            if (elHand) elHand.innerText = `@${handle}`;
+            
+            let badgeRol = document.getElementById('perfilModalRolBadge');
+            if (badgeRol) {
+                let esAdmin = (currentUser.rol === 'admin');
+                badgeRol.innerText = esAdmin ? 'ADMIN' : 'DIRECTOR';
+                badgeRol.className = esAdmin ? 
+                    'text-[9px] uppercase font-mono px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30' :
+                    'text-[9px] uppercase font-mono px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
+            }
+
+            // Filtrar servicios donde participó este usuario (Director, Realizador, Switcher, o Camarógrafo asignado)
+            let servicios = Array.isArray(appData.servicios) ? appData.servicios : [];
+            let misServicios = servicios.filter(s => {
+                let dir = String(s.director || '').toLowerCase().trim();
+                let real = String(s.realizador || '').toLowerCase().trim();
+                let reg = String(s.registradoPor || '').toLowerCase().trim();
+                let switchr = String(s.switcher || '').toLowerCase().trim();
+                if (dir === nomLower || real === nomLower || reg === nomLower || switchr === nomLower) return true;
+                for (let i = 1; i <= 6; i++) {
+                    let cam = s[`cam${i}`];
+                    if (cam && String(cam.asig || '').toLowerCase().trim() === nomLower) return true;
+                }
+                return false;
+            });
+
+            // Recolectar Likes recibidos en mis servicios
+            let listaLikes = [];
+            misServicios.forEach(s => {
+                let likesArr = Array.isArray(s.likes) ? s.likes : [];
+                likesArr.forEach(persona => {
+                    listaLikes.push({
+                        usuario: persona,
+                        servicioId: s.id,
+                        fecha: s.fecha,
+                        fechaFormateada: formatearFechaLimpia(s.fecha),
+                        esMio: persona.toLowerCase() === nomLower
+                    });
+                });
+            });
+
+            // Recolectar Comentarios recibidos en mis servicios
+            let listaComentarios = [];
+            misServicios.forEach(s => {
+                let coms = Array.isArray(s.comentariosLista) ? s.comentariosLista : [];
+                coms.forEach(c => {
+                    listaComentarios.push({
+                        id: c.id,
+                        autor: c.autor || 'Voluntario',
+                        texto: c.texto || '',
+                        fechaHora: c.fechaHora || '',
+                        timestamp: c.timestamp || 0,
+                        servicioId: s.id,
+                        fecha: s.fecha,
+                        fechaFormateada: formatearFechaLimpia(s.fecha),
+                        esMio: c.autor && c.autor.toLowerCase() === nomLower
+                    });
+                });
+            });
+            listaComentarios.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            // Actualizar contadores numéricos
+            let elStatServ = document.getElementById('perfilStatServicios');
+            if (elStatServ) elStatServ.innerText = misServicios.length;
+            let elStatLk = document.getElementById('perfilStatLikes');
+            if (elStatLk) elStatLk.innerText = listaLikes.length;
+            let elStatCm = document.getElementById('perfilStatComentarios');
+            if (elStatCm) elStatCm.innerText = listaComentarios.length;
+
+            let elBadgeLk = document.getElementById('badgeCountLikesPerfil');
+            if (elBadgeLk) elBadgeLk.innerText = listaLikes.length;
+            let elBadgeCm = document.getElementById('badgeCountComentariosPerfil');
+            if (elBadgeCm) elBadgeCm.innerText = listaComentarios.length;
+
+            // Renderizar Lista de Likes
+            let contLikes = document.getElementById('perfilListaLikes');
+            if (contLikes) {
+                if (listaLikes.length === 0) {
+                    contLikes.innerHTML = `
+                        <div class="p-6 text-center text-zinc-500 space-y-2 bg-black/20 rounded-xl border border-white/[0.04]">
+                            <i class="far fa-heart text-2xl text-zinc-600 block mb-1"></i>
+                            <p class="text-xs">Aún no hay "Me gusta" registrados en tus servicios.</p>
+                            <p class="text-[10px] text-zinc-600">Cuando el equipo dé like a tus servicios aparecerán aquí.</p>
+                        </div>`;
+                } else {
+                    contLikes.innerHTML = listaLikes.map(lk => {
+                        let inicialLk = lk.usuario ? lk.usuario.charAt(0).toUpperCase() : 'U';
+                        let handleLk = lk.usuario ? lk.usuario.toLowerCase().replace(/[^a-z0-9_]/g, '_') : 'usuario';
+                        return `
+                        <div onclick="verServicioEnFeed('${lk.servicioId}')" 
+                            class="p-2.5 sm:p-3 bg-white/[0.03] hover:bg-white/[0.06] rounded-xl border border-white/[0.06] flex items-center justify-between cursor-pointer transition active:scale-[0.99] group">
+                            <div class="flex items-center space-x-3 min-w-0 pr-2">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-rose-500 to-amber-500 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm shadow-rose-500/20">
+                                    ${inicialLk}
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-xs text-white leading-snug">
+                                        <span class="font-bold">@${handleLk}</span>
+                                        <span class="text-zinc-300"> le dio me gusta a tu servicio</span>
+                                    </p>
+                                    <p class="text-[10px] text-zinc-500 font-mono mt-0.5 flex items-center gap-1">
+                                        <i class="fas fa-calendar-day text-zinc-600"></i> ${lk.fechaFormateada}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-1.5 flex-shrink-0">
+                                <i class="fas fa-heart text-rose-500 text-sm"></i>
+                                <i class="fas fa-chevron-right text-zinc-600 group-hover:text-zinc-400 text-xs transition"></i>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
+            }
+
+            // Renderizar Lista de Comentarios
+            let contComs = document.getElementById('perfilListaComentarios');
+            if (contComs) {
+                if (listaComentarios.length === 0) {
+                    contComs.innerHTML = `
+                        <div class="p-6 text-center text-zinc-500 space-y-2 bg-black/20 rounded-xl border border-white/[0.04]">
+                            <i class="far fa-comment text-2xl text-zinc-600 block mb-1"></i>
+                            <p class="text-xs">No hay comentarios en tus servicios todavía.</p>
+                            <p class="text-[10px] text-zinc-600">Los comentarios dejados por ti u otros directores aparecerán aquí.</p>
+                        </div>`;
+                } else {
+                    contComs.innerHTML = listaComentarios.map(cm => {
+                        let inicialCm = cm.autor ? cm.autor.charAt(0).toUpperCase() : 'U';
+                        let handleCm = cm.autor ? cm.autor.toLowerCase().replace(/[^a-z0-9_]/g, '_') : 'usuario';
+                        return `
+                        <div onclick="verServicioEnFeed('${cm.servicioId}')" 
+                            class="p-2.5 sm:p-3 bg-white/[0.03] hover:bg-white/[0.06] rounded-xl border border-white/[0.06] flex items-start justify-between cursor-pointer transition active:scale-[0.99] group">
+                            <div class="flex items-start space-x-3 min-w-0 pr-2">
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold text-white flex-shrink-0 mt-0.5 shadow-sm shadow-indigo-500/20">
+                                    ${inicialCm}
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-xs text-white leading-snug">
+                                        <span class="font-bold">@${handleCm}</span>:
+                                        <span class="text-zinc-300">"${cm.texto}"</span>
+                                    </p>
+                                    <p class="text-[10px] text-zinc-500 font-mono mt-1 flex items-center gap-1.5">
+                                        <span><i class="fas fa-calendar-day text-zinc-600"></i> ${cm.fechaFormateada}</span>
+                                        <span>•</span>
+                                        <span>${cm.fechaHora}</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-1.5 flex-shrink-0 mt-1">
+                                <i class="far fa-comment-dots text-indigo-400 text-sm"></i>
+                                <i class="fas fa-chevron-right text-zinc-600 group-hover:text-zinc-400 text-xs transition"></i>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
+            }
+
+            // Limpiar inputs de cambio de PIN
+            let pinAct = document.getElementById('cambiarPinActualInput');
+            let pinNue = document.getElementById('cambiarPinNuevoInput');
+            let pinConf = document.getElementById('cambiarPinConfirmarInput');
+            if (pinAct) pinAct.value = '';
+            if (pinNue) pinNue.value = '';
+            if (pinConf) pinConf.value = '';
             let errBox = document.getElementById('cambiarPinError');
             if (errBox) errBox.classList.add('hidden');
-            let sub = document.getElementById('cambiarPinSubtitulo');
-            let nombreMostrar = currentUser ? currentUser.nombre : 'Usuario';
-            let rolMostrar = (currentUser && currentUser.rol === 'admin') ? 'Administrador' : 'Director';
-            if (sub) sub.innerText = `Usuario activo: ${nombreMostrar} (${rolMostrar})`;
+
+            // Abrir tab especificado
+            cambiarTabPerfil(tabInicial);
+
             modal.classList.remove('hidden');
+        }
+
+        function cerrarModalPerfilUsuario() {
+            let modal = document.getElementById('modalPerfilUsuario');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function cambiarTabPerfil(tab) {
+            let tabs = ['likes', 'comentarios', 'pin'];
+            tabs.forEach(t => {
+                let panel = document.getElementById(`perfilPanel${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                let btn = document.getElementById(`btnPerfilTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if (panel) {
+                    if (t === tab) panel.classList.remove('hidden');
+                    else panel.classList.add('hidden');
+                }
+                if (btn) {
+                    if (t === tab) {
+                        btn.className = `flex-1 py-3 text-center border-b-2 ${
+                            t === 'likes' ? 'border-rose-500 text-rose-400' :
+                            t === 'comentarios' ? 'border-indigo-500 text-indigo-400' :
+                            'border-white text-white'
+                        } flex items-center justify-center space-x-1.5 transition`;
+                    } else {
+                        btn.className = "flex-1 py-3 text-center border-b-2 border-transparent text-zinc-400 hover:text-white flex items-center justify-center space-x-1.5 transition";
+                    }
+                }
+            });
+            if (tab === 'pin') {
+                setTimeout(() => {
+                    document.getElementById('cambiarPinActualInput')?.focus();
+                }, 100);
+            }
+        }
+
+        function verServicioEnFeed(servicioId) {
+            cerrarModalPerfilUsuario();
+            switchTab('dashboard');
             setTimeout(() => {
-                document.getElementById('cambiarPinActualInput')?.focus();
-            }, 150);
+                let elem = document.getElementById(`servicioPost_${servicioId}`);
+                if (elem) {
+                    elem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    elem.classList.add('ring-2', 'ring-indigo-500', 'shadow-2xl', 'shadow-indigo-500/25');
+                    setTimeout(() => {
+                        elem.classList.remove('ring-2', 'ring-indigo-500', 'shadow-2xl', 'shadow-indigo-500/25');
+                    }, 2500);
+                }
+            }, 300);
+        }
+
+        function abrirModalCambiarPinActual() {
+            abrirModalPerfilUsuario('pin');
         }
 
         function cerrarModalCambiarPinActual() {
-            let modal = document.getElementById('modalCambiarPinActual');
-            if (modal) modal.classList.add('hidden');
+            cerrarModalPerfilUsuario();
         }
 
         async function ejecutarCambioPinActual() {
@@ -3852,6 +4148,11 @@
             actualizarIgNavInferior(tab);
 
             if (tab === 'auditoria') {
+                if (userRole !== 'admin') {
+                    showToast("Acceso restringido: Solo Administradores pueden ver la auditoría.", "error");
+                    switchTab('dashboard');
+                    return;
+                }
                 cargarAuditoria();
             }
             if (tab === 'registro') {
@@ -4924,6 +5225,10 @@
             showToast(mensaje, "success");
         }
         // Attach to window just in case
+        window.abrirModalPerfilUsuario = abrirModalPerfilUsuario;
+        window.cerrarModalPerfilUsuario = cerrarModalPerfilUsuario;
+        window.cambiarTabPerfil = cambiarTabPerfil;
+        window.verServicioEnFeed = verServicioEnFeed;
         window.abrirModalCambiarPinActual = abrirModalCambiarPinActual;
         window.cerrarModalCambiarPinActual = cerrarModalCambiarPinActual;
         window.ejecutarCambioPinActual = ejecutarCambioPinActual;
