@@ -2002,8 +2002,8 @@
                             <span>ISO CÁMARA</span>
                         </label>
                         <div class="relative w-36">
-                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="regCam${i}_iso" list="listaIsosDisponibles" placeholder="Ej: 800, 1600..."
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                            <input type="text" inputmode="decimal" pattern="[0-9.,]*" id="regCam${i}_iso" list="listaIsosDisponibles" placeholder="Ej: 800, 1600..."
+                                oninput="this.value = this.value.replace(/[^0-9.,]/g, '')"
                                 class="w-full bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
                         </div>
                     </div>
@@ -2013,11 +2013,11 @@
                         <div class="bg-black/30 p-2.5 rounded-xl border border-white/[0.04] space-y-1.5">
                             <span class="block text-[10px] font-mono font-bold text-zinc-400">PRESET A <span class="text-rose-400 font-bold">*</span></span>
                             <div class="flex space-x-1">
-                                <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" id="regCam${i}_fa" placeholder="F *" 
-                                    oninput="this.value = this.value.replace(/[^0-9.]/g, '')"
+                                <input type="text" inputmode="decimal" pattern="[0-9.,]*" id="regCam${i}_fa" placeholder="F *" 
+                                    oninput="this.value = this.value.replace(/[^0-9.,]/g, '')"
                                     class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
-                                <input type="text" inputmode="numeric" pattern="[0-9]*" id="regCam${i}_ka" placeholder="Kelvin *" 
-                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                <input type="text" inputmode="decimal" pattern="[0-9.,]*" id="regCam${i}_ka" placeholder="Kelvin *" 
+                                    oninput="this.value = this.value.replace(/[^0-9.,]/g, '')"
                                     class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
                             </div>
                         </div>
@@ -2031,11 +2031,11 @@
                                 </button>
                             </div>
                             <div class="flex space-x-1">
-                                <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" id="regCam${i}_fb" placeholder="F *" 
-                                    oninput="this.value = this.value.replace(/[^0-9.]/g, '')"
+                                <input type="text" inputmode="decimal" pattern="[0-9.,]*" id="regCam${i}_fb" placeholder="F *" 
+                                    oninput="this.value = this.value.replace(/[^0-9.,]/g, '')"
                                     class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
-                                <input type="text" inputmode="numeric" pattern="[0-9]*" id="regCam${i}_kb" placeholder="Kelvin *" 
-                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                <input type="text" inputmode="decimal" pattern="[0-9.,]*" id="regCam${i}_kb" placeholder="Kelvin *" 
+                                    oninput="this.value = this.value.replace(/[^0-9.,]/g, '')"
                                     class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
                             </div>
                         </div>
