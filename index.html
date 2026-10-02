@@ -363,113 +363,8 @@
 
         <!-- ========================= SECCIÓN: DASHBOARD ========================= -->
         <section id="sec-dashboard" class="space-y-4 animate-fade-in">
-            <!-- ========================= HISTORIAS DE INSTAGRAM (STORIES BAR) ========================= -->
-            <div class="bg-[#111319] border border-white/[0.07] rounded-2xl p-3 sm:p-4 shadow-sm">
-                <div class="flex items-center justify-between mb-2 px-1">
-                    <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider font-mono flex items-center gap-1.5">
-                        <i class="fas fa-circle-notch text-rose-500 animate-spin text-[10px]"></i> Historias / Filtros Rápidos
-                    </span>
-                    <span class="text-[10px] text-zinc-500">Toca para ir directo</span>
-                </div>
-                <div class="flex items-center space-x-3 sm:space-x-4 overflow-x-auto no-scrollbar py-1 px-0.5">
-                    <!-- Story: Planear (+) -->
-                    <button type="button" onclick="switchTab('registro')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Crear / Planear nuevo servicio">
-                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] border-2 border-dashed border-indigo-400/60 group-hover:border-indigo-400 flex items-center justify-center transition group-hover:scale-105 active:scale-95">
-                            <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-indigo-400 text-base sm:text-lg group-hover:bg-indigo-600 group-hover:text-white transition">
-                                <i class="fas fa-plus"></i>
-                            </div>
-                        </div>
-                        <span class="text-[10px] sm:text-[11px] font-semibold text-zinc-300 group-hover:text-white truncate max-w-[62px]">Planear</span>
-                    </button>
-
-                    <!-- Story: Hoy (★) -->
-                    <button type="button" onclick="filtrarOIrAServicio('hoy')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Ver servicio de hoy">
-                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] ig-gradient-border flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
-                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
-                                <div class="w-full h-full rounded-full bg-gradient-to-br from-amber-500/30 to-rose-600/30 flex items-center justify-center text-amber-300 text-sm sm:text-base font-bold">
-                                    ★
-                                </div>
-                            </div>
-                        </div>
-                        <span class="text-[10px] sm:text-[11px] font-bold text-amber-300 group-hover:text-amber-200 truncate max-w-[62px]">★ Hoy</span>
-                    </button>
-
-                    <!-- Story: Domingo 9am -->
-                    <button type="button" onclick="filtrarOIrAServicio('9:00')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Servicio Domingo 9:00 AM">
-                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] ig-gradient-border flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
-                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
-                                <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-rose-400 text-[10px] sm:text-xs font-bold">
-                                    9 AM
-                                </div>
-                            </div>
-                        </div>
-                        <span class="text-[10px] sm:text-[11px] font-medium text-zinc-300 group-hover:text-white truncate max-w-[62px]">Dom 9am</span>
-                    </button>
-
-                    <!-- Story: Domingo 11am -->
-                    <button type="button" onclick="filtrarOIrAServicio('11:00')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Servicio Domingo 11:00 AM">
-                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] ig-gradient-border flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
-                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
-                                <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-fuchsia-400 text-[10px] sm:text-xs font-bold">
-                                    11 AM
-                                </div>
-                            </div>
-                        </div>
-                        <span class="text-[10px] sm:text-[11px] font-medium text-zinc-300 group-hover:text-white truncate max-w-[62px]">Dom 11am</span>
-                    </button>
-
-                    <!-- Story: Jueves -->
-                    <button type="button" onclick="filtrarOIrAServicio('jueves')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Servicios de Jueves">
-                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] ig-gradient-border flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
-                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
-                                <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-indigo-400 text-[10px] sm:text-xs font-bold">
-                                    JUE
-                                </div>
-                            </div>
-                        </div>
-                        <span class="text-[10px] sm:text-[11px] font-medium text-zinc-300 group-hover:text-white truncate max-w-[62px]">Jueves</span>
-                    </button>
-
-                    <!-- Story: LINK Jóvenes -->
-                    <button type="button" onclick="filtrarOIrAServicio('link')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Servicios LINK Jóvenes">
-                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] ig-gradient-border flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
-                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
-                                <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-emerald-400 text-[10px] sm:text-xs font-bold">
-                                    LINK
-                                </div>
-                            </div>
-                        </div>
-                        <span class="text-[10px] sm:text-[11px] font-medium text-zinc-300 group-hover:text-white truncate max-w-[62px]">LINK</span>
-                    </button>
-
-                    <!-- Story: KZN Corazón -->
-                    <button type="button" onclick="filtrarOIrAServicio('corazon')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Servicios Corazón Niños">
-                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] ig-gradient-border flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
-                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
-                                <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-amber-400 text-[10px] sm:text-xs font-bold">
-                                    KZN
-                                </div>
-                            </div>
-                        </div>
-                        <span class="text-[10px] sm:text-[11px] font-medium text-zinc-300 group-hover:text-white truncate max-w-[62px]">Corazón</span>
-                    </button>
-
-                    <!-- Story: Todos -->
-                    <button type="button" onclick="filtrarOIrAServicio('todos')" class="flex flex-col items-center space-y-1.5 flex-shrink-0 group focus:outline-none" title="Ver todos los servicios">
-                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full p-[2px] bg-zinc-700/60 flex items-center justify-center group-hover:scale-105 active:scale-95 transition shadow-sm">
-                            <div class="w-full h-full rounded-full bg-[#090a0f] p-[2px] flex items-center justify-center">
-                                <div class="w-full h-full rounded-full bg-[#161822] flex items-center justify-center text-zinc-400 text-xs font-semibold">
-                                    <i class="fas fa-list"></i>
-                                </div>
-                            </div>
-                        </div>
-                        <span class="text-[10px] sm:text-[11px] font-medium text-zinc-400 group-hover:text-white truncate max-w-[62px]">Todos</span>
-                    </button>
-                </div>
-            </div>
-
             <!-- Header de Feed -->
-            <div class="flex items-center justify-between pb-1 border-b border-white/[0.06] pt-1">
+            <div class="flex items-center justify-between pb-1 border-b border-white/[0.06]">
                 <div class="flex items-center space-x-2">
                     <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
                     <h2 class="text-sm sm:text-base font-bold text-white tracking-tight flex items-center gap-1.5">
@@ -2301,7 +2196,6 @@
 
             // Render Dashboard con tarjetas estilo POST DE INSTAGRAM
             let htmlServicios = '';
-            let guardadosArr = JSON.parse(localStorage.getItem('media_guardados') || '[]');
 
             if (data.servicios.length === 0) {
                 htmlServicios = `
@@ -2316,7 +2210,6 @@
 
                     let likesArr = Array.isArray(s.likes) ? s.likes : [];
                     let yaDioLike = currentUser && likesArr.includes(currentUser.nombre);
-                    let estaGuardado = guardadosArr.includes(s.id);
 
                     let realizadorNombre = s.realizador && s.realizador !== 'Sin Director' ? s.realizador : (s.registradoPor || s.director || 'Pas Media');
                     let handleRealizador = realizadorNombre.toLowerCase().replace(/[^a-z0-9_]/g, '_');
@@ -2351,7 +2244,7 @@
                                 </div>
                             </div>
                             
-                            <!-- Acciones del Post (3-dots / Editar / Eliminar / Compartir) -->
+                            <!-- Acciones del Post (Editar / Eliminar) -->
                             <div class="flex items-center space-x-1 flex-shrink-0">
                                 ${puedeEditar ? `
                                     <button onclick="cargarEdicionServicio('${s.id}')" title="Editar Servicio" class="text-zinc-400 hover:text-indigo-400 p-2 text-xs rounded-lg hover:bg-white/[0.05] transition">
@@ -2361,9 +2254,6 @@
                                         <i class="fas fa-trash-can"></i>
                                     </button>
                                 ` : ''}
-                                <button onclick="compartirServicioWhatsApp('${s.id}')" title="Compartir en WhatsApp" class="text-zinc-400 hover:text-emerald-400 p-2 text-xs rounded-lg hover:bg-white/[0.05] transition">
-                                    <i class="fa-brands fa-whatsapp text-sm"></i>
-                                </button>
                             </div>
                         </div>
 
@@ -2410,7 +2300,7 @@
                             </div>
                         </div>
 
-                        <!-- BARRA DE ACCIONES DE INSTAGRAM (❤️ 💬 📤 🔖) -->
+                        <!-- BARRA DE ACCIONES DE INSTAGRAM (❤️ 💬) -->
                         <div class="p-3 sm:px-4 sm:pt-3 pb-1 flex items-center justify-between">
                             <div class="flex items-center space-x-4">
                                 <!-- Me gusta (Heart) -->
@@ -2425,19 +2315,7 @@
                                     title="Comentar">
                                     <i class="far fa-comment text-xl"></i>
                                 </button>
-                                <!-- Compartir por WhatsApp (Paper plane) -->
-                                <button onclick="compartirServicioWhatsApp('${s.id}')" 
-                                    class="text-zinc-300 hover:text-emerald-400 transition active:scale-125 focus:outline-none" 
-                                    title="Compartir asignación por WhatsApp">
-                                    <i class="far fa-paper-plane text-xl"></i>
-                                </button>
                             </div>
-                            <!-- Guardar (Bookmark) -->
-                            <button id="btnBookmark_${s.id}" onclick="toggleGuardarServicio('${s.id}')" 
-                                class="text-zinc-300 hover:text-amber-400 transition active:scale-125 focus:outline-none" 
-                                title="Guardar servicio">
-                                ${estaGuardado ? '<i class="fas fa-bookmark text-amber-400 text-xl"></i>' : '<i class="far fa-bookmark text-zinc-300 hover:text-amber-400 text-xl transition"></i>'}
-                            </button>
                         </div>
 
                         <!-- CONTADOR DE LIKES (Le gusta a...) -->
