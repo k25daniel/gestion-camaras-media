@@ -261,7 +261,7 @@
 
                 <div>
                     <label class="block text-[11px] font-mono text-zinc-400 uppercase tracking-wider mb-1.5">PIN de Acceso</label>
-                    <input type="password" id="loginPinInput" placeholder="••••" maxlength="10"
+                    <input type="password" id="loginPinInput" placeholder="••••" maxlength="10" inputmode="numeric" pattern="[0-9]*"
                         class="w-full bg-[#161822] border border-white/[0.12] focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 rounded-xl p-3 text-center text-white text-lg outline-none tracking-[0.4em] font-mono">
                 </div>
 
@@ -2002,7 +2002,8 @@
                             <span>ISO CÁMARA</span>
                         </label>
                         <div class="relative w-36">
-                            <input type="text" id="regCam${i}_iso" list="listaIsosDisponibles" placeholder="Ej: 800, 1600..."
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="regCam${i}_iso" list="listaIsosDisponibles" placeholder="Ej: 800, 1600..."
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                                 class="w-full bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
                         </div>
                     </div>
@@ -2012,8 +2013,12 @@
                         <div class="bg-black/30 p-2.5 rounded-xl border border-white/[0.04] space-y-1.5">
                             <span class="block text-[10px] font-mono font-bold text-zinc-400">PRESET A <span class="text-rose-400 font-bold">*</span></span>
                             <div class="flex space-x-1">
-                                <input type="text" id="regCam${i}_fa" placeholder="F *" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
-                                <input type="text" id="regCam${i}_ka" placeholder="Kelvin *" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
+                                <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" id="regCam${i}_fa" placeholder="F *" 
+                                    oninput="this.value = this.value.replace(/[^0-9.]/g, '')"
+                                    class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" id="regCam${i}_ka" placeholder="Kelvin *" 
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                    class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
                             </div>
                         </div>
 
@@ -2026,8 +2031,12 @@
                                 </button>
                             </div>
                             <div class="flex space-x-1">
-                                <input type="text" id="regCam${i}_fb" placeholder="F *" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
-                                <input type="text" id="regCam${i}_kb" placeholder="Kelvin *" class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
+                                <input type="text" inputmode="decimal" pattern="[0-9]*[.,]?[0-9]*" id="regCam${i}_fb" placeholder="F *" 
+                                    oninput="this.value = this.value.replace(/[^0-9.]/g, '')"
+                                    class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
+                                <input type="text" inputmode="numeric" pattern="[0-9]*" id="regCam${i}_kb" placeholder="Kelvin *" 
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                    class="w-1/2 bg-[#161822] border border-white/[0.08] rounded-lg p-1.5 text-xs font-mono text-white text-center outline-none focus:border-indigo-500 transition">
                             </div>
                         </div>
                     </div>
