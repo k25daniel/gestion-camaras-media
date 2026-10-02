@@ -873,15 +873,15 @@
             <!-- Panel 1: API Token -->
             <div id="panelPcApi" class="space-y-3 text-xs">
                 <p class="text-zinc-300 leading-relaxed">
-                    Introduce tus credenciales de API generadas en 
-                    <a href="https://api.planningcenteronline.com/oauth/applications" target="_blank" class="text-indigo-400 hover:underline inline-flex items-center">
-                        Planning Center API <i class="fas fa-arrow-up-right-from-square ml-1 text-[9px]"></i>
+                    Sincroniza tus equipos utilizando tus 
+                    <a href="https://api.planningcenteronline.com/personal_access_tokens" target="_blank" class="text-indigo-400 font-semibold hover:underline inline-flex items-center">
+                        Personal Access Tokens de Planning Center <i class="fas fa-arrow-up-right-from-square ml-1 text-[9px]"></i>
                     </a>.
                 </p>
 
                 <div class="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-2.5 text-[11px] text-zinc-300 leading-relaxed flex items-start space-x-2">
-                    <i class="fas fa-circle-info text-indigo-400 mt-0.5 flex-shrink-0"></i>
-                    <span>Conéctate con tu Application ID y Secret para descargar los miembros de Services directamente a tu base de datos.</span>
+                    <i class="fas fa-shield-check text-indigo-400 mt-0.5 flex-shrink-0"></i>
+                    <span>Conéctate con tu Application ID y Secret para sincronizar en tiempo real los miembros de tus equipos de Media y los planes directamente a la base de datos.</span>
                 </div>
 
                 <div>
@@ -899,7 +899,7 @@
                 <div>
                     <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Qué sincronizar</label>
                     <select id="pcSyncScope" class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white outline-none">
-                        <option value="all_teams">⭐ Todos los equipos de Media (Servicio Jueves, LINK, Servicio Finde, Ayuno, KZN)</option>
+                        <option value="all_teams">⭐ Todos los equipos de Media (Servicio Jueves, LINK, Servicio Finde, KZN)</option>
                         <option value="single_team">Solo un Team ID específico</option>
                     </select>
                 </div>
@@ -910,16 +910,33 @@
                         class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                 </div>
 
-                <div class="pt-1 border-t border-white/[0.06]">
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Proxy CORS / Cloudflare Worker</label>
-                        <span id="badgeProxyDetectado" class="text-[9px] px-1.5 py-0.5 rounded font-mono bg-zinc-800 text-zinc-400">Detectando...</span>
+                <div class="pt-2 border-t border-white/[0.06] space-y-2">
+                    <div class="flex justify-between items-center">
+                        <label class="block text-[10px] font-mono text-zinc-300 uppercase tracking-wider">
+                            <i class="fab fa-google text-indigo-400 mr-1"></i> URL de Google Apps Script Web App
+                        </label>
+                        <span id="badgeAppsScriptStatus" class="text-[9px] px-1.5 py-0.5 rounded font-mono bg-zinc-800 text-zinc-400">Verificando...</span>
                     </div>
-                    <input type="text" id="pcProxyUrl" placeholder="Ej: http://localhost:3000/pco-api o https://tu-worker.workers.dev"
+                    <input type="text" id="pcAppsScriptUrl" placeholder="https://script.google.com/macros/s/.../exec"
                         class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
-                    <p class="text-[10px] text-zinc-400 mt-1 leading-relaxed">
-                        ⚡ Al ejecutar <code class="text-indigo-300 font-mono">npm start</code>, se conecta mediante el proxy local sin CORS. En móvil o GitHub Pages puedes usar un Cloudflare Worker gratuito (<code class="text-zinc-300 font-mono">cloudflare-worker.js</code>).
+                    <p class="text-[10px] text-zinc-400 leading-relaxed">
+                        ⚡ <b>Recomendado para GitHub Pages / Móvil</b>: Utiliza el archivo <code class="text-indigo-300 font-mono">codigo.gs</code> desplegado como Aplicación Web para sincronizar directamente con tus tokens sin restricciones de CORS.
                     </p>
+
+                    <!-- Opciones avanzadas (Proxy local / Worker) -->
+                    <details class="text-[11px] text-zinc-400 pt-1">
+                        <summary class="cursor-pointer hover:text-white font-mono text-[10px] uppercase tracking-wider select-none text-zinc-400">
+                            + Opciones de conexión local o Cloudflare Worker
+                        </summary>
+                        <div class="pt-2 space-y-1.5">
+                            <div class="flex justify-between items-center mb-0.5">
+                                <span class="text-[10px] font-mono text-zinc-400">Proxy Local / Worker URL</span>
+                                <span id="badgeProxyDetectado" class="text-[9px] px-1.5 py-0.5 rounded font-mono bg-zinc-800 text-zinc-400">Detectando...</span>
+                            </div>
+                            <input type="text" id="pcProxyUrl" placeholder="http://localhost:3000/pco-api o https://tu-worker.workers.dev"
+                                class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2 text-xs text-white font-mono outline-none">
+                        </div>
+                    </details>
                 </div>
             </div>
 
@@ -3349,6 +3366,7 @@
             let savedAppId = localStorage.getItem('pc_app_id') || '';
             let savedSecret = localStorage.getItem('pc_secret') || '';
             let savedTeamId = localStorage.getItem('pc_team_id') || '2982202';
+            let savedAppsScript = localStorage.getItem('pc_apps_script_url') || '';
             let savedProxy = localStorage.getItem('pc_proxy_url') || '';
 
             let isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -3359,6 +3377,21 @@
             document.getElementById('pcAppId').value = savedAppId;
             document.getElementById('pcSecret').value = savedSecret;
             document.getElementById('pcTeamId').value = savedTeamId;
+            
+            let appsScriptInput = document.getElementById('pcAppsScriptUrl');
+            if (appsScriptInput) appsScriptInput.value = savedAppsScript;
+
+            let badgeAppsScript = document.getElementById('badgeAppsScriptStatus');
+            if (badgeAppsScript) {
+                if (savedAppsScript) {
+                    badgeAppsScript.innerText = '⚡ Apps Script Activo';
+                    badgeAppsScript.className = 'text-[9px] px-1.5 py-0.5 rounded font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                } else {
+                    badgeAppsScript.innerText = 'Sin configurar';
+                    badgeAppsScript.className = 'text-[9px] px-1.5 py-0.5 rounded font-mono bg-zinc-800 text-zinc-400';
+                }
+            }
+
             let proxyInput = document.getElementById('pcProxyUrl');
             if (proxyInput) proxyInput.value = savedProxy;
 
@@ -3569,13 +3602,14 @@
             let secret = document.getElementById('pcSecret').value.trim();
             let scope = document.getElementById('pcSyncScope').value;
             let teamIdInput = document.getElementById('pcTeamId').value.trim() || '2982202';
+            let appsScriptUrl = (document.getElementById('pcAppsScriptUrl')?.value || '').trim();
             let proxyUrl = (document.getElementById('pcProxyUrl')?.value || '').trim();
             let msg = document.getElementById('pcStatusMsg');
             let btn = document.getElementById('btnEjecutarSyncPC');
 
             if (!appId || !secret) {
                 msg.className = 'p-3 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';
-                msg.innerText = 'Por favor, ingresa tanto el Application ID como el Secret.';
+                msg.innerText = 'Por favor, ingresa tanto el Application ID como el Secret de tus Personal Access Tokens.';
                 msg.classList.remove('hidden');
                 return;
             }
@@ -3584,6 +3618,7 @@
             localStorage.setItem('pc_app_id', appId);
             localStorage.setItem('pc_secret', secret);
             localStorage.setItem('pc_team_id', teamIdInput);
+            if (appsScriptUrl) localStorage.setItem('pc_apps_script_url', appsScriptUrl);
             if (proxyUrl) localStorage.setItem('pc_proxy_url', proxyUrl);
 
             let originalBtn = btn.innerHTML;
@@ -3591,162 +3626,262 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Sincronizando...';
 
             msg.className = 'p-3 rounded-xl text-xs bg-indigo-500/10 border border-indigo-500/30 text-indigo-200';
-            msg.innerText = 'Conectando con Planning Center Services...';
+            msg.innerText = 'Iniciando conexión con Planning Center Services...';
             msg.classList.remove('hidden');
 
-            function resolverUrlPco(apiPath) {
-                let cleanPath = apiPath.startsWith('/') ? apiPath : '/' + apiPath;
-                let isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                let effectiveProxy = proxyUrl || (isLocalhost ? `${window.location.origin}/pco-api` : '');
-
-                if (effectiveProxy) {
-                    let base = effectiveProxy.replace(/\/+$/, '');
-                    if (base.endsWith('/pco-api')) {
-                        return `${base}${cleanPath}`;
-                    } else if (base.includes('?url=')) {
-                        return `${base}${encodeURIComponent('https://api.planningcenteronline.com' + cleanPath)}`;
-                    } else {
-                        return `${base}${cleanPath}`;
-                    }
-                }
-                return `https://api.planningcenteronline.com${cleanPath}`;
-            }
-
-            let basicAuth = btoa(`${appId}:${secret}`);
-
-            async function fetchPcoApi(apiPath) {
-                let target = resolverUrlPco(apiPath);
-                let res = await fetch(target, {
-                    headers: {
-                        'Authorization': `Basic ${basicAuth}`,
-                        'Accept': 'application/json'
-                    }
-                });
-                if (!res.ok) {
-                    let errTxt = '';
-                    try { errTxt = await res.text(); } catch(e) {}
-                    throw new Error(`HTTP ${res.status}: ${errTxt || res.statusText}`);
-                }
-                return await res.json();
-            }
-
             try {
-                // Si el usuario seleccionó sincronizar todos los equipos de Media
-                let teamsToFetch = [];
-                if (scope === 'all_teams') {
-                    // Obtener todos los equipos de Services
-                    let dataTeams = await fetchPcoApi('/services/v2/teams?per_page=100');
-                    let allTeams = dataTeams.data || [];
-                    // Filtrar equipos que contengan "PAS Media" o "Media"
-                    let mediaTeams = allTeams.filter(t => {
-                        let nom = ((t.attributes && t.attributes.name) || '').toLowerCase();
-                        return nom.includes('media') || nom.includes('camara') || nom.includes('cámara') || nom.includes('link') || nom.includes('jueves') || nom.includes('finde') || nom.includes('kzn') || nom.includes('ayuno');
-                    });
-                    if (mediaTeams.length > 0) {
-                        teamsToFetch = mediaTeams.map(t => t.id);
-                    }
-                }
-
-                // Si no hay lista dinámica o es equipo único, usar el teamIdInput
-                if (teamsToFetch.length === 0) {
-                    teamsToFetch = [teamIdInput];
-                }
-
-                msg.innerText = `Descargando personas de ${teamsToFetch.length} equipo(s) de Media...`;
-
                 let todasLasPersonas = [];
-                for (let tId of teamsToFetch) {
-                    let data = await fetchPcoApi(`/services/v2/teams/${tId}/people?per_page=100`);
-                    if (data && data.data) {
-                        todasLasPersonas = todasLasPersonas.concat(data.data);
+                let todosLosPlanes = [];
+
+                // ESTRATEGIA 1: Conexión mediante Google Apps Script (Recomendado, sin CORS en cualquier navegador)
+                if (appsScriptUrl) {
+                    msg.innerText = 'Consultando Services a través de Google Apps Script...';
+                    let targetUrl = new URL(appsScriptUrl);
+                    targetUrl.searchParams.set('action', 'sync');
+                    targetUrl.searchParams.set('appId', appId);
+                    targetUrl.searchParams.set('secret', secret);
+                    targetUrl.searchParams.set('scope', scope);
+                    if (scope === 'single_team') targetUrl.searchParams.set('teamId', teamIdInput);
+
+                    let res = await fetch(targetUrl.toString(), { method: 'GET', redirect: 'follow' });
+                    if (!res.ok) {
+                        let errTxt = '';
+                        try { errTxt = await res.text(); } catch(e){}
+                        throw new Error(`Google Apps Script HTTP ${res.status}: ${errTxt || res.statusText}`);
+                    }
+                    let data = await res.json();
+                    if (data.status === 'error' || data.error) {
+                        throw new Error(data.error || 'Error al conectar con Planning Center mediante Apps Script');
+                    }
+
+                    todasLasPersonas = data.members || [];
+                    todosLosPlanes = data.plans || [];
+
+                } else {
+                    // ESTRATEGIA 2: Proxy Local (npm start) o Cloudflare Worker
+                    let isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                    let effectiveProxy = proxyUrl || (isLocalhost ? `${window.location.origin}/pco-api` : '');
+
+                    if (!effectiveProxy) {
+                        throw new Error('CORS_CONFIG_REQUIRED');
+                    }
+
+                    function resolverUrlPco(apiPath) {
+                        let cleanPath = apiPath.startsWith('/') ? apiPath : '/' + apiPath;
+                        let base = effectiveProxy.replace(/\/+$/, '');
+                        if (base.endsWith('/pco-api')) {
+                            return `${base}${cleanPath}`;
+                        } else if (base.includes('?url=')) {
+                            return `${base}${encodeURIComponent('https://api.planningcenteronline.com' + cleanPath)}`;
+                        } else {
+                            return `${base}${cleanPath}`;
+                        }
+                    }
+
+                    let basicAuth = btoa(`${appId}:${secret}`);
+                    async function fetchPcoApi(apiPath) {
+                        let target = resolverUrlPco(apiPath);
+                        let res = await fetch(target, {
+                            headers: {
+                                'Authorization': `Basic ${basicAuth}`,
+                                'Accept': 'application/json'
+                            }
+                        });
+                        if (!res.ok) {
+                            let errTxt = '';
+                            try { errTxt = await res.text(); } catch(e) {}
+                            throw new Error(`HTTP ${res.status}: ${errTxt || res.statusText}`);
+                        }
+                        return await res.json();
+                    }
+
+                    let teamsToFetch = [];
+                    if (scope === 'all_teams') {
+                        // IDs oficiales de Media en PAS
+                        teamsToFetch = [
+                            { id: "2982202", label: "Servicio Finde" },
+                            { id: "3047884", label: "LINK" },
+                            { id: "3075184", label: "KZN" },
+                            { id: "4496712", label: "Servicio Jueves" }
+                        ];
+                    } else {
+                        teamsToFetch = [{ id: teamIdInput, label: `Equipo ${teamIdInput}` }];
+                    }
+
+                    msg.innerText = `Descargando personas de ${teamsToFetch.length} equipo(s) de Media...`;
+                    for (let teamObj of teamsToFetch) {
+                        try {
+                            let data = await fetchPcoApi(`/services/v2/teams/${teamObj.id}/people?per_page=100`);
+                            if (data && data.data) {
+                                for (let p of data.data) {
+                                    let attrs = p.attributes || {};
+                                    let fn = attrs.first_name || '';
+                                    let ln = attrs.last_name || '';
+                                    let full = attrs.full_name || `${fn} ${ln}`.trim();
+                                    todasLasPersonas.push({
+                                        id: p.id,
+                                        nombre: fn,
+                                        apellidos: ln,
+                                        nombreCompleto: full,
+                                        equipos: [teamObj.label]
+                                    });
+                                }
+                            }
+                        } catch (e) {
+                            console.warn(`Error en equipo ${teamObj.id}:`, e);
+                        }
+                    }
+
+                    // Traer también planes de Services
+                    try {
+                        let stList = [
+                            { id: "753549", label: "Servicio Finde", key: "Finde" },
+                            { id: "779373", label: "LINK", key: "LINK" },
+                            { id: "779364", label: "KZN", key: "KZN" },
+                            { id: "1138448", label: "Servicio Jueves", key: "Jueves" }
+                        ];
+                        for (let st of stList) {
+                            let pData = await fetchPcoApi(`/services/v2/service_types/${st.id}/plans?per_page=100&filter=future&order=sort_date`);
+                            if (pData && pData.data) {
+                                for (let plan of pData.data) {
+                                    let attrs = plan.attributes || {};
+                                    todosLosPlanes.push({
+                                        id: plan.id,
+                                        serviceTypeKey: st.key,
+                                        serviceTypeName: st.label,
+                                        serviceTypeId: st.id,
+                                        sortDate: attrs.sort_date,
+                                        dates: attrs.dates || attrs.sort_date,
+                                        title: attrs.title || st.label,
+                                        seriesTitle: attrs.series_title || ""
+                                    });
+                                }
+                            }
+                        }
+                    } catch (ePlans) {
+                        console.warn("No se pudieron descargar planes directamente:", ePlans);
                     }
                 }
 
                 if (todasLasPersonas.length === 0) {
-                    throw new Error('No se encontraron personas en los equipos seleccionados. Revisa tus credenciales o Team ID.');
+                    throw new Error('No se encontraron personas en los equipos de Media. Revisa tus tokens o los permisos de Services.');
                 }
 
-                msg.innerText = `Se encontraron ${todasLasPersonas.length} registros. Guardando en Firestore...`;
+                msg.innerText = `Se encontraron ${todasLasPersonas.length} personas y ${todosLosPlanes.length} planes. Guardando en base de datos...`;
 
-                // Guardar en Firestore evitando duplicados
+                // 1. Guardar o actualizar miembros en Firestore
                 let snapMiembros = await db.collection('miembros').get();
                 let nombresExistentes = new Set();
+                let mapDocs = new Map();
                 snapMiembros.forEach(doc => {
                     let d = doc.data();
                     let mId = (d.id || `${d.nombre || ''} ${d.apellidos || ''}`).trim().toLowerCase();
-                    if (mId) nombresExistentes.add(mId);
+                    if (mId) {
+                        nombresExistentes.add(mId);
+                        mapDocs.set(mId, doc.id);
+                    }
                 });
 
                 let agregados = 0;
+                let actualizados = 0;
                 for (let p of todasLasPersonas) {
-                    let attrs = p.attributes || {};
-                    let firstName = String(attrs.first_name || '').trim();
-                    let lastName = String(attrs.last_name || '').trim();
-                    let fullName = `${firstName} ${lastName}`.trim();
+                    let firstName = String(p.nombre || '').trim();
+                    let lastName = String(p.apellidos || '').trim();
+                    let fullName = p.nombreCompleto || `${firstName} ${lastName}`.trim();
                     let compareKey = fullName.toLowerCase();
 
-                    if (fullName && !nombresExistentes.has(compareKey)) {
+                    if (!fullName) continue;
+
+                    if (!nombresExistentes.has(compareKey)) {
                         await db.collection('miembros').add({
                             id: fullName,
-                            nombre: firstName,
+                            nombre: firstName || fullName,
                             apellidos: lastName,
                             esDirector: false,
                             esCapacitador: false,
                             esCamarografo: true,
                             enCapacitacion: false,
                             planningCenterId: p.id,
+                            equiposPco: p.equipos || [],
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
                         nombresExistentes.add(compareKey);
                         agregados++;
+                    } else {
+                        let existingDocId = mapDocs.get(compareKey);
+                        if (existingDocId) {
+                            await db.collection('miembros').doc(existingDocId).update({
+                                planningCenterId: p.id,
+                                equiposPco: p.equipos || []
+                            });
+                            actualizados++;
+                        }
                     }
                 }
 
-                logAuditoriaFirestore(currentUser ? currentUser.nombre : 'Admin', userRole, 'Sincronización Planning Center', `Sincronizó equipos de Media (+${agregados} nuevos miembros añadidos)`);
+                // 2. Guardar planes en Firestore (pco_planes)
+                if (todosLosPlanes.length > 0) {
+                    for (let plan of todosLosPlanes) {
+                        let docId = String(plan.id);
+                        await db.collection('pco_planes').doc(docId).set({
+                            planId: plan.id,
+                            serviceTypeId: plan.serviceTypeId,
+                            serviceName: plan.serviceTypeName || plan.serviceTypeKey,
+                            serviceKey: plan.serviceTypeKey,
+                            dates: plan.dates || plan.sortDate,
+                            sortDate: plan.sortDate,
+                            planTitle: plan.title || plan.serviceTypeName,
+                            seriesTitle: plan.seriesTitle || '',
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+                    }
+                    await cargarPlanesPcoDropdown(true, false);
+                }
+
+                logAuditoriaFirestore(
+                    currentUser ? currentUser.nombre : 'Admin',
+                    userRole,
+                    'Sincronización Planning Center',
+                    `Sincronizó Services (+${agregados} nuevos miembros, ${actualizados} actualizados, ${todosLosPlanes.length} planes)`
+                );
+
                 let freshData = await getDatabaseDataFirestore();
                 renderApp(freshData);
 
                 msg.className = 'p-3 rounded-xl text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-200';
-                msg.innerText = `¡Éxito! Se sincronizaron las personas de tus equipos (+${agregados} nuevos registrados).`;
-                showToast(`¡${todasLasPersonas.length} personas sincronizadas con éxito!`, "success");
+                msg.innerText = `¡Éxito! Sincronizados ${todasLasPersonas.length} miembros (+${agregados} nuevos) y ${todosLosPlanes.length} planes en vivo.`;
+                showToast(`¡${todasLasPersonas.length} miembros y ${todosLosPlanes.length} planes sincronizados con éxito!`, "success");
 
-                setTimeout(() => cerrarModalPlanningCenter(), 2000);
+                setTimeout(() => cerrarModalPlanningCenter(), 2200);
 
             } catch (err) {
                 console.error("Error en sincronización PC:", err);
                 let errStr = String(err.message || err);
-                if (errStr.includes('Load failed') || errStr.includes('Failed to fetch') || errStr.includes('NetworkError') || errStr.includes('CORS')) {
+
+                if (errStr.includes('CORS_CONFIG_REQUIRED') || errStr.includes('Load failed') || errStr.includes('Failed to fetch') || errStr.includes('NetworkError') || errStr.includes('CORS')) {
                     msg.className = 'p-3.5 rounded-xl text-xs bg-amber-500/10 border border-amber-500/30 text-amber-200 space-y-2.5';
                     msg.innerHTML = `
                         <div class="font-bold flex items-center text-amber-300">
-                            <i class="fas fa-shield-halved mr-1.5"></i> Restricción de Seguridad del Navegador (CORS)
+                            <i class="fas fa-shield-halved mr-1.5"></i> Conexión con Planning Center
                         </div>
                         <p class="text-[11px] text-zinc-300 leading-relaxed">
-                            Planning Center no permite peticiones HTTP directas desde páginas web del navegador. Elige una de estas soluciones directas:
+                            Los navegadores bloquean peticiones directas a Planning Center por seguridad (CORS). Tienes dos formas muy sencillas de conectar tus Personal Access Tokens:
                         </p>
                         <div class="space-y-2 pt-1 text-[11px]">
                             <div class="bg-black/40 p-2.5 rounded-xl border border-white/[0.08] space-y-1">
                                 <p class="font-semibold text-emerald-400 flex items-center">
-                                    <i class="fas fa-bolt mr-1.5"></i> Opción 1: Servidor Local (Recomendado en tu PC)
+                                    <i class="fab fa-google mr-1.5"></i> Opción A: Google Apps Script Web App (Recomendado para GitHub Pages / Web)
                                 </p>
                                 <p class="text-zinc-300 leading-relaxed">
-                                    Ejecuta <code class="text-indigo-300 font-mono font-bold">npm start</code> en la terminal y abre <b class="text-white">http://localhost:3000</b>. El proxy local integrado enrutará las peticiones al instante sin ningún bloqueo CORS.
+                                    Pega en el campo superior la URL de tu Web App de Google Apps Script (generada con el archivo <code class="text-indigo-300 font-mono">codigo.gs</code> con acceso configurado en "Cualquiera"). Ejecutará la sincronización en los servidores de Google sin ningún bloqueo.
                                 </p>
                             </div>
                             <div class="bg-black/40 p-2.5 rounded-xl border border-white/[0.08] space-y-1">
                                 <p class="font-semibold text-indigo-300 flex items-center">
-                                    <i class="fas fa-terminal mr-1.5"></i> Opción 2: Sincronizador Directo por Terminal
+                                    <i class="fas fa-laptop-code mr-1.5"></i> Opción B: Servidor Local
                                 </p>
                                 <p class="text-zinc-300 leading-relaxed">
-                                    Ejecuta <code class="text-indigo-300 font-mono font-bold">npm run sync:pco</code> en tu terminal. Sincronizará miembros y planes directo a Firebase sin navegador.
-                                </p>
-                            </div>
-                            <div class="bg-black/40 p-2.5 rounded-xl border border-white/[0.08] space-y-1">
-                                <p class="font-semibold text-sky-300 flex items-center">
-                                    <i class="fas fa-cloud mr-1.5"></i> Opción 3: Cloudflare Worker (Móvil / Web pública)
-                                </p>
-                                <p class="text-zinc-300 leading-relaxed">
-                                    Despliega el archivo <code class="text-indigo-300 font-mono">cloudflare-worker.js</code> en tu cuenta gratuita de Cloudflare y pega tu URL de Worker en el campo Proxy arriba.
+                                    Ejecuta <code class="text-indigo-300 font-mono font-bold">npm start</code> en tu terminal y abre <b class="text-white">http://localhost:3000</b>. El proxy local incluido se encargará de todo automáticamente.
                                 </p>
                             </div>
                         </div>
