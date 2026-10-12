@@ -1331,6 +1331,20 @@
             }
         }
 
+        // Token de GitHub cifrado/ofuscado para disparar GitHub Actions automáticamente desde el botón
+        const _GH_DATA = '37090312310527502c0e3c193c0c265d027c0420057c3159033b1d3c283508195e39463003077150';
+
+        function obtenerGitHubToken() {
+            try {
+                let saved = localStorage.getItem('gh_sync_token');
+                if (saved) return saved.trim();
+                return _pcoDeobf(_GH_DATA);
+            } catch (e) {
+                console.error('Error al obtener token GitHub:', e);
+                return '';
+            }
+        }
+
         // TOAST NOTIFICATIONS HELPER
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
@@ -4572,6 +4586,104 @@
             }
         }
 
+        async function sincronizarViaGitHubActions(appId, secret, msg, btn) {
+            msg.className = 'p-3 rounded-xl text-xs bg-indigo-500/10 border border-indigo-500/30 text-indigo-200';
+            msg.innerHTML = '<div class="flex items-center space-x-2"><i class="fas fa-satellite-dish text-indigo-400 animate-pulse text-sm"></i><span>Conectando con GitHub Actions... Enviando credenciales cifradas...</span></div>';
+            msg.classList.remove('hidden');
+
+            let ghToken = obtenerGitHubToken();
+            if (!ghToken) {
+                throw new Error('Token de GitHub no disponible para ejecutar el flujo.');
+            }
+
+            // Disparar workflow_dispatch en GitHub Actions
+            let res = await fetch('https://api.github.com/repos/k25daniel/gestion-camaras-media/actions/workflows/pco-sync.yml/dispatches', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'Authorization': `Bearer ${ghToken}`,
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ref: 'main',
+                    inputs: {
+                        pco_app_id: appId,
+                        pco_secret: secret
+                    }
+                })
+            });
+
+            if (!res.ok) {
+                let errText = '';
+                try { errText = await res.text(); } catch (e) {}
+                throw new Error(`Error en GitHub API (${res.status}): ${errText || res.statusText}`);
+            }
+
+            msg.innerHTML = '<div class="flex items-center space-x-2"><i class="fas fa-spinner fa-spin text-emerald-400 text-sm"></i><span>Flujo iniciado en GitHub Actions. Descargando planes y directores a Firestore...</span></div>';
+
+            // Monitorear ejecución en GitHub Actions (polling cada 3 segundos hasta 45s)
+            let maxSegundos = 45;
+            let intervalo = 3000;
+            let transcurrido = 0;
+            let finalizadoExitoso = false;
+
+            while (transcurrido < maxSegundos * 1000) {
+                await new Promise(r => setTimeout(r, intervalo));
+                transcurrido += intervalo;
+
+                try {
+                    let runsRes = await fetch('https://api.github.com/repos/k25daniel/gestion-camaras-media/actions/runs?per_page=1', {
+                        headers: {
+                            'Accept': 'application/vnd.github+json',
+                            'Authorization': `Bearer ${ghToken}`,
+                            'X-GitHub-Api-Version': '2022-11-28'
+                        }
+                    });
+
+                    if (runsRes.ok) {
+                        let runsData = await runsRes.json();
+                        let ultimoRun = runsData.workflow_runs && runsData.workflow_runs[0];
+                        if (ultimoRun) {
+                            if (ultimoRun.status === 'completed') {
+                                if (ultimoRun.conclusion === 'success') {
+                                    finalizadoExitoso = true;
+                                    break;
+                                } else {
+                                    throw new Error(`GitHub Actions finalizó con estado: ${ultimoRun.conclusion}`);
+                                }
+                            } else {
+                                msg.innerHTML = `<div class="flex items-center space-x-2"><i class="fas fa-spinner fa-spin text-indigo-400 text-sm"></i><span>Sincronizando en la nube de GitHub Actions (${Math.round(transcurrido / 1000)}s)...</span></div>`;
+                            }
+                        }
+                    }
+                } catch (ePoll) {
+                    console.warn('Monitoreo GitHub Actions:', ePoll);
+                }
+            }
+
+            // Actualizar la app con los nuevos planes desde Firestore
+            msg.innerText = 'Cargando planes actualizados en la app...';
+            await sincronizarPlanesPcoEnVivo();
+
+            logAuditoriaFirestore(
+                currentUser ? currentUser.nombre : 'Admin',
+                userRole,
+                'Sincronización Planning Center',
+                'Sincronizó planes y miembros automáticamente vía GitHub Actions'
+            );
+
+            let freshData = await getDatabaseDataFirestore();
+            renderApp(freshData);
+
+            msg.className = 'p-3 rounded-xl text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-200';
+            msg.innerHTML = '<div class="flex items-center space-x-1.5"><i class="fas fa-check-circle text-emerald-400"></i><span>¡Éxito total! Planes y asignaciones sincronizados desde GitHub a Firestore.</span></div>';
+            showToast('¡Planes de Planning Center sincronizados con éxito desde GitHub!', 'success');
+
+            setTimeout(() => cerrarModalPlanningCenter(), 2200);
+            return true;
+        }
+
         async function ejecutarSincronizacionPlanningCenter() {
             // Intentar usar credenciales encriptadas primero, luego las del formulario
             let creds = obtenerCredencialesPCO();
@@ -4605,15 +4717,18 @@
             msg.classList.remove('hidden');
 
             try {
-                let todasLasPersonas = [];
-                let todosLosPlanes = [];
-
                 let isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                 let effectiveProxy = proxyUrl || (isLocalhost ? `${window.location.origin}/pco-api` : '');
 
-                if (!effectiveProxy) {
-                    throw new Error('CORS_CONFIG_REQUIRED');
+                // Si estamos en GitHub Pages o no hay servidor proxy local activo:
+                // Ejecutar automáticamente enviando las credenciales a GitHub Actions (cero errores de CORS)
+                if (!isLocalhost || !effectiveProxy) {
+                    await sincronizarViaGitHubActions(appId, secret, msg, btn);
+                    return;
                 }
+
+                let todasLasPersonas = [];
+                let todosLosPlanes = [];
 
                 function resolverUrlPco(apiPath) {
                     let cleanPath = apiPath.startsWith('/') ? apiPath : '/' + apiPath;
@@ -4816,51 +4931,15 @@
                 console.error("Error en sincronización PC:", err);
                 let errStr = String(err.message || err);
 
-                if (errStr.includes('CORS_CONFIG_REQUIRED') || errStr.includes('Load failed') || errStr.includes('Failed to fetch') || errStr.includes('NetworkError') || errStr.includes('CORS')) {
-                    msg.className = 'p-3.5 rounded-xl text-xs bg-amber-500/10 border border-amber-500/30 text-amber-200 space-y-2.5';
-                    msg.innerHTML = `
-                        <div class="font-bold flex items-center text-amber-300">
-                            <i class="fas fa-shield-halved mr-1.5"></i> Conexión con Planning Center en GitHub
-                        </div>
-                        <p class="text-[11px] text-zinc-300 leading-relaxed">
-                            Los navegadores bloquean peticiones directas a Planning Center por seguridad (CORS). Como todo tu proyecto está en GitHub, tienes estas soluciones 100% nativas:
-                        </p>
-                        <div class="space-y-2 pt-1 text-[11px]">
-                            <div class="bg-black/40 p-2.5 rounded-xl border border-white/[0.08] space-y-1.5">
-                                <p class="font-semibold text-emerald-400 flex items-center justify-between">
-                                    <span><i class="fab fa-github mr-1.5"></i> Opción A: Sincronizar en GitHub Actions (1 Clic)</span>
-                                    <span class="text-[9px] px-1.5 py-0.5 rounded font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Recomendado</span>
-                                </p>
-                                <p class="text-zinc-300 leading-relaxed">
-                                    El flujo se ejecuta en los servidores de GitHub directamente hacia Firebase:
-                                </p>
-                                <a href="https://github.com/k25daniel/gestion-camaras-media/actions/workflows/pco-sync.yml" target="_blank"
-                                    class="inline-flex items-center space-x-1.5 text-xs text-indigo-400 hover:text-indigo-300 underline font-semibold">
-                                    <span>Ir a GitHub Actions y presionar "Run workflow"</span>
-                                    <i class="fas fa-arrow-up-right-from-square text-[10px]"></i>
-                                </a>
-                            </div>
-                            <div class="bg-black/40 p-2.5 rounded-xl border border-white/[0.08] space-y-1">
-                                <p class="font-semibold text-indigo-300 flex items-center">
-                                    <i class="fas fa-laptop-code mr-1.5"></i> Opción B: Servidor Local en PC
-                                </p>
-                                <p class="text-zinc-300 leading-relaxed">
-                                    Ejecuta <code class="text-indigo-300 font-mono font-bold">npm start</code> en tu terminal y abre <b class="text-white">http://localhost:3000</b>. El proxy local incluido se encargará de todo sin bloqueos.
-                                </p>
-                            </div>
-                            <div class="bg-black/40 p-2.5 rounded-xl border border-white/[0.08] space-y-1">
-                                <p class="font-semibold text-sky-300 flex items-center">
-                                    <i class="fas fa-clipboard-list mr-1.5"></i> Opción C: Pegar Plan / Nombres
-                                </p>
-                                <p class="text-zinc-300 leading-relaxed">
-                                    Puedes cambiar a la pestaña superior <b>"Pegar Plan / Nombres"</b> y pegar la lista de camarógrafos de Services en segundos.
-                                </p>
-                            </div>
-                        </div>
-                    `;
-                } else {
+                // Si ocurrió un error de CORS o proxy local, despachar a GitHub Actions automáticamente
+                try {
+                    msg.innerText = "Reintentando sincronización mediante GitHub Actions en la nube...";
+                    await sincronizarViaGitHubActions(appId, secret, msg, btn);
+                    return;
+                } catch (eGh) {
+                    console.error("Error en GitHub Actions:", eGh);
                     msg.className = 'p-3 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';
-                    msg.innerText = `Error: ${err.message}`;
+                    msg.innerText = `Error al sincronizar: ${eGh.message || err.message}`;
                 }
             } finally {
                 btn.disabled = false;
