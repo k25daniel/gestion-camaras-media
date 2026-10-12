@@ -29,7 +29,6 @@ La sincronización se ejecuta directamente en la infraestructura de GitHub hacia
    - Todos los planes futuros y sus camarógrafos/directores asignados.
    - Los guardará en Firebase Firestore en segundos.
 
-*Nota: Este flujo también corre de forma automática de martes a sábado.*
 
 ---
 

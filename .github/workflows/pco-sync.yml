@@ -1,9 +1,6 @@
 name: Sincronización Planning Center a Firestore
 
 on:
-  schedule:
-    # Corre automáticamente de martes a sábado
-    - cron: '0 21 * * 2-6'
   workflow_dispatch:
     inputs:
       pco_app_id:

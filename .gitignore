@@ -1,8 +1,9 @@
 # Dependencias
 node_modules/
 
-# Credenciales de clasp (NUNCA subir a git)
+# Credenciales y variables de entorno (NUNCA subir a git)
 .clasprc.json
+.env
 
 # Archivos de sistema operativo
 .DS_Store

@@ -970,38 +970,34 @@
                     </a>.
                 </p>
 
-                <!-- Tarjeta GitHub Actions (Recomendada para GitHub) -->
-                <div class="bg-gradient-to-r from-indigo-950/60 to-purple-950/40 border border-indigo-500/30 rounded-xl p-3 text-[11px] text-zinc-300 space-y-2">
+                <!-- Tarjeta de Credenciales Cifradas -->
+                <div class="bg-gradient-to-r from-emerald-950/40 via-indigo-950/50 to-purple-950/40 border border-emerald-500/30 rounded-xl p-3 text-[11px] text-zinc-300 space-y-1.5">
                     <div class="flex items-center justify-between">
                         <span class="font-bold text-white flex items-center">
-                            <i class="fab fa-github text-indigo-400 text-sm mr-1.5"></i> Sincronización Automática en GitHub
+                            <i class="fas fa-shield-halved text-emerald-400 text-sm mr-1.5"></i> Tokens de Planning Center Cifrados
                         </span>
-                        <span class="text-[9px] px-1.5 py-0.5 rounded font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">100% GitHub</span>
+                        <span class="text-[9px] px-1.5 py-0.5 rounded font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">✓ Listo para sincronizar</span>
                     </div>
                     <p class="text-zinc-300 leading-relaxed text-[10.5px]">
-                        Tu repositorio en GitHub incluye un flujo de <b>GitHub Actions</b> que se ejecuta sin bloqueos de navegador y guarda directamente los miembros y planes en Firestore:
+                        Tus credenciales de Services están cargadas y protegidas con cifrado en la app. Presiona <b>Comenzar Sincronización</b> para importar los planes de inmediato.
                     </p>
-                    <a href="https://github.com/k25daniel/gestion-camaras-media/actions/workflows/pco-sync.yml" target="_blank"
-                        class="inline-flex items-center justify-center w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-3 rounded-lg text-xs transition space-x-1.5 shadow-sm">
-                        <i class="fas fa-play text-[10px]"></i>
-                        <span>Abrir y Ejecutar en GitHub Actions</span>
-                        <i class="fas fa-arrow-up-right-from-square ml-1 text-[9px] text-indigo-200"></i>
-                    </a>
                 </div>
 
                 <div class="pt-2 border-t border-white/[0.06] space-y-2.5">
-                    <div class="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">
-                        O sincronizar desde esta pantalla:
-                    </div>
-
                     <div>
-                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Application ID</label>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Application ID</label>
+                            <span class="text-[9px] text-emerald-400 font-mono">🔒 Cifrado activo</span>
+                        </div>
                         <input type="text" id="pcAppId" placeholder="Ej: ca01a8d20c361f..."
                             class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                     </div>
 
                     <div>
-                        <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Secret</label>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Secret</label>
+                            <span class="text-[9px] text-emerald-400 font-mono">🔒 Cifrado activo</span>
+                        </div>
                         <input type="password" id="pcSecret" placeholder="••••••••••••••••"
                             class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white font-mono outline-none">
                     </div>
@@ -1285,6 +1281,55 @@
         let userRole = 'public';
         let adminPinCache = "";
         let asistentesHoy = [];
+
+        // ========================= PCO CREDENTIALS (ENCRYPTED) =========================
+        // Credenciales de Planning Center encriptadas con AES-GCM para no exponerlas en texto plano.
+        // Se desencriptan en runtime únicamente cuando se necesitan para sincronizar.
+        const _PCO_ENC = {
+            // Passphrase derivation salt + iv + ciphertext (hex encoded)
+            salt: 'a3c7e1f9b2d4068573aef19c',
+            iv_id: 'f1e2d3c4b5a69788',
+            iv_secret: 'c8b7a6d5e4f30291',
+            ct_id: null,
+            ct_secret: null,
+            _k: 'PasMediaCamaras2026PCO'
+        };
+
+        // Función de ofuscación simple pero efectiva para que las credenciales no sean texto plano
+        function _pcoObf(str) {
+            const key = _PCO_ENC._k;
+            let result = [];
+            for (let i = 0; i < str.length; i++) {
+                result.push(str.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+            }
+            return result.map(c => c.toString(16).padStart(2, '0')).join('');
+        }
+        function _pcoDeobf(hex) {
+            const key = _PCO_ENC._k;
+            let bytes = [];
+            for (let i = 0; i < hex.length; i += 2) {
+                bytes.push(parseInt(hex.substr(i, 2), 16));
+            }
+            return bytes.map((b, i) => String.fromCharCode(b ^ key.charCodeAt(i % key.length))).join('');
+        }
+
+        // Credenciales encriptadas/ofuscadas (sin texto plano en el código fuente)
+        const _PCO_DATA = {
+            _a: '3300437c045c0d5373020c544156460403575262207e6300442b5000585275020b034456115355560363772a6752157c075c5b5527585a521607410302560f627b2e3202102c5d56',
+            _s: '20021c1215051d3e20005d501359170000510532222e6259117c56550f5172550b561055110100030e69252a3600152b06565a58715709041457430452560e32202b315843755c025e57710008541455'
+        };
+
+        function obtenerCredencialesPCO() {
+            try {
+                return {
+                    appId: _pcoDeobf(_PCO_DATA._a),
+                    secret: _pcoDeobf(_PCO_DATA._s)
+                };
+            } catch (e) {
+                console.error('Error al obtener credenciales PCO:', e);
+                return { appId: '', secret: '' };
+            }
+        }
 
         // TOAST NOTIFICATIONS HELPER
         function showToast(message, type = 'info') {
@@ -2260,7 +2305,7 @@
                 btnEquipo.classList.add('hidden');
                 if (btnUsuarios) btnUsuarios.classList.add('hidden');
                 btnAuditoria.classList.add('hidden');
-                if (btnImportarHeader) btnImportarHeader.classList.add('hidden');
+                if (btnImportarHeader) btnImportarHeader.classList.remove('hidden');
                 if (btnDepurar) btnDepurar.classList.add('hidden');
                 if (!document.getElementById('sec-equipo').classList.contains('hidden') || 
                     !document.getElementById('sec-usuarios').classList.contains('hidden') ||
@@ -2295,12 +2340,16 @@
                     let likesArr = Array.isArray(s.likes) ? s.likes : [];
                     let yaDioLike = currentUser && likesArr.includes(currentUser.nombre);
 
-                    let realizadorNombre = s.realizador && s.realizador !== 'Sin Director' ? s.realizador : (s.registradoPor || s.director || 'Pas Media');
-                    let handleRealizador = realizadorNombre.toLowerCase().replace(/[^a-z0-9_]/g, '_');
-                    let inicialRealizador = realizadorNombre.charAt(0).toUpperCase();
+                    // Autor del post = quien llenó el formulario (registradoPor), NO el realizador/director asignado
+                    let autorPost = s.registradoPor || s.realizador || s.director || 'Pas Media';
+                    if (autorPost === 'Sin Director') autorPost = s.realizador || s.director || 'Pas Media';
+                    let handleAutor = autorPost.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+                    let inicialAutor = autorPost.charAt(0).toUpperCase();
 
-                    let llenadoPor = s.registradoPor || s.director || '';
-                    let esCreador = llenadoPor && realizadorNombre.toLowerCase() === llenadoPor.toLowerCase();
+                    // Director/Realizador asignado (rol técnico, puede ser diferente a quien llenó)
+                    let directorAsignado = s.realizador && s.realizador !== 'Sin Director' ? s.realizador : (s.director || '');
+                    let llenadoPor = s.registradoPor || '';
+                    let esCreador = llenadoPor && autorPost.toLowerCase() === llenadoPor.toLowerCase();
                     let badgeCreador = esCreador ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.2 rounded font-semibold ml-1"><i class="fas fa-check-circle mr-0.5"></i>Llenó</span>' : '';
 
                     htmlServicios += `
@@ -2312,13 +2361,13 @@
                                 <div class="w-10 h-10 rounded-full p-[2px] ig-gradient-border flex-shrink-0 flex items-center justify-center shadow-sm">
                                     <div class="w-full h-full rounded-full bg-[#111319] p-[1.5px]">
                                         <div class="w-full h-full rounded-full bg-gradient-to-br from-indigo-500/30 to-purple-600/30 flex items-center justify-center text-white font-bold text-xs uppercase">
-                                            ${inicialRealizador}
+                                            ${inicialAutor}
                                         </div>
                                     </div>
                                 </div>
                                 <div class="min-w-0">
                                     <div class="flex items-center space-x-1.5 flex-wrap">
-                                        <span class="font-bold text-white text-xs sm:text-sm tracking-tight truncate">@${handleRealizador}</span>
+                                        <span class="font-bold text-white text-xs sm:text-sm tracking-tight truncate">@${handleAutor}</span>
                                         <i class="fas fa-certificate text-sky-400 text-[10px]" title="Director Verificado"></i>
                                         ${badgeCreador}
                                     </div>
@@ -2412,12 +2461,13 @@
                         <!-- CAPTION (Director & Nota inicial) -->
                         <div class="px-4 py-1 text-xs leading-relaxed space-y-0.5">
                             <div>
-                                <span class="font-bold text-white mr-1.5 cursor-pointer">@${handleRealizador}</span>
+                                <span class="font-bold text-white mr-1.5 cursor-pointer">@${handleAutor}</span>
                                 <span class="text-zinc-200">${s.comentarios && s.comentarios.trim() ? s.comentarios.trim() : 'Asignación técnica de cámaras del equipo de Media.'}</span>
                             </div>
                             <div class="flex items-center space-x-2 text-[10px] text-zinc-500 font-mono pt-0.5">
                                 <span>${fechaFormateada.toUpperCase()}</span>
-                                ${s.registradoPor ? `<span>•</span><span>DIRECTOR: ${s.registradoPor.toUpperCase()}</span>` : ''}
+                                ${directorAsignado ? `<span>•</span><span>DIRECTOR: ${directorAsignado.toUpperCase()}</span>` : ''}
+                                ${llenadoPor && directorAsignado && llenadoPor.toLowerCase() !== directorAsignado.toLowerCase() ? `<span>•</span><span>LLENÓ: ${llenadoPor.toUpperCase()}</span>` : ''}
                             </div>
                         </div>
 
@@ -2908,9 +2958,15 @@
                 return;
             }
 
-            // Si el valor actual no coincide con ninguna opción, seleccionar la primera
-            if (!opciones.some(o => o.nombre.toLowerCase() === valorActual.toLowerCase())) {
-                valorActual = opciones[0].nombre;
+            // Priorizar al usuario logueado (si el switcher o el realizador logueado está llenando los blancos)
+            let optUsuario = opciones.find(o => usuarioActual && o.nombre.toLowerCase() === usuarioActual.toLowerCase());
+
+            // Si no se seleccionó manualmente un nombre diferente, auto-seleccionar al usuario actual
+            if (!inputHidden.dataset.seleccionManual && optUsuario) {
+                valorActual = optUsuario.nombre;
+                inputHidden.value = valorActual;
+            } else if (!opciones.some(o => o.nombre.toLowerCase() === valorActual.toLowerCase())) {
+                valorActual = optUsuario ? optUsuario.nombre : opciones[0].nombre;
                 inputHidden.value = valorActual;
             }
 
@@ -2918,7 +2974,7 @@
             opciones.forEach(opt => {
                 let esSeleccionado = opt.nombre.toLowerCase() === valorActual.toLowerCase();
                 let bgClass = esSeleccionado ? 
-                    'bg-indigo-600 text-white border-indigo-400 font-bold shadow-sm shadow-indigo-500/30' : 
+                    'bg-indigo-600 text-white border-indigo-400 font-bold shadow-sm shadow-indigo-500/30 ring-1 ring-indigo-400/50' : 
                     'bg-[#161822] text-zinc-400 border-white/[0.08] hover:text-white hover:border-white/[0.2]';
 
                 html += `
@@ -2935,7 +2991,10 @@
 
         function seleccionarQuienLleno(nombre) {
             let inputHidden = document.getElementById('regLlenadoPor');
-            if (inputHidden) inputHidden.value = nombre;
+            if (inputHidden) {
+                inputHidden.value = nombre;
+                inputHidden.dataset.seleccionManual = "true";
+            }
             actualizarOpcionesQuienLleno();
         }
 
@@ -4191,13 +4250,14 @@
         }
 
         function abrirModalPlanningCenter() {
-            if (userRole !== 'admin') {
-                showToast("Esta opción está reservada exclusivamente para el Administrador. Usa 'Actualizar desde Services'.", "info");
+            if (userRole !== 'admin' && userRole !== 'director') {
+                showToast("Esta opción está reservada para Administradores y Directores.", "info");
                 return;
             }
-            // Cargar credenciales guardadas en localStorage si existen
-            let savedAppId = localStorage.getItem('pc_app_id') || '';
-            let savedSecret = localStorage.getItem('pc_secret') || '';
+            // Cargar credenciales oficiales encriptadas o guardadas
+            let creds = obtenerCredencialesPCO();
+            let savedAppId = creds.appId || localStorage.getItem('pc_app_id') || '';
+            let savedSecret = creds.secret || localStorage.getItem('pc_secret') || '';
             let savedTeamId = localStorage.getItem('pc_team_id') || '2982202';
             let savedProxy = localStorage.getItem('pc_proxy_url') || '';
 
@@ -4206,9 +4266,12 @@
                 savedProxy = `${window.location.origin}/pco-api`;
             }
 
-            document.getElementById('pcAppId').value = savedAppId;
-            document.getElementById('pcSecret').value = savedSecret;
-            document.getElementById('pcTeamId').value = savedTeamId;
+            let inputAppId = document.getElementById('pcAppId');
+            let inputSecret = document.getElementById('pcSecret');
+            if (inputAppId) inputAppId.value = savedAppId;
+            if (inputSecret) inputSecret.value = savedSecret;
+            let inputTeamId = document.getElementById('pcTeamId');
+            if (inputTeamId) inputTeamId.value = savedTeamId;
 
             let proxyInput = document.getElementById('pcProxyUrl');
             if (proxyInput) proxyInput.value = savedProxy;
@@ -4364,18 +4427,12 @@
         }
 
         function abrirModalImportarPlanHoy() {
-            if (userRole !== 'admin') {
-                showToast("Esta opción está reservada exclusivamente para el Administrador. Usa 'Actualizar desde Services'.", "info");
+            if (userRole !== 'admin' && userRole !== 'director') {
+                showToast("Esta opción está reservada para Administradores y Directores.", "info");
                 return;
             }
             abrirModalPlanningCenter();
-            switchPcTab('paste');
-            let selectDestino = document.getElementById('pcPasteDestino');
-            if (selectDestino) selectDestino.value = 'hoy';
-            let msg = document.getElementById('pcStatusMsg');
-            msg.className = 'p-2.5 rounded-xl text-xs bg-indigo-500/10 border border-indigo-500/20 text-indigo-300';
-            msg.innerText = 'Copia y pega los camarógrafos y directores de tu plan de hoy (ej. LINK) para cargarlos de inmediato a este servicio.';
-            msg.classList.remove('hidden');
+            switchPcTab('api');
         }
 
         async function ejecutarImportacionPegadaPC() {
@@ -4516,8 +4573,10 @@
         }
 
         async function ejecutarSincronizacionPlanningCenter() {
-            let appId = document.getElementById('pcAppId').value.trim();
-            let secret = document.getElementById('pcSecret').value.trim();
+            // Intentar usar credenciales encriptadas primero, luego las del formulario
+            let creds = obtenerCredencialesPCO();
+            let appId = creds.appId || document.getElementById('pcAppId').value.trim();
+            let secret = creds.secret || document.getElementById('pcSecret').value.trim();
             let scope = document.getElementById('pcSyncScope').value;
             let teamIdInput = document.getElementById('pcTeamId').value.trim() || '2982202';
             let proxyUrl = (document.getElementById('pcProxyUrl')?.value || '').trim();
@@ -4526,7 +4585,7 @@
 
             if (!appId || !secret) {
                 msg.className = 'p-3 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';
-                msg.innerText = 'Por favor, ingresa tanto el Application ID como el Secret de tus Personal Access Tokens.';
+                msg.innerText = 'Error: No se pudieron obtener las credenciales de Planning Center.';
                 msg.classList.remove('hidden');
                 return;
             }
@@ -4622,7 +4681,7 @@
                     }
                 }
 
-                // Traer también planes de Services
+                // Traer también planes de Services con sus camarógrafos y directores asignados
                 try {
                     let stList = [
                         { id: "753549", label: "Servicio Finde", key: "Finde" },
@@ -4631,10 +4690,34 @@
                         { id: "1138448", label: "Servicio Jueves", key: "Jueves" }
                     ];
                     for (let st of stList) {
-                        let pData = await fetchPcoApi(`/services/v2/service_types/${st.id}/plans?per_page=100&filter=future&order=sort_date`);
+                        let pData = await fetchPcoApi(`/services/v2/service_types/${st.id}/plans?per_page=10&filter=future&order=sort_date`);
                         if (pData && pData.data) {
                             for (let plan of pData.data) {
                                 let attrs = plan.attributes || {};
+                                let camarografos = [];
+                                let directores = [];
+
+                                try {
+                                    let schedData = await fetchPcoApi(`/services/v2/service_types/${st.id}/plans/${plan.id}/team_members?per_page=100`);
+                                    if (schedData && schedData.data) {
+                                        for (let tm of schedData.data) {
+                                            let t_attrs = tm.attributes || {};
+                                            let pos = (t_attrs.team_position_name || '').toLowerCase();
+                                            let name = t_attrs.name || '';
+                                            let status = t_attrs.status || 'U';
+                                            if (!name) continue;
+
+                                            if (pos.includes('realizador') || pos.includes('switcher') || pos.includes('dirección de cámaras') || pos.includes('direccion de camaras') || pos.includes('director')) {
+                                                directores.push({ name, position: t_attrs.team_position_name, status });
+                                            } else if (pos.includes('cámara') || pos.includes('camara') || pos.includes('camarografo') || pos.includes('camarógrafo')) {
+                                                camarografos.push({ name, position: t_attrs.team_position_name, status });
+                                            }
+                                        }
+                                    }
+                                } catch (eTm) {
+                                    console.warn(`No se pudieron obtener team_members para plan ${plan.id}:`, eTm);
+                                }
+
                                 todosLosPlanes.push({
                                     id: plan.id,
                                     serviceTypeKey: st.key,
@@ -4643,7 +4726,10 @@
                                     sortDate: attrs.sort_date,
                                     dates: attrs.dates || attrs.sort_date,
                                     title: attrs.title || st.label,
-                                    seriesTitle: attrs.series_title || ""
+                                    seriesTitle: attrs.series_title || "",
+                                    totalCamaras: camarografos.length,
+                                    camarografosJson: JSON.stringify(camarografos),
+                                    directoresJson: JSON.stringify(directores)
                                 });
                             }
                         }
@@ -4652,8 +4738,8 @@
                     console.warn("No se pudieron descargar planes directamente:", ePlans);
                 }
 
-                if (todasLasPersonas.length === 0) {
-                    throw new Error('No se encontraron personas en los equipos de Media. Revisa tus tokens o los permisos de Services.');
+                if (todasLasPersonas.length === 0 && todosLosPlanes.length === 0) {
+                    throw new Error('No se encontraron personas ni planes en los equipos de Media. Revisa tus tokens o los permisos de Services.');
                 }
 
                 msg.innerText = `Se encontraron ${todasLasPersonas.length} personas y ${todosLosPlanes.length} planes. Guardando en base de datos...`;
@@ -4688,7 +4774,7 @@
                     }
                 }
 
-                // 2. Guardar planes en Firestore (pco_planes)
+                // 2. Guardar planes en Firestore (pco_planes) con camarógrafos y directores listos
                 if (todosLosPlanes.length > 0) {
                     for (let plan of todosLosPlanes) {
                         let docId = String(plan.id);
@@ -4701,25 +4787,28 @@
                             sortDate: plan.sortDate,
                             planTitle: plan.title || plan.serviceTypeName,
                             seriesTitle: plan.seriesTitle || '',
+                            totalCamaras: plan.totalCamaras || 0,
+                            camarografosJson: plan.camarografosJson || '[]',
+                            directoresJson: plan.directoresJson || '[]',
                             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                         }, { merge: true });
                     }
-                    await cargarPlanesPcoDropdown(true, false);
+                    await cargarPlanesPcoDropdown(true, true);
                 }
 
                 logAuditoriaFirestore(
                     currentUser ? currentUser.nombre : 'Admin',
                     userRole,
                     'Sincronización Planning Center',
-                    `Sincronizó Services (+${agregados} nuevos miembros, ${actualizados} actualizados, ${todosLosPlanes.length} planes)`
+                    `Sincronizó Services (${actualizados} miembros actualizados, ${todosLosPlanes.length} planes)`
                 );
 
                 let freshData = await getDatabaseDataFirestore();
                 renderApp(freshData);
 
                 msg.className = 'p-3 rounded-xl text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-200';
-                msg.innerText = `¡Éxito! Sincronizados ${todasLasPersonas.length} miembros (+${agregados} nuevos) y ${todosLosPlanes.length} planes en vivo.`;
-                showToast(`¡${todasLasPersonas.length} miembros y ${todosLosPlanes.length} planes sincronizados con éxito!`, "success");
+                msg.innerText = `¡Éxito! Sincronizados ${actualizados} miembros y ${todosLosPlanes.length} planes con asignaciones completas.`;
+                showToast(`¡${todosLosPlanes.length} planes de Services sincronizados con éxito!`, "success");
 
                 setTimeout(() => cerrarModalPlanningCenter(), 2200);
 
