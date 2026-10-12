@@ -398,8 +398,9 @@
                     </div>
 
                     <div class="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-end flex-wrap gap-2">
-                        <button type="button" id="btnImportarPlanHeader" onclick="abrirModalImportarPlanHoy()"
-                            class="hidden bg-[#1e1b4b] hover:bg-[#312e81] active:scale-95 text-indigo-200 hover:text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border border-indigo-500/30 flex items-center shadow-sm">
+                        <button type="button" id="btnImportarPlanHeader" onclick="importarPlanServicesDirecto(this)"
+                            class="hidden bg-[#1e1b4b] hover:bg-[#312e81] active:scale-95 text-indigo-200 hover:text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border border-indigo-500/30 flex items-center shadow-sm"
+                            title="Importar automáticamente planes y camarógrafos desde Planning Center">
                             <i class="fas fa-file-import mr-1.5 text-[11px] text-indigo-400"></i> Importar de Plan (Services)
                         </button>
                         <button type="button" onclick="copiarServicioAnterior()"
@@ -951,15 +952,6 @@
                 </button>
             </div>
 
-            <!-- Tabs en Modal: API o Pegar/CSV -->
-            <div class="flex border-b border-white/[0.08] pb-1 space-x-2">
-                <button type="button" id="tabPcApiBtn" onclick="switchPcTab('api')" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                    <i class="fas fa-key mr-1"></i> Por API Token
-                </button>
-                <button type="button" id="tabPcPasteBtn" onclick="switchPcTab('paste')" class="text-xs font-semibold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition">
-                    <i class="fas fa-clipboard-list mr-1"></i> Pegar Plan / Nombres
-                </button>
-            </div>
 
             <!-- Panel 1: API Token -->
             <div id="panelPcApi" class="space-y-3 text-xs">
@@ -1036,26 +1028,6 @@
                 </div>
             </div>
 
-            <!-- Panel 2: Pegar Nombres o Asignaciones de un Plan -->
-            <div id="panelPcPaste" class="hidden space-y-3 text-xs">
-                <p class="text-zinc-300 leading-relaxed">
-                    Puedes copiar el texto o nombres de tu plan en Services (por ejemplo, los camarógrafos de <b>LINK</b> o <b>Servicio Jueves</b>) y pegarlos aquí. Se detectarán sus nombres automáticamente:
-                </p>
-
-                <div class="space-y-1">
-                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Tipo de importación</label>
-                    <select id="pcPasteDestino" class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2 text-xs text-white outline-none">
-                        <option value="hoy">🎯 Cargar directamente a "Camarógrafos Disponibles Hoy" en Planear</option>
-                        <option value="equipo">📁 Guardar en el Directorio General de Miembros</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-[10px] font-mono text-zinc-400 uppercase tracking-wider mb-1">Pegar texto de Services / Nombres</label>
-                    <textarea id="pcPasteText" rows="6" placeholder="Alfonso Vargas Miranda&#10;Carlos Andrés Gamboa Mesén&#10;Treicy Arroyo Cantillo&#10;Monica Zamora Chavarria&#10;Daniel Fernandez Piedra"
-                        class="w-full bg-[#161822] border border-white/[0.08] focus:border-indigo-500 rounded-xl p-2.5 text-xs text-white outline-none resize-none font-mono"></textarea>
-                </div>
-            </div>
 
             <div id="pcStatusMsg" class="hidden p-3 rounded-xl text-xs"></div>
 
@@ -4241,26 +4213,7 @@
         let currentPcMode = 'api';
 
         function switchPcTab(mode) {
-            currentPcMode = mode;
-            let btnApi = document.getElementById('tabPcApiBtn');
-            let btnPaste = document.getElementById('tabPcPasteBtn');
-            let panelApi = document.getElementById('panelPcApi');
-            let panelPaste = document.getElementById('panelPcPaste');
-            let btnText = document.getElementById('btnEjecutarSyncPCText');
-
-            if (mode === 'api') {
-                btnApi.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
-                btnPaste.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition';
-                panelApi.classList.remove('hidden');
-                panelPaste.classList.add('hidden');
-                btnText.innerText = 'Comenzar Sincronización';
-            } else {
-                btnPaste.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-500/20 text-indigo-300 border border-indigo-500/30';
-                btnApi.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition';
-                panelPaste.classList.remove('hidden');
-                panelApi.classList.add('hidden');
-                btnText.innerText = 'Importar Nombres';
-            }
+            currentPcMode = 'api';
         }
 
         function abrirModalPlanningCenter() {
@@ -4433,156 +4386,176 @@
                 showToast("Esta acción solo está permitida para el Administrador.", "error");
                 return;
             }
-            if (currentPcMode === 'api') {
-                await ejecutarSincronizacionPlanningCenter();
-            } else {
-                await ejecutarImportacionPegadaPC();
-            }
+            await ejecutarSincronizacionPlanningCenter();
         }
 
         function abrirModalImportarPlanHoy() {
+            importarPlanServicesDirecto(document.getElementById('btnImportarPlanHeader'));
+        }
+
+        async function importarPlanServicesDirecto(btn) {
+            if (!btn) btn = document.getElementById('btnImportarPlanHeader');
             if (userRole !== 'admin' && userRole !== 'director') {
                 showToast("Esta opción está reservada para Administradores y Directores.", "info");
                 return;
             }
-            abrirModalPlanningCenter();
-            switchPcTab('api');
-        }
 
-        async function ejecutarImportacionPegadaPC() {
-            let texto = document.getElementById('pcPasteText').value.trim();
-            let destino = document.getElementById('pcPasteDestino') ? document.getElementById('pcPasteDestino').value : 'hoy';
-            let msg = document.getElementById('pcStatusMsg');
-            let btn = document.getElementById('btnEjecutarSyncPC');
+            let creds = obtenerCredencialesPCO();
+            let appId = creds.appId || localStorage.getItem('pc_app_id');
+            let secret = creds.secret || localStorage.getItem('pc_secret');
+            let ghToken = obtenerGitHubToken();
 
-            if (!texto) {
-                msg.className = 'p-3 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';
-                msg.innerText = 'Por favor, pega el texto o nombres en el campo.';
-                msg.classList.remove('hidden');
+            if (!appId || !secret) {
+                showToast("No se encontraron las credenciales de Planning Center.", "error");
+                return;
+            }
+            if (!ghToken) {
+                showToast("Token de GitHub no configurado para ejecutar la sincronización.", "error");
                 return;
             }
 
-            let originalBtn = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i> Procesando...';
+            let originalHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('opacity-90', 'cursor-not-allowed');
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5 text-xs text-indigo-300"></i> <span id="txtBtnImportarDirecto">Iniciando en GitHub...</span>';
+            }
 
-            msg.className = 'p-3 rounded-xl text-xs bg-indigo-500/10 border border-indigo-500/30 text-indigo-200';
-            msg.innerText = 'Procesando personas detectadas...';
-            msg.classList.remove('hidden');
+            let updateBtnText = (txt) => {
+                let el = document.getElementById('txtBtnImportarDirecto');
+                if (el) el.innerText = txt;
+            };
+
+            showToast("Iniciando sincronización con Services en GitHub Actions...", "info");
 
             try {
-                let lineas = texto.split(/[\r\n,]+/).map(x => x.trim()).filter(x => x.length > 0);
-
-                let personasDetectadas = [];
-                let ignorarPalabras = ['needed', 'cámaras', 'camaras', 'dirección de cámaras', 'direccion de camaras', 'jefe de piso', 'capacitacion', 'capacitaciones', 'arena', 'bajo', 'batería', 'foh', 'asistente', 'eléctrica', 'acústica', 'pastor', 'anfitriones', 'sonido', 'predica', 'unsent', 'email', 'teams', 'order', 'rehearse', 'times', 'files', 'notes', 'first name', 'last name', 'nombre', 'pending', 'confirmed', 'declined', 'media'];
-
-                for (let linea of lineas) {
-                    let linLower = linea.toLowerCase();
-                    // Saltar líneas de encabezados o estados
-                    if (ignorarPalabras.some(palabra => linLower === palabra || linLower.startsWith(palabra + ':') || linLower.startsWith(palabra + ' '))) continue;
-                    if (linLower.match(/^\d+\s+needed/)) continue;
-                    if (linLower.match(/^\d{1,2}:\d{2}/)) continue;
-
-                    // Si es un nombre válido de al menos 2 palabras o caracteres legibles
-                    let limpio = linea.replace(/[✓✕?✉•]/g, '').trim();
-                    if (limpio.length >= 3 && !limpio.includes('http') && !limpio.includes('@')) {
-                        personasDetectadas.push(limpio);
-                    }
-                }
-
-                if (personasDetectadas.length === 0) {
-                    throw new Error('No se detectaron nombres legibles en el texto pegado.');
-                }
-
-                // 1. Si el destino es cargarlos a "Hoy" en Planear Servicio
-                if (destino === 'hoy') {
-                    let agregadosHoy = 0;
-                    for (let nombrePers of personasDetectadas) {
-                        // Si ya está en asistentesHoy, ignorar
-                        if (!asistentesHoy.some(a => a.nombre.toLowerCase() === nombrePers.toLowerCase())) {
-                            asistentesHoy.push({ nombre: nombrePers, capacitador: '' });
-                            agregadosHoy++;
+                // Obtener el ID del último run previo para no confundirlo con el nuevo
+                let previousRunId = null;
+                try {
+                    let prevRes = await fetch('https://api.github.com/repos/k25daniel/gestion-camaras-media/actions/runs?per_page=1', {
+                        headers: {
+                            'Accept': 'application/vnd.github+json',
+                            'Authorization': `Bearer ${ghToken}`,
+                            'X-GitHub-Api-Version': '2022-11-28'
                         }
-
-                        // Además, asegurarse de que quede guardado en el directorio de Firebase si no existía
-                        let existeEnFirebase = appData.miembros.some(m => m.id.toLowerCase() === nombrePers.toLowerCase());
-                        if (!existeEnFirebase) {
-                            let partes = nombrePers.split(/\s+/);
-                            let nom = partes[0];
-                            let ape = partes.slice(1).join(' ');
-                            await db.collection('miembros').add({
-                                id: nombrePers,
-                                nombre: nom,
-                                apellidos: ape,
-                                esDirector: false,
-                                esCapacitador: false,
-                                esCamarografo: true,
-                                enCapacitacion: false,
-                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                            });
+                    });
+                    if (prevRes.ok) {
+                        let prevData = await prevRes.json();
+                        if (prevData.workflow_runs && prevData.workflow_runs[0]) {
+                            previousRunId = prevData.workflow_runs[0].id;
                         }
                     }
-
-                    // Actualizar dropdowns y UI de la pestaña Planear
-                    actualizarUIAsistentes();
-                    let freshData = await getDatabaseDataFirestore();
-                    renderApp(freshData);
-
-                    msg.className = 'p-3 rounded-xl text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-200';
-                    msg.innerText = `¡Listo! Se cargaron ${agregadosHoy} camarógrafos al servicio de hoy.`;
-                    showToast(`¡${agregadosHoy} camarógrafos asignados a hoy!`, "success");
-                    switchTab('registro');
-                    setTimeout(() => cerrarModalPlanningCenter(), 1800);
-                    return;
+                } catch (e) {
+                    console.warn("No se pudo obtener el run previo:", e);
                 }
 
-                // 2. Si el destino es guardar en Directorio General (Equipo)
-                let snapMiembros = await db.collection('miembros').get();
-                let nombresExistentes = new Set();
-                snapMiembros.forEach(doc => {
-                    let d = doc.data();
-                    let mId = (d.id || `${d.nombre || ''} ${d.apellidos || ''}`).trim().toLowerCase();
-                    if (mId) nombresExistentes.add(mId);
+                let dispatchTime = Date.now();
+
+                // 1. Disparar workflow_dispatch en GitHub Actions
+                let res = await fetch('https://api.github.com/repos/k25daniel/gestion-camaras-media/actions/workflows/pco-sync.yml/dispatches', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/vnd.github+json',
+                        'Authorization': `Bearer ${ghToken}`,
+                        'X-GitHub-Api-Version': '2022-11-28',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ref: 'main',
+                        inputs: {
+                            pco_app_id: appId,
+                            pco_secret: secret
+                        }
+                    })
                 });
 
-                let agregados = 0;
-                for (let fullName of personasDetectadas) {
-                    let compareKey = fullName.toLowerCase();
-                    if (!nombresExistentes.has(compareKey)) {
-                        let partes = fullName.split(/\s+/);
-                        let nombre = partes[0] || '';
-                        let apellidos = partes.slice(1).join(' ') || '';
+                if (!res.ok) {
+                    let errText = '';
+                    try { errText = await res.text(); } catch (e) {}
+                    throw new Error(`Error en GitHub API (${res.status}): ${errText || res.statusText}`);
+                }
 
-                        await db.collection('miembros').add({
-                            id: fullName,
-                            nombre: nombre,
-                            apellidos: apellidos,
-                            esDirector: false,
-                            esCapacitador: false,
-                            esCamarografo: true,
-                            enCapacitacion: false,
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                updateBtnText('Ejecutando en GitHub (0s)...');
+
+                // 2. Monitorear ejecución en GitHub Actions (duración exacta del job)
+                let maxSegundos = 65;
+                let intervalo = 2500;
+                let transcurrido = 0;
+                let finalizadoExitoso = false;
+
+                while (transcurrido < maxSegundos * 1000) {
+                    await new Promise(r => setTimeout(r, intervalo));
+                    transcurrido += intervalo;
+                    let segs = Math.round(transcurrido / 1000);
+                    updateBtnText(`Sincronizando (${segs}s)...`);
+
+                    try {
+                        let runsRes = await fetch('https://api.github.com/repos/k25daniel/gestion-camaras-media/actions/runs?per_page=1', {
+                            headers: {
+                                'Accept': 'application/vnd.github+json',
+                                'Authorization': `Bearer ${ghToken}`,
+                                'X-GitHub-Api-Version': '2022-11-28'
+                            }
                         });
-                        nombresExistentes.add(compareKey);
-                        agregados++;
+
+                        if (runsRes.ok) {
+                            let runsData = await runsRes.json();
+                            let ultimoRun = runsData.workflow_runs && runsData.workflow_runs[0];
+                            if (ultimoRun) {
+                                let esNuevoRun = (previousRunId ? ultimoRun.id !== previousRunId : true) || 
+                                                 (new Date(ultimoRun.created_at).getTime() >= dispatchTime - 5000);
+                                
+                                if (esNuevoRun) {
+                                    if (ultimoRun.status === 'completed') {
+                                        if (ultimoRun.conclusion === 'success') {
+                                            finalizadoExitoso = true;
+                                            break;
+                                        } else {
+                                            throw new Error(`El job de GitHub Actions finalizó con estado: ${ultimoRun.conclusion}`);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (ePoll) {
+                        if (ePoll.message && ePoll.message.includes('GitHub Actions finalizó')) {
+                            throw ePoll;
+                        }
+                        console.warn('Monitoreo GitHub Actions:', ePoll);
                     }
                 }
 
-                let freshData = await getDatabaseDataFirestore();
-                renderApp(freshData);
+                updateBtnText('Cargando datos...');
 
-                msg.className = 'p-3 rounded-xl text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-200';
-                msg.innerText = `¡Éxito! Se registraron ${agregados} personas en el Equipo.`;
-                showToast(`¡${agregados} miembros añadidos!`, "success");
-                setTimeout(() => cerrarModalPlanningCenter(), 1800);
+                // 3. Recargar planes de Firestore en tiempo real y auto-aplicar el de hoy
+                await sincronizarPlanesPcoEnVivo();
+
+                // 4. Refrescar directorio de miembros
+                try {
+                    let freshData = await getDatabaseDataFirestore();
+                    renderApp(freshData);
+                } catch (e) {
+                    console.warn("Refrescar miembros:", e);
+                }
+
+                logAuditoriaFirestore(
+                    currentUser ? currentUser.nombre : 'Usuario',
+                    userRole,
+                    'Importar Plan Services',
+                    'Sincronizó planes y camarógrafos en 1 clic directamente vía GitHub Actions'
+                );
+
+                showToast('¡Planes y camarógrafos de Planning Center importados con éxito!', 'success');
 
             } catch (err) {
-                console.error(err);
-                msg.className = 'p-3 rounded-xl text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300';
-                msg.innerText = `Error: ${err.message}`;
+                console.error("Error al importar desde Services:", err);
+                showToast('Error al importar desde Services: ' + err.message, 'error');
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = originalBtn;
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-90', 'cursor-not-allowed');
+                    btn.innerHTML = originalHtml;
+                }
             }
         }
 
@@ -4595,6 +4568,27 @@
             if (!ghToken) {
                 throw new Error('Token de GitHub no disponible para ejecutar el flujo.');
             }
+
+            let previousRunId = null;
+            try {
+                let prevRes = await fetch('https://api.github.com/repos/k25daniel/gestion-camaras-media/actions/runs?per_page=1', {
+                    headers: {
+                        'Accept': 'application/vnd.github+json',
+                        'Authorization': `Bearer ${ghToken}`,
+                        'X-GitHub-Api-Version': '2022-11-28'
+                    }
+                });
+                if (prevRes.ok) {
+                    let prevData = await prevRes.json();
+                    if (prevData.workflow_runs && prevData.workflow_runs[0]) {
+                        previousRunId = prevData.workflow_runs[0].id;
+                    }
+                }
+            } catch (e) {
+                console.warn("No se pudo obtener el run previo:", e);
+            }
+
+            let dispatchTime = Date.now();
 
             // Disparar workflow_dispatch en GitHub Actions
             let res = await fetch('https://api.github.com/repos/k25daniel/gestion-camaras-media/actions/workflows/pco-sync.yml/dispatches', {
@@ -4622,9 +4616,9 @@
 
             msg.innerHTML = '<div class="flex items-center space-x-2"><i class="fas fa-spinner fa-spin text-emerald-400 text-sm"></i><span>Flujo iniciado en GitHub Actions. Descargando planes y directores a Firestore...</span></div>';
 
-            // Monitorear ejecución en GitHub Actions (polling cada 3 segundos hasta 45s)
-            let maxSegundos = 45;
-            let intervalo = 3000;
+            // Monitorear ejecución en GitHub Actions (polling cada 2.5 segundos hasta 60s)
+            let maxSegundos = 60;
+            let intervalo = 2500;
             let transcurrido = 0;
             let finalizadoExitoso = false;
 
@@ -4645,19 +4639,26 @@
                         let runsData = await runsRes.json();
                         let ultimoRun = runsData.workflow_runs && runsData.workflow_runs[0];
                         if (ultimoRun) {
-                            if (ultimoRun.status === 'completed') {
-                                if (ultimoRun.conclusion === 'success') {
-                                    finalizadoExitoso = true;
-                                    break;
+                            let esNuevoRun = (previousRunId ? ultimoRun.id !== previousRunId : true) || 
+                                             (new Date(ultimoRun.created_at).getTime() >= dispatchTime - 5000);
+                            if (esNuevoRun) {
+                                if (ultimoRun.status === 'completed') {
+                                    if (ultimoRun.conclusion === 'success') {
+                                        finalizadoExitoso = true;
+                                        break;
+                                    } else {
+                                        throw new Error(`GitHub Actions finalizó con estado: ${ultimoRun.conclusion}`);
+                                    }
                                 } else {
-                                    throw new Error(`GitHub Actions finalizó con estado: ${ultimoRun.conclusion}`);
+                                    msg.innerHTML = `<div class="flex items-center space-x-2"><i class="fas fa-spinner fa-spin text-indigo-400 text-sm"></i><span>Sincronizando en la nube de GitHub Actions (${Math.round(transcurrido / 1000)}s)...</span></div>`;
                                 }
-                            } else {
-                                msg.innerHTML = `<div class="flex items-center space-x-2"><i class="fas fa-spinner fa-spin text-indigo-400 text-sm"></i><span>Sincronizando en la nube de GitHub Actions (${Math.round(transcurrido / 1000)}s)...</span></div>`;
                             }
                         }
                     }
                 } catch (ePoll) {
+                    if (ePoll.message && ePoll.message.includes('GitHub Actions finalizó')) {
+                        throw ePoll;
+                    }
                     console.warn('Monitoreo GitHub Actions:', ePoll);
                 }
             }
