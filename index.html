@@ -2333,7 +2333,7 @@
                     let inicialAutor = autorPost.charAt(0).toUpperCase();
 
                     // Director/Realizador asignado (rol técnico, puede ser diferente a quien llenó)
-                    let directorAsignado = s.realizador && s.realizador !== 'Sin Director' ? s.realizador : (s.director || '');
+                    let directorAsignado = (s.realizador && s.realizador !== 'Sin Director') ? s.realizador : (s.director && s.director !== 'Sin Director' ? s.director : '');
                     let llenadoPor = s.registradoPor || '';
                     let esCreador = llenadoPor && autorPost.toLowerCase() === llenadoPor.toLowerCase();
                     let badgeCreador = esCreador ? '<span class="text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.2 rounded font-semibold ml-1"><i class="fas fa-check-circle mr-0.5"></i>Llenó</span>' : '';
@@ -2376,10 +2376,11 @@
                             </div>
                         </div>
 
-                        <!-- SUB-BARRA: Switcher y Tipo de Servicio -->
-                        ${(s.switcher || s.tipoServicio) ? `
+                        <!-- SUB-BARRA: Director / Realizador, Switcher y Tipo de Servicio -->
+                        ${(directorAsignado || s.switcher || s.tipoServicio) ? `
                         <div class="px-4 py-1.5 bg-black/25 border-b border-white/[0.04] flex items-center justify-between text-[11px] font-mono flex-wrap gap-2">
-                            <div class="flex items-center space-x-2 text-zinc-400">
+                            <div class="flex items-center flex-wrap gap-x-3 gap-y-1 text-zinc-400">
+                                ${directorAsignado ? `<span><span class="text-indigo-400 font-semibold">🎬 Director / Realizador:</span> ${directorAsignado}</span>` : ''}
                                 ${s.switcher ? `<span><span class="text-purple-400 font-semibold">🎛️ Switcher:</span> ${s.switcher}</span>` : ''}
                             </div>
                             ${s.tipoServicio ? `<span class="px-2 py-0.5 rounded-full bg-white/[0.06] text-zinc-300 text-[10px] border border-white/[0.06]">${s.tipoServicio}</span>` : ''}
@@ -3444,7 +3445,8 @@
             let texto = `📸 *EQUIPO DE CÁMARAS · PAS MEDIA*\n`;
             texto += `📅 *Fecha:* ${fecha}\n`;
             if (s.tipoServicio) texto += `⛪ *Servicio:* ${s.tipoServicio}\n`;
-            if (s.realizador) texto += `🎬 *Realizador:* ${s.realizador}\n`;
+            let dirRealizador = (s.realizador && s.realizador !== 'Sin Director') ? s.realizador : (s.director && s.director !== 'Sin Director' ? s.director : '');
+            if (dirRealizador) texto += `🎬 *Director / Realizador:* ${dirRealizador}\n`;
             if (s.switcher) texto += `🎛️ *Switcher:* ${s.switcher}\n`;
             texto += `\n*DISTRIBUCIÓN DE CÁMARAS:*\n`;
             for (let i = 1; i <= 6; i++) {
